@@ -1,11 +1,13 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import DashboardComponent from '../components/Dashboard.astro';
 ---
 
 <Layout>
-	<Welcome />
+  <main style="padding:1.25rem">
+    <h1>Dashboard</h1>
+    <p style="color:#555;margin-top:0.25rem">Sections and indicator cards generated from <code>src/data/indicators.json</code>.</p>
+
+    <DashboardComponent />
+  </main>
 </Layout>
