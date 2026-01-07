@@ -440,7 +440,7 @@
         "symbol": "CLP",
         "notes": "Valor de la Unidad de Fomento (CLP por UF). Fuente: Banco Central de Chile / Superintendencia."
       },
-      "nativeFrequency": "daily",
+      "nativeFrequency": "monthly",
       "preferredChart": {
         "type": "line"
       },

@@ -51,8 +51,8 @@ const { indicator } = Astro.props;
                         class="w-full bg-transparent border-0 p-1" 
                         type="number" 
                         name={`year-${idx}`} 
-                        min="1900" 
-                        max="2100" 
+                        min="0" 
+                        max="9999" 
                         placeholder="e.g., 2025" 
                       />
                     </td>
@@ -77,15 +77,28 @@ const { indicator } = Astro.props;
         </div>
 
         <div class="mt-6">
-          <button type="submit">Submit Annual Data (Client-Side Only)</button>
+          <button type="submit" id="submit-btn">Submit Annual Data</button>
+          <p id="status-message" class="mt-2 text-sm"></p>
         </div>
       </form>
     </div>
 
-    <script is:inline define:vars={{ indicator }}>
-      const form = document.getElementById('series-form');
+    <script>
+      import { supabase } from '../../../lib/supabase';
+
+      // Check current session on load
+      (async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        console.log('Current session:', { user, error });
+      })();
+
+      const indicator = (window as any).indicatorData;
+      const form = document.getElementById('series-form') as HTMLFormElement;
       const addRowBtn = document.getElementById('add-row');
       const annualRows = document.getElementById('annual-rows');
+      const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+      const statusMessage = document.getElementById('status-message') as HTMLParagraphElement;
+      
       let rowCount = 4;
       
       // Add row functionality
@@ -98,8 +111,8 @@ const { indicator } = Astro.props;
               class="w-full bg-transparent border-0 p-1" 
               type="number" 
               name="year-${rowCount}" 
-              min="1900" 
-              max="2100" 
+              min="0" 
+              max="9999" 
               placeholder="e.g., 2025" 
             />
           </td>
@@ -120,37 +133,112 @@ const { indicator } = Astro.props;
         rowCount++;
       });
       
-      // Form submission
-      form?.addEventListener('submit', (e) => {
+      // Form submission with Supabase integration
+      form?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const yearlyValues = [];
-        let idx = 0;
         
-        while (formData.has(`year-${idx}`)) {
-          const year = formData.get(`year-${idx}`);
-          const value = formData.get(`value-${idx}`);
+        // Disable submit button during submission
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        statusMessage.textContent = '';
+        statusMessage.className = 'mt-2 text-sm';
+        
+        try {
+          // Get authenticated user from the same supabase client
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
           
-          if (year && year.trim() !== '' && value && value.trim() !== '') {
-            yearlyValues.push({
-              year: parseInt(year),
-              value: parseFloat(value)
-            });
+          if (userError || !user) {
+            throw new Error('You must be logged in to submit data. Please login first.');
           }
-          idx++;
+          
+          const formData = new FormData(e.target as HTMLFormElement);
+          const yearlyValues = [];
+          let idx = 0;
+          
+          // Collect all year-value pairs
+          while (formData.has(`year-${idx}`)) {
+            const year = formData.get(`year-${idx}`) as string;
+            const value = formData.get(`value-${idx}`) as string;
+            
+            if (year && year.trim() !== '' && value && value.trim() !== '') {
+              yearlyValues.push({
+                year: parseInt(year),
+                value: parseFloat(value)
+              });
+            }
+            idx++;
+          }
+          
+          // Validate minimum number of rows
+          if (yearlyValues.length < 1) {
+            throw new Error('Please provide at least 1 data points.');
+          }
+          
+          const dataSource = formData.get('data-source') as string;
+          const date = formData.get('date') as string;
+          
+          if (!dataSource || !date) {
+            throw new Error('Please fill in all required fields.');
+          }
+          
+          console.log('isert :>> ', {
+              indicator_id: indicator.id,
+              // submitted_by: user.id,
+              data_source: dataSource,
+              frequency: indicator.nativeFrequency,
+              status: 'pending'
+            });
+
+          // Step 1: Insert serie_posts record with authenticated user
+          const { data: postData, error: postError } = await supabase
+            .from('serie_posts')
+            .insert({
+              indicator_id: indicator.id,
+              // submitted_by: user.id,
+              data_source: dataSource,
+              frequency: indicator.nativeFrequency,
+              status: 'pending'
+            })
+            .select()
+            .single();
+          
+          if (postError) throw postError;
+          
+          // Step 2: Insert serie_data records
+          const dataPoints = yearlyValues.map(item => ({
+            post_id: postData.id,
+            date: `${item.year}-01-01`, // Store as YYYY-01-01 for annual data
+            value: item.value
+          }));
+          
+          const { error: dataError } = await supabase
+            .from('serie_data')
+            .insert(dataPoints);
+          
+          if (dataError) throw dataError;
+          
+          // Success
+          statusMessage.textContent = `✓ Successfully submitted ${yearlyValues.length} data points!`;
+          statusMessage.className = 'mt-2 text-sm text-green-600';
+          
+          // Reset form
+          form.reset();
+          
+        } catch (error: any) {
+          console.error('Submission error:', error);
+          statusMessage.textContent = `✗ Error: ${error.message || 'Failed to submit data'}`;
+          statusMessage.className = 'mt-2 text-sm text-red-600';
+        } finally {
+          // Re-enable submit button
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Annual Data';
         }
-        
-        const seriesData = {
-          indicatorId: indicator.id,
-          date: formData.get('date'),
-          dataSource: formData.get('data-source'),
-          frequency: indicator.nativeFrequency,
-          data: yearlyValues
-        };
-        
-        console.log('Annual Series Data Submitted:', seriesData);
-        alert('Annual data logged to console (not saved to file).');
       });
+    </script>
+    
+    <script is:inline define:vars={{ indicator }}>
+      // Make indicator data available globally for the module script
+      window.indicatorData = indicator;
     </script>
   </main>
 </Layout>
