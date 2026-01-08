@@ -23,10 +23,10 @@ const { indicator } = Astro.props;
 
     <div class="flex justify-center">
       <form id="series-form" class="mx-auto text-left max-w-150">
-        <div class="mb-4">
+        <!-- <div class="mb-4">
           <label for="date" class="block mb-2 font-semibold">Date:</label>
           <input class="w-full" type="date" id="date" name="date" required />
-        </div>
+        </div> -->
 
         <div class="mb-4">
           <label for="data-source" class="block mb-2 font-semibold">Data Source:</label>
@@ -175,19 +175,11 @@ const { indicator } = Astro.props;
           }
           
           const dataSource = formData.get('data-source') as string;
-          const date = formData.get('date') as string;
           
-          if (!dataSource || !date) {
+          if (!dataSource || dataSource.trim() === '') {
             throw new Error('Please fill in all required fields.');
           }
-          
-          console.log('isert :>> ', {
-              indicator_id: indicator.id,
-              // submitted_by: user.id,
-              data_source: dataSource,
-              frequency: indicator.nativeFrequency,
-              status: 'pending'
-            });
+  
 
           // Step 1: Insert serie_posts record with authenticated user
           const { data: postData, error: postError } = await supabase

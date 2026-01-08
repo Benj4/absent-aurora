@@ -1,0 +1,83 @@
+---
+// filepath: src/pages/postlist.astro
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+
+// Fetch all posts with their data
+const { data: posts, error } = await supabase
+  .from('serie_posts')
+  .select(`
+    id, indicator_id, data_source, frequency, status, created_at, 
+    serie_data(id, date, value)
+  `)
+  .order('created_at', { ascending: false });
+
+if (error) {
+  console.error('Error fetching posts:', error);
+}
+---
+
+<Layout>
+  <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
+    <h1>Series Posts</h1>
+    
+    {error && (
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        Error loading posts: {error.message}
+      </div>
+    )}
+    
+    {posts && posts.length === 0 && (
+      <p class="text-gray-500">No posts found.</p>
+    )}
+    
+    {posts && posts.length > 0 && (
+      <div class="space-y-6">
+        {posts.map((post) => (
+          <div class="border border-foreground/20 rounded-lg p-4 bg-foreground/5">
+            <div class="mb-3">
+              <h2 class="text-xl font-bold mb-2">Post #{post.id}</h2>
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <div><strong>Indicator:</strong> {post.indicator_id}</div>
+                <div><strong>Frequency:</strong> {post.frequency}</div>
+                <div><strong>Data Source:</strong> {post.data_source}</div>
+                <div><strong>Status:</strong> <span class={`px-2 py-1 rounded ${post.status === 'approved' ? 'bg-green-200' : post.status === 'pending' ? 'bg-yellow-200' : 'bg-gray-200'}`}>{post.status}</span></div>
+                <div><strong>Created:</strong> {new Date(post.created_at).toLocaleDateString()}</div>
+              </div>
+            </div>
+            
+            {post.serie_data && post.serie_data.length > 0 && (
+              <div class="mt-4">
+                <h3 class="font-semibold mb-2">Data Points ({post.serie_data.length}):</h3>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm">
+                    <thead>
+                      <tr class="bg-foreground/10">
+                        <th class="border border-foreground/30 p-2 text-left">Date</th>
+                        <th class="border border-foreground/30 p-2 text-right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {post.serie_data
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .map((data) => (
+                          <tr>
+                            <td class="border border-foreground/30 p-2">{data.date}</td>
+                            <td class="border border-foreground/30 p-2 text-right">{data.value}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+            
+            {(!post.serie_data || post.serie_data.length === 0) && (
+              <p class="text-sm text-gray-500 mt-2">No data points for this post.</p>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </main>
+</Layout>
