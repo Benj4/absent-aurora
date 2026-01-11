@@ -1,0 +1,334 @@
+---
+// No server-side logic needed - auth happens client-side
+---
+
+<nav class="navbar">
+  <div class="navbar-container">
+    <!-- Logo/Brand Section -->
+    <div class="navbar-brand">
+      <a href="/" class="brand-link">Absent Aurora</a>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="navbar-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/postlist" class="nav-link">Post List</a>
+      <a href="/login" class="nav-link" id="login-link">Login</a>
+    </div>
+
+    <!-- Profile Menu (Right Side) -->
+    <div class="navbar-profile">
+      <a href="/login" class="login-button" id="login-button">Login</a>
+      <div class="profile-menu" id="profile-menu" style="display: none;">
+        <button class="profile-button" id="profileButton">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="profile-icon"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div class="dropdown-menu" id="dropdownMenu">
+          <div class="dropdown-item user-email" id="user-email"></div>
+          <hr class="dropdown-divider" />
+          <a href="/post" class="dropdown-item">New Post</a>
+          <a href="/postlist" class="dropdown-item">My Posts</a>
+          <hr class="dropdown-divider" />
+          <button id="logoutBtn" class="dropdown-item logout-btn">Logout</button
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .navbar-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .navbar-brand {
+    flex-shrink: 0;
+  }
+
+  .brand-link {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .brand-link:hover {
+    color: #3b82f6;
+  }
+
+  .navbar-links {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+  }
+
+  .nav-link {
+    color: #4b5563;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  .nav-link:hover {
+    color: #3b82f6;
+  }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -0.5rem;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #3b82f6;
+    transition: width 0.2s;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .navbar-profile {
+    flex-shrink: 0;
+  }
+
+  .profile-menu {
+    position: relative;
+  }
+
+  .profile-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .profile-button:hover {
+    background-color: #e5e7eb;
+  }
+
+  .profile-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #4b5563;
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem;
+    width: 12rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s;
+  }
+
+  .dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .dropdown-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #374151;
+    text-decoration: none;
+    transition: background-color 0.2s;
+    font-size: 0.875rem;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .dropdown-item.user-email {
+    font-weight: 600;
+    color: #1f2937;
+    cursor: default;
+    font-size: 0.8125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dropdown-item.user-email:hover {
+    background-color: transparent;
+  }
+
+  .dropdown-item.logout-btn {
+    color: #dc2626;
+  }
+
+  .dropdown-item.logout-btn:hover {
+    background-color: #fee2e2;
+  }
+
+  .dropdown-item:first-child {
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+
+  .dropdown-item:last-child {
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f3f4f6;
+  }
+
+  .dropdown-divider {
+    margin: 0.25rem 0;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .login-button {
+    padding: 0.5rem 1rem;
+    background-color: #3b82f6;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+  }
+
+  .login-button:hover {
+    background-color: #2563eb;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .navbar-links {
+      gap: 1rem;
+    }
+
+    .nav-link {
+      font-size: 0.875rem;
+    }
+
+    .navbar-container {
+      padding: 0.75rem 1rem;
+    }
+  }
+</style>
+
+<script>
+  import type { Session } from "@supabase/auth-js";
+  import { supabase } from "../lib/supabase";
+
+  // Toggle dropdown menu
+  const profileButton = document.getElementById("profileButton");
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  const loginLink = document.getElementById("login-link");
+  const loginButton = document.getElementById("login-button");
+  const profileMenu = document.getElementById("profile-menu");
+  const userEmail = document.getElementById("user-email");
+
+  // Check auth state on load
+  async function checkAuthState(session: Session | null) {
+    let user = session?.user;
+
+    if (!user) {
+      user = (await supabase.auth.getUser())?.data?.user ?? undefined;
+    }
+
+    if (user) {
+      // User is logged in - show profile menu
+      if (loginLink) loginLink.style.display = "none";
+      if (loginButton) loginButton.style.display = "none";
+      if (profileMenu) profileMenu.style.display = "block";
+      if (userEmail) userEmail.textContent = user.email || "";
+    } else {
+      // User is not logged in - show login button
+      if (loginLink) loginLink.style.display = "block";
+      if (loginButton) loginButton.style.display = "block";
+      if (profileMenu) profileMenu.style.display = "none";
+    }
+  }
+
+  // Toggle dropdown menu
+  if (profileButton && dropdownMenu) {
+    profileButton.addEventListener("click", () => {
+      dropdownMenu.classList.toggle("active");
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      if (!profileButton.contains(target) && !dropdownMenu.contains(target)) {
+        dropdownMenu.classList.remove("active");
+      }
+    });
+  }
+
+  // Logout functionality
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await supabase.auth.signOut();
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+    });
+  }
+
+  // Listen for auth state changes
+  supabase.auth.onAuthStateChange((event, session) => {
+    // console.log("Auth state changed:", { event, session });
+    checkAuthState(session);
+  });
+
+  // Initial auth check
+  // checkAuthState(null);
+</script>
