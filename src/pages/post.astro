@@ -141,12 +141,50 @@ import Layout from '../layouts/Layout.astro';
           </div>
         `;
 
+        // SHOW VALIDATIONS IF NOT PENDING
+        if (post.status !== 'pending') {
+          // get and show all validations for this post
+          const { data: validations, error: valError } = await supabase
+            .from('serie_validations')
+            .select('id, validation_status, validation_notes, validated_at')
+            .eq('post_id', post.id);
+
+          if (valError) {
+            console.error('Error fetching validations:', valError);
+            postSection.innerHTML += `
+              <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+                Error loading validations: ${valError.message}
+              </div>
+            `;
+          } else if (validations && validations.length > 0) {
+            let validationsHtml = `
+              <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-2">Validations (${validations.length})</h3>
+                <div class="space-y-4">
+            `;
+            validations.forEach(val => {
+              validationsHtml += `
+                <div class="border border-gray-300 rounded p-3 bg-white">
+                  <p class="m-0"><strong>Status:</strong> ${val.validation_status}</p>
+                  <p class="m-0"><strong>Notes:</strong> ${val.validation_notes || 'None'}</p>
+                  <p class="m-0 text-sm text-gray-600">Validated at: ${new Date(val.validated_at).toLocaleDateString()} ${new Date(val.validated_at).toLocaleTimeString()}</p>
+                </div>
+              `;
+            });
+            validationsHtml += `
+                </div>
+              </div>
+            `;
+            postSection.innerHTML += validationsHtml;
+          }
+        }
+
         // Show validation form if post is pending and user is authenticated
         if (currentUser && post.status === 'pending') {
           // Check if user already validated this post
           const { data: existingValidation } = await supabase
             .from('serie_validations')
-            .select('id, validation_status')
+            .select('id, validation_status, validation_notes')
             .eq('post_id', post.id)
             .eq('validated_by', currentUser.id)
             .single();
@@ -155,6 +193,7 @@ import Layout from '../layouts/Layout.astro';
             postSection.innerHTML += `
               <div class="mt-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded">
                 <p class="m-0"><strong>You already validated this post as:</strong> ${existingValidation.validation_status}</p>
+                <p class="m-0">Notes: ${existingValidation.validation_notes || 'None'}</p>
               </div>
             `;
           } else {
