@@ -1,7 +1,3 @@
----
-// No server-side logic needed - auth happens client-side
----
-
 <nav class="navbar">
   <div class="navbar-container">
     <!-- Logo/Brand Section -->
@@ -41,8 +37,7 @@
         <div class="dropdown-menu" id="dropdownMenu">
           <div class="dropdown-item user-email" id="user-email"></div>
           <hr class="dropdown-divider" />
-          <a href="/post" class="dropdown-item">New Post</a>
-          <a href="/postlist" class="dropdown-item">My Posts</a>
+          <a href="#" class="dropdown-item" id="own-posts-link">Own Posts</a>
           <hr class="dropdown-divider" />
           <button id="logoutBtn" class="dropdown-item logout-btn">Logout</button
           >
@@ -288,6 +283,9 @@
       if (loginButton) loginButton.style.display = "none";
       if (profileMenu) profileMenu.style.display = "block";
       if (userEmail) userEmail.textContent = user.email || "";
+
+      document.getElementById("own-posts-link")?.setAttribute("href", `/user/${user.id}/post`);
+
     } else {
       // User is not logged in - show login button
       if (loginLink) loginLink.style.display = "block";
