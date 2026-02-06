@@ -1,0 +1,20 @@
+---
+// filepath: src/pages/user/[...slug].astro
+import Layout from '../../layouts/Layout.astro';
+import UserPosts from '../../components/user/UserPosts';
+
+---
+
+<Layout>
+  <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
+    <div class="mb-6">
+      <a href="/" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Volver al tablero</a>
+    </div>
+
+    <UserPosts client:load />
+
+    <noscript>
+      <div class="mt-4 text-gray-600">Esta página requiere JavaScript para navegar entre las secciones de usuario (Publicaciones, Editar, Validaciones).</div>
+    </noscript>
+  </main>
+</Layout>

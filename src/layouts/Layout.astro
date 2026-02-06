@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import Navbar from "../components/Navbar.astro";
+import Navbar from "../components/Navbar";
 ---
 
 <!doctype html>
@@ -15,7 +15,9 @@ import Navbar from "../components/Navbar.astro";
 		<title>Mites Absent Aurora</title>
 	</head>
 	<body>
-		<Navbar />
+		<Navbar client:only />
+		<!-- <Navbar client:load /> -->
+		<!-- <Navbar /> -->
 		<slot />
 	</body>
 </html>

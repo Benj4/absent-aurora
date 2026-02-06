@@ -2,16 +2,20 @@
 // filepath: src/pages/postlist.astro
 import Layout from '../layouts/Layout.astro';
 import { supabase } from '../lib/supabase';
-import PostCard from '../components/PostCard.astro';
+import PostCard from '../components/PostCard';
+import PostListClient from '../components/PostListClient';
 
-// Fetch all posts with their data
-const { data: posts, error } = await supabase
+
+let query = supabase
   .from('serie_posts')
   .select(`
-    id, indicator_id, data_source, frequency, status, created_at, 
+    id, indicator_id, data_source, frequency, status, created_at, updated_at,
     serie_data(id, date, value)
   `)
-  .order('created_at', { ascending: false });
+  .order('created_at', { ascending: false })
+  .limit(50);
+
+const { data: posts, error } = await query;
 
 if (error) {
   console.error('Error fetching posts:', error);
@@ -20,24 +24,18 @@ if (error) {
 
 <Layout>
   <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
-    <h1>Series Posts</h1>
-    
+    <h1>Publicaciones de Series</h1>
+
     {error && (
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        Error loading posts: {error.message}
+        Error cargando publicaciones: {error.message}
       </div>
     )}
-    
+
     {posts && posts.length === 0 && (
-      <p class="text-gray-500">No posts found.</p>
+      <p class="text-gray-500">No se encontraron publicaciones.</p>
     )}
-    
-    {posts && posts.length > 0 && (
-      <div class="space-y-6">
-        {posts.map((post) => (
-          <PostCard post={post} />
-        ))}
-      </div>
-    )}
+
+    <PostListClient client:load initialPosts={posts ?? []} />
   </main>
 </Layout>
