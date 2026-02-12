@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'preact/hooks';
+import { useEffect, useState, useRef } from 'react';
 import type { User } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
 

@@ -1,5 +1,5 @@
-import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import React from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
 

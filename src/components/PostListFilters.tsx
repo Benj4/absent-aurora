@@ -1,5 +1,5 @@
-import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import React from 'react';
+import { useEffect, useState } from 'react';
 
 type Filters = {
   status: string;
@@ -48,14 +48,14 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
   }, []);
 
 
-  function handleChange(e: Event) {
-    const target = e.target as HTMLInputElement | HTMLSelectElement;
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const target = e.target;
     const name = target.name as keyof Filters;
     const value = target.value;
     setFilters(prev => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e: Event) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const params = new URLSearchParams(filters);
     window.history.pushState(null, '', `?${params.toString()}`);
@@ -78,7 +78,7 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
 
       <div>
         <label className="text-sm font-semibold block">Buscar</label>
-        <input name="q" value={filters.q} onInput={handleChange} placeholder="Indicador o fuente" className="border rounded p-2" />
+        <input name="q" value={filters.q} onChange={handleChange} placeholder="Indicador o fuente" className="border rounded p-2" />
       </div>
 
       <div>

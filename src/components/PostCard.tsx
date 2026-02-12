@@ -1,4 +1,4 @@
-import type { FunctionalComponent } from 'preact';
+import type { FC } from 'react';
 
 // NOTE: Use local types compatible with server responses. Prefer importing from `src/lib/supabase` when possible.
 interface SerieData {
@@ -63,7 +63,7 @@ const formatDate = (iso: string) => {
   }
 };
 
-const PostCard: FunctionalComponent<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => {
+const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => {
   const serie = post.serie_data || [];
   const sorted = [...serie].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const slice = sorted.slice(0, maxDataPoints);

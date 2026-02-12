@@ -1,5 +1,5 @@
-import { h } from 'preact';
-import type { FunctionalComponent } from 'preact';
+import React from 'react';
+import type { FC } from 'react';
 
 export interface Indicator {
   id: string;
@@ -62,7 +62,7 @@ function sparklinePath(series: Series = [], width = 160, height = 48, padding = 
     .join(' ');
 }
 
-const IndicatorCard: FunctionalComponent<{ ind: Indicator }> = ({ ind }) => {
+const IndicatorCard: FC<{ ind: Indicator }> = ({ ind }) => {
   const series = sortedSeries(ind.series || []);
   const path = sparklinePath(series, 160, 48, 6);
   

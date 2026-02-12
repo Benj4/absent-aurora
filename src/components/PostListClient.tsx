@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
 import PostListFilters from './PostListFilters';
 import PostCard from './PostCard';
 import { supabase } from '../lib/supabase';

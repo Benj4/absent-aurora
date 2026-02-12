@@ -12,14 +12,17 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@astrojs/preact": "^4.1.3",
+    "@ant-design/cssinjs": "^2.1.0",
+    "@astrojs/react": "^4.4.2",
     "@bentogrid/core": "^1.1.1",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@supabase/auth-js": "^2.89.0",
     "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/vite": "^4.1.18",
+    "antd": "^6.3.0",
     "astro": "^5.16.6",
-    "preact": "^10.28.3"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "volta": {
     "node": "24.12.0",
@@ -28,6 +31,8 @@
   "devDependencies": {
     "@astrojs/tailwind": "^6.0.2",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.23",
     "dotenv": "^17.2.3",
