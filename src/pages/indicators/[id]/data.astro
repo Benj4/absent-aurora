@@ -3,7 +3,10 @@
 import Layout from '../../../layouts/Layout.astro';
 import { supabase } from '../../../lib/supabase';
 import indicatorsData from '../../../data/indicators.json';
-import PostCard from '../../../components/PostCard.astro';
+import PostCard from '../../../components/PostCard';
+import IndicatorChart from '../../../components/IndicatorChart';
+
+export const prerender = true;
 
 export async function getStaticPaths() {
   const { indicators = [] } = indicatorsData || {};
@@ -31,51 +34,73 @@ const { data: posts, error } = await supabase
 if (error) {
   console.error('Error fetching posts:', error);
 }
+
+  const approvedSeries: string | any[] | undefined = [];
+
+
+// // Fetch approved datapoints for the indicator (view)
+// const { data: approvedSeries = [], error: approvedError } = await supabase
+//   .from('approved_series_view')
+//   .select('date, value')
+//   .eq('indicator_id', id)
+//   .order('date', { ascending: true });
+
+// if (approvedError) {
+//   console.error('Error fetching approved series:', approvedError);
+// }
 ---
 
 <Layout>
   <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
     <div class="mb-6">
-      <a href="/" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Back to Dashboard</a>
+      <a href="/" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Volver al tablero</a>
     </div>
 
-    <h1>Data Posts for {indicator ? indicator.label : id}</h1>
+    <h1>Serie: {indicator ? indicator.label : id}</h1>
     
     {indicator && (
       <div class="bg-slate-100 dark:bg-slate-800 rounded-lg p-4 mb-6">
         <div class="grid grid-cols-2 gap-3 text-sm">
-          <div><strong>Indicator ID:</strong> {indicator.id}</div>
-          <div><strong>Frequency:</strong> {indicator.nativeFrequency}</div>
-          <div><strong>Unit:</strong> {indicator.unit?.symbol || indicator.unit?.type}</div>
-          <div><strong>Chart Type:</strong> {indicator.preferredChart?.type}</div>
+          <div><strong>ID:</strong> {indicator.id}</div>
+          <div><strong>Frecuencia:</strong> {indicator.nativeFrequency}</div>
+          <div><strong>Unidad:</strong> {indicator.unit?.symbol || indicator.unit?.type}</div>
+          <div><strong>Tipo de gráfico:</strong> {indicator.preferredChart?.type}</div>
         </div>
       </div>
     )}
-    
+
+    {approvedSeries && approvedSeries.length > 0 ? (
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold mb-2">Gráfico (datos aprobados)</h2>
+        <IndicatorChart client:visible series={approvedSeries} label={indicator ? indicator.label : id} />
+      </div>
+    ) : (
+      <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
+        <p class="m-0">No hay datos aprobados para graficar esta serie.</p>
+      </div>
+    )}
+
     {error && (
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        Error loading posts: {error.message}
+        Error cargando publicaciones: {error.message}
       </div>
     )}
     
-    {posts && posts.length === 0 && (
       <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
-        <p class="m-0">No data posts found for this indicator.</p>
         <p class="m-0 mt-2">
           <a 
             href={indicator?.nativeFrequency?.toLowerCase().includes('monthly') ? `/series/monthly/${id}` : `/series/annual/${id}`}
             class="text-blue-600 hover:text-blue-800 font-semibold"
           >
-            + Add Series Data
+            + Añadir datos
           </a>
         </p>
       </div>
-    )}
     
     {posts && posts.length > 0 && (
       <div class="space-y-6">
         <div class="mb-4">
-          <p class="text-gray-600">Total posts: <strong>{posts.length}</strong></p>
+          <p class="text-gray-600">Publicaciones totales: <strong>{posts.length}</strong></p>
         </div>
         
         {posts.map((post) => (
