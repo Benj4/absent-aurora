@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Ant Design CSS Variables Support */
+:root {
+  color-scheme: light dark;
+}
+
 /* @import 'tailwindcss';
 @import 'katex/dist/katex.css'; */
 

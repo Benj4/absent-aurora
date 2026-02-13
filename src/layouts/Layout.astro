@@ -1,6 +1,12 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
+
+interface Props {
+	title?: string;
+}
+
+const { title = 'Mites Absent Aurora' } = Astro.props;
 ---
 
 <!doctype html>
@@ -12,7 +18,11 @@ import Navbar from "../components/Navbar";
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Mites Absent Aurora</title>
+		<!-- Ant Design Reset CSS -->
+		<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@6.3.0/dist/reset.css" /> -->
+		<!-- Ant Design Full CSS (Backup if CSS-in-JS fails) -->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@6.3.0/dist/antd.min.css" />
+		<title>{title}</title>
 	</head>
 	<body>
 		<Navbar client:load />

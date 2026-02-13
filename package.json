@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.0",
+    "@ant-design/icons": "^6.1.0",
     "@astrojs/react": "^4.4.2",
     "@bentogrid/core": "^1.1.1",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
