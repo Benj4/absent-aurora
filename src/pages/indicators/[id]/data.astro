@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import indicatorsData from '../../../data/indicators.json';
 import PostCard from '../../../components/PostCard';
 import IndicatorChart from '../../../components/IndicatorChart';
+import AntdProvider from '../../../components/AntdProvider';
 
 export const prerender = true;
 
@@ -102,10 +103,12 @@ if (error) {
         <div class="mb-4">
           <p class="text-gray-600">Publicaciones totales: <strong>{posts.length}</strong></p>
         </div>
-        
-        {posts.map((post) => (
-          <PostCard post={post} />
-        ))}
+
+        <AntdProvider>
+          {posts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </AntdProvider>
       </div>
     )}
   </main>

@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import PostCard from '../PostCard';
+import AntdProvider from '../AntdProvider';
 
 
 const UserPosts = () => {
@@ -51,14 +52,16 @@ const UserPosts = () => {
   if (!posts || posts.length === 0) return <p className="text-gray-600">No se encontraron publicaciones para este usuario.</p>;
 
   return (
-    <div className="space-y-6">
-      <p className="text-gray-600">Total: <strong>{posts.length}</strong></p>
-      <div className="grid gap-4">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+    <AntdProvider>
+      <div className="space-y-6">
+        <p className="text-gray-600">Total: <strong>{posts.length}</strong></p>
+        <div className="grid gap-4">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </div>
       </div>
-    </div>
+    </AntdProvider>
   );
 }
 

@@ -1,4 +1,4 @@
-export {};
+export { };
 declare global {
   namespace JSX {
     interface IntrinsicAttributes {
@@ -6,6 +6,11 @@ declare global {
     }
 
     interface HTMLAttributes<T = any> {
+      key?: string | number;
+    }
+  }
+  namespace astroHTML.JSX {
+    interface HTMLAttributes {
       key?: string | number;
     }
   }

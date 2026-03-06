@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import PostListFilters from './PostListFilters';
 import PostCard from './PostCard';
 import { supabase } from '../lib/supabase';
+import AntdProvider from './AntdProvider';
 
 type Filters = {
   status: string;
@@ -17,7 +18,7 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function runSearch(f: Filters) {
+  const runSearch = useCallback(async (f: Filters) => {
     setLoading(true);
     setError(null);
     try {
@@ -38,7 +39,13 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
         q = q.gte('created_at', f.from);
       }
       if (f.to) {
-        q = q.lte('created_at', f.to);
+        const endExclusive = new Date(`${f.to}T00:00:00Z`);
+        if (Number.isNaN(endExclusive.getTime())) {
+          q = q.lte('created_at', f.to);
+        } else {
+          endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+          q = q.lt('created_at', endExclusive.toISOString());
+        }
       }
 
       q = q.order('created_at', { ascending: f.sort === 'oldest' });
@@ -56,16 +63,17 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
 
-  function handleSearch(f: Filters) {
+  const handleSearch = useCallback((f: Filters) => {
     runSearch(f);
-  }
+  }, [runSearch]);
 
   return (
-    <div>
-      <PostListFilters onSearch={handleSearch} />
+    <AntdProvider>
+      <div>
+        <PostListFilters onSearch={handleSearch} />
 
 
       {loading && (
@@ -83,10 +91,11 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
       {!loading && posts.length > 0 && (
         <div className="space-y-6">
           {posts.map((post) => (
-            <PostCard post={post} />
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </AntdProvider>
   );
 }

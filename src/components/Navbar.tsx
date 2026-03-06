@@ -68,6 +68,7 @@ const Navbar = () => {
           <div className="navbar-links">
             <a href="/" className="nav-link">Inicio</a>
             <a href="/postlist" className="nav-link">Publicaciones</a>
+            <a href="/antd-demo" className="nav-link">Demo Ant Design</a>
             {!user && (
               <a href="/login" className="nav-link" id="login-link">Iniciar sesión</a>
             )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { Button, Form, Input, Select, Space } from 'antd';
 
 type Filters = {
   status: string;
@@ -30,79 +31,101 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
   });
 
   useEffect(() => {
-    // Run initial search if there are active filters in the URL; otherwise keep server-provided posts
+    // Keep the list synchronized with URL state on first load and browser navigation.
     const urlFilters = parseSearch(window.location.search);
-    const hasAnyFilter = Object.values(urlFilters).some(v => v && v !== 'all' && v !== '');
-    if (hasAnyFilter) {
-      setFilters(urlFilters);
-      if (onSearch) onSearch(urlFilters);
-    }
+    setFilters(urlFilters);
+    if (onSearch) onSearch(urlFilters);
 
     function onPop() {
       const f = parseSearch(window.location.search);
       setFilters(f);
-      if (onSearch) onSearch(urlFilters);
+      if (onSearch) onSearch(f);
     }
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, []);
+  }, [onSearch]);
 
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const target = e.target;
-    const name = target.name as keyof Filters;
-    const value = target.value;
-    setFilters(prev => ({ ...prev, [name]: value }));
+  function handleFieldChange(name: keyof Filters, value: string) {
+    setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const params = new URLSearchParams(filters);
+    const params = new URLSearchParams();
+    if (filters.status && filters.status !== 'all') params.set('status', filters.status);
+    if (filters.q.trim()) params.set('q', filters.q.trim());
+    if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
     window.history.pushState(null, '', `?${params.toString()}`);
     if (onSearch) onSearch(filters);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap gap-3 items-end mb-6">
-      {/* {JSON.stringify(filters)} */}
-      <div>
-        <label className="text-sm font-semibold block">Estado</label>
-        <select name="status" className="border rounded p-2" aria-label="Estado" value={filters.status} onChange={handleChange}>
-          <option value="all">Todos</option>
-          <option value="approved">Aprobado</option>
-          <option value="pending">Pendiente</option>
-          <option value="rejected">Rechazado</option>
-          <option value="disabled">Deshabilitado</option>
-        </select>
-      </div>
+    <form onSubmit={handleSubmit} className="mb-6">
+      <Space size={[12, 12]} wrap align="end">
+        <Form.Item label="Estado" style={{ marginBottom: 0, minWidth: 180 }}>
+          <Select
+            aria-label="Estado"
+            value={filters.status}
+            onChange={(value) => handleFieldChange('status', value)}
+            options={[
+              { value: 'all', label: 'Todos' },
+              { value: 'approved', label: 'Aprobado' },
+              { value: 'pending', label: 'Pendiente' },
+              { value: 'rejected', label: 'Rechazado' },
+              { value: 'disabled', label: 'Deshabilitado' },
+            ]}
+          />
+        </Form.Item>
 
-      <div>
-        <label className="text-sm font-semibold block">Buscar</label>
-        <input name="q" value={filters.q} onChange={handleChange} placeholder="Indicador o fuente" className="border rounded p-2" />
-      </div>
+        <Form.Item label="Buscar" style={{ marginBottom: 0, minWidth: 240 }}>
+          <Input
+            value={filters.q}
+            onChange={(e) => handleFieldChange('q', e.target.value)}
+            placeholder="Indicador o fuente"
+            allowClear
+          />
+        </Form.Item>
 
-      <div>
-        <label className="text-sm font-semibold block">Ordenar</label>
-        <select name="sort" className="border rounded p-2" aria-label="Ordenar" value={filters.sort} onChange={handleChange}>
-          <option value="newest">Más recientes</option>
-          <option value="oldest">Más antiguos</option>
-        </select>
-      </div>
+        <Form.Item label="Ordenar" style={{ marginBottom: 0, minWidth: 180 }}>
+          <Select
+            aria-label="Ordenar"
+            value={filters.sort}
+            onChange={(value) => handleFieldChange('sort', value)}
+            options={[
+              { value: 'newest', label: 'Mas recientes' },
+              { value: 'oldest', label: 'Mas antiguos' },
+            ]}
+          />
+        </Form.Item>
 
-      <div>
-        <label className="text-sm font-semibold block">Desde</label>
-        <input type="date" name="from" value={filters.from} onChange={handleChange} className="border rounded p-2" />
-      </div>
+        <Form.Item label="Desde" style={{ marginBottom: 0 }}>
+          <Input
+            type="date"
+            value={filters.from}
+            onChange={(e) => handleFieldChange('from', e.target.value)}
+            allowClear
+          />
+        </Form.Item>
 
-      <div>
-        <label className="text-sm font-semibold block">Hasta</label>
-        <input type="date" name="to" value={filters.to} onChange={handleChange} className="border rounded p-2" />
-      </div>
+        <Form.Item label="Hasta" style={{ marginBottom: 0 }}>
+          <Input
+            type="date"
+            value={filters.to}
+            onChange={(e) => handleFieldChange('to', e.target.value)}
+            allowClear
+          />
+        </Form.Item>
 
-      <div>
-        <button type="submit" className="bg-blue-600 text-white px-3 py-2 rounded">Filtrar</button>
-        <a href="/postlist" className="ml-3 text-sm text-gray-600">Borrar filtros</a>
-      </div>
+        <Form.Item style={{ marginBottom: 0 }}>
+          <Space>
+            <Button type="primary" htmlType="submit">Filtrar</Button>
+            <Button href="/postlist">Borrar filtros</Button>
+          </Space>
+        </Form.Item>
+      </Space>
     </form>
   );
 }

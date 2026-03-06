@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import PostCard from '../PostCard';
+import AntdProvider from '../AntdProvider';
 
 interface Props { userId: string }
 
@@ -41,18 +42,20 @@ export default function UserEdit({ userId }: Props) {
   if (!posts || posts.length === 0) return <p className="text-gray-600">No hay publicaciones para editar.</p>;
 
   return (
-    <div className="space-y-4">
-      <p className="text-gray-600">Haz click en "Editar" para ir a la página de edición de la publicación.</p>
-      <div className="grid gap-4">
-        {posts.map((post) => (
-          <div key={post.id} className="flex items-start gap-4">
-            <div className="flex-1"><PostCard post={post} maxDataPoints={0} showLinks={false} /></div>
-            <div className="shrink-0">
-              <a className="inline-block px-3 py-2 bg-blue-600 text-white rounded" href={`/edit/${post.id}`}>Editar</a>
+    <AntdProvider>
+      <div className="space-y-4">
+        <p className="text-gray-600">Haz click en "Editar" para ir a la página de edición de la publicación.</p>
+        <div className="grid gap-4">
+          {posts.map((post) => (
+            <div key={post.id} className="flex items-start gap-4">
+              <div className="flex-1"><PostCard post={post} maxDataPoints={0} showLinks={false} /></div>
+              <div className="shrink-0">
+                <a className="inline-block px-3 py-2 bg-blue-600 text-white rounded" href={`/edit/${post.id}`}>Editar</a>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </AntdProvider>
   );
 }

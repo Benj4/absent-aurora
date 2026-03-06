@@ -1,4 +1,7 @@
 import type { FC } from 'react';
+import { Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from 'antd';
+
+const { Title, Text } = Typography;
 
 // NOTE: Use local types compatible with server responses. Prefer importing from `src/lib/supabase` when possible.
 interface SerieData {
@@ -24,18 +27,18 @@ interface Props {
   showLinks?: boolean;
 }
 
-const statusClass = (status: string) => {
+const statusColor = (status: string) => {
   switch (status) {
     case 'approved':
-      return 'bg-green-200 text-green-800';
+      return 'success';
     case 'pending':
-      return 'bg-yellow-200 text-yellow-800';
+      return 'warning';
     case 'rejected':
-      return 'bg-red-200 text-red-800';
+      return 'error';
     case 'disabled':
-      return 'bg-gray-200 text-gray-800';
+      return 'default';
     default:
-      return 'bg-gray-200 text-gray-800';
+      return 'default';
   }
 };
 
@@ -63,69 +66,173 @@ const formatDate = (iso: string) => {
   }
 };
 
+const formatSeriesDate = (raw: string, frequency: string) => {
+  if (!raw) return raw;
+  if (frequency === 'annual') return raw;
+
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString('es-ES');
+};
+
+const formatValue = (value: number) => {
+  if (!Number.isFinite(value)) return String(value);
+  return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 6 }).format(value);
+};
+
 const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => {
   const serie = post.serie_data || [];
   const sorted = [...serie].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const slice = sorted.slice(0, maxDataPoints);
+  const shouldShowSerie = maxDataPoints > 0;
+  const latest = sorted[0];
+  const oldest = sorted[sorted.length - 1];
+
+  const tableData = slice.map((data, index) => {
+    const previous = slice[index + 1];
+    const variation = previous ? data.value - previous.value : null;
+
+    return {
+      rank: index + 1,
+    key: String(data.id ?? `${data.date}-${data.value}`),
+    date: formatSeriesDate(data.date, post.frequency),
+      rawDate: data.date,
+    value: formatValue(data.value),
+      rawValue: data.value,
+      variation,
+    };
+  });
 
   return (
-    <div className="border border-foreground/20 rounded-lg p-4 bg-foreground/5">
-      <div className="flex justify-between items-start mb-3">
-        <h2 className="text-xl font-bold mb-0">Publicación #{post.id}</h2>
-        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusClass(post.status)}`}>
-          {statusLabel(post.status)}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-        <div><strong>Indicador:</strong> {post.indicator_id}</div>
-        <div><strong>Frecuencia:</strong> {post.frequency}</div>
-        <div><strong>Fuente:</strong> {post.data_source || 'N/A'}</div>
-        <div><strong>Creado:</strong> {formatDate(post.created_at)}</div>
-        {post.updated_at && (
-          <div className="col-span-2"><strong>Actualizado:</strong> {formatDate(post.updated_at)}</div>
-        )}
-      </div>
-
-      {serie.length > 0 ? (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">Datos de serie ({serie.length} puntos)</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300">
-              <thead className="bg-gray-100 dark:bg-gray-700">
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Fecha</th>
-                  <th className="border border-gray-300 px-4 py-2 text-right">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {slice.map((data) => (
-                  <tr key={data.id ?? `${data.date}-${data.value}`}>
-                    <td className="border border-gray-300 px-4 py-2">{data.date}</td>
-                    <td className="border border-gray-300 px-4 py-2 text-right">{data.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {serie.length > maxDataPoints && (
-              <p className="text-sm text-gray-600 mt-2 italic">Mostrando {maxDataPoints} de {serie.length} puntos (más recientes)</p>
-            )}
-          </div>
+    <Card
+      title={
+        <div>
+          <Title level={4} style={{ margin: 0 }}>{post.indicator_id}</Title>
+          <Text type="secondary">Publicacion #{post.id}</Text>
         </div>
-      ) : (
-        <div className="bg-gray-100 dark:bg-gray-700 rounded p-3 mt-3">
-          <p className="text-gray-600 m-0">No hay datos de serie adjuntos a esta publicación.</p>
+      }
+      extra={
+        <Space size={8} wrap>
+          <Tag>{post.frequency}</Tag>
+          <Tag color={statusColor(post.status)}>{statusLabel(post.status)}</Tag>
+        </Space>
+      }
+      style={{ width: '100%' }}
+    >
+      <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }}>
+        <Descriptions.Item label="Fuente">{post.data_source || 'N/A'}</Descriptions.Item>
+        <Descriptions.Item label="Frecuencia">{post.frequency}</Descriptions.Item>
+        <Descriptions.Item label="Creado">{formatDate(post.created_at)}</Descriptions.Item>
+        {post.updated_at && (
+          <Descriptions.Item label="Actualizado" span={3}>{formatDate(post.updated_at)}</Descriptions.Item>
+        )}
+      </Descriptions>
+
+      {shouldShowSerie && serie.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Space size={16} wrap style={{ marginBottom: 8 }}>
+            <Text strong>Puntos: {serie.length}</Text>
+            {latest && (
+              <Text type="secondary">
+                Ultimo: {formatSeriesDate(latest.date, post.frequency)} ({formatValue(latest.value)})
+              </Text>
+            )}
+            {oldest && (
+              <Text type="secondary">
+                Primero: {formatSeriesDate(oldest.date, post.frequency)}
+              </Text>
+            )}
+          </Space>
+
+          <Table
+            className="postcard-ant-table"
+            size="small"
+            pagination={tableData.length > 8 ? { pageSize: 8, size: 'small', hideOnSinglePage: true } : false}
+            scroll={{ x: 560 }}
+            dataSource={tableData}
+            // rowClassName={(record, rowIndex) => {
+            //   if (record.rank === 1) return 'bg-green-500/10';
+            //   return (rowIndex ?? 0) % 2 === 0 ? 'bg-black/5' : '';
+            // }}
+            locale={{ emptyText: 'Sin datos para mostrar' }}
+            columns={[
+              {
+                title: '#',
+                dataIndex: 'rank',
+                key: 'rank',
+                width: 64,
+                align: 'center',
+                render: (rank: number) => <Text type="secondary">{rank}</Text>,
+              },
+              {
+                title: 'Periodo',
+                dataIndex: 'date',
+                key: 'date',
+                sorter: (a, b) => new Date(a.rawDate).getTime() - new Date(b.rawDate).getTime(),
+                defaultSortOrder: 'descend',
+                render: (period: string, record) => (
+                  <Space size={8}>
+                    <Text>{period}</Text>
+                    {/* {record.rank === 1 && <Tag color="success">reciente</Tag>} */}
+                  </Space>
+                ),
+              },
+              {
+                title: 'Valor reportado',
+                dataIndex: 'value',
+                key: 'value',
+                align: 'right',
+                sorter: (a, b) => a.rawValue - b.rawValue,
+                render: (value: string) => <Text strong>{value}</Text>,
+              },
+              {
+                title: 'Variacion',
+                dataIndex: 'variation',
+                key: 'variation',
+                align: 'right',
+                width: 140,
+                render: (variation: number | null) => {
+                  if (variation === null) return <Text type="secondary">-</Text>;
+                  const isPositive = variation > 0;
+                  const isNegative = variation < 0;
+
+                  if (!isPositive && !isNegative) {
+                    return <Text type="secondary">0</Text>;
+                  }
+
+                  return (
+                    <Text type={isPositive ? 'success' : 'danger'}>
+                      {isPositive ? '+' : ''}
+                      {formatValue(variation)}
+                    </Text>
+                  );
+                },
+              },
+            ]}
+          />
+
+          {serie.length > maxDataPoints && (
+            <Text type="secondary" italic>
+              Mostrando {maxDataPoints} de {serie.length} puntos (mas recientes)
+            </Text>
+          )}
+        </div>
+      )}
+
+      {shouldShowSerie && serie.length === 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Empty description="No hay datos de serie adjuntos a esta publicacion." image={Empty.PRESENTED_IMAGE_SIMPLE} />
         </div>
       )}
 
       {showLinks && (
-        <div className="flex gap-3 mt-4">
-          <a href={`/post?id=${post.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">Revisar y validar</a>
-          {/* Future links kept as comments for reference */}
+        <div style={{ marginTop: 12 }}>
+          <Button type="link" href={`/post?id=${post.id}`} style={{ paddingInline: 0 }}>
+            Revisar y validar
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 

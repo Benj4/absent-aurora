@@ -6,20 +6,26 @@ import PostCard from '../components/PostCard';
 import PostListClient from '../components/PostListClient';
 
 
-let query = supabase
-  .from('serie_posts')
-  .select(`
-    id, indicator_id, data_source, frequency, status, created_at, updated_at,
-    serie_data(id, date, value)
-  `)
-  .order('created_at', { ascending: false })
-  .limit(50);
+// let query = supabase
+//   .from('serie_posts')
+//   .select(`
+//     id, indicator_id, data_source, frequency, status, created_at, updated_at,
+//     serie_data(id, date, value)
+//   `)
+//   .order('created_at', { ascending: false })
+//   .limit(50);
 
-const { data: posts, error } = await query;
+// const { data: posts, error } = await query;
 
-if (error) {
-  console.error('Error fetching posts:', error);
+// if (error) {
+//   console.error('Error fetching posts:', error);
+// }
+
+const { data: posts, error } = {
+  data: [],
+  error: null
 }
+
 ---
 
 <Layout>

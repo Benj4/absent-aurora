@@ -311,9 +311,7 @@ article img {
   }
 
   b,
-  strong,
-  th,
-  button {
+  strong {
     @apply font-semibold;
   }
 
@@ -330,7 +328,7 @@ article img {
     }
   }
 
-  button {
+  button:not(.ant-btn) {
     @apply font-bold text-center text-accent py-1 px-4.5 border-4 border-accent rounded-xl cursor-pointer hover:bg-accent/15 transition-colors;
   }
 
@@ -566,13 +564,13 @@ article img {
     }
   }
 
-  table,
-  th,
-  td {
+  & > table,
+  & > table th,
+  & > table td {
     @apply border-2 border-foreground/80 p-2.5;
   }
 
-  th {
+  & > table th {
     @apply uppercase text-left;
   }
 
