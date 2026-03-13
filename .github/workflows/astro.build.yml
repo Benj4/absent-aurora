@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,6 +37,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Validate required environment variables
+        run: |
+          test -n "$PUBLIC_SUPABASE_URL" || (echo "Missing secret: PUBLIC_SUPABASE_URL" && exit 1)
+          test -n "$PUBLIC_SUPABASE_ANON_KEY" || (echo "Missing secret: PUBLIC_SUPABASE_ANON_KEY" && exit 1)
 
       - name: Build site
         run: pnpm build
