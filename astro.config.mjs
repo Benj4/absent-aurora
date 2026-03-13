@@ -19,9 +19,9 @@ export default defineConfig({
     : {}),
   vite: {
     plugins: [tailwindcss()],
-    // ssr: {
-    //   noExternal: ['antd', '@ant-design/icons', '@ant-design/cssinjs']
-    // }
+    ssr: {
+      noExternal: [/^@ant-design\/cssinjs$/, /^@rc-component\//]
+    }
   },
 
   integrations: [react()]

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import AntdProvider from './AntdProvider';
 import type { User } from '@supabase/auth-js';
 import type { MenuProps } from 'antd';
 import { Layout, Menu } from 'antd';
@@ -106,30 +107,31 @@ const Navbar = () => {
   };
 
   return (
-    <Header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        paddingInline: 24,
-      }}
-    >
-      <div className="demo-logo" />
+    <AntdProvider>
+      <Header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          paddingInline: 24,
+        }}
+      >
+        <div className="demo-logo" />
 
-      <Menu
-        theme="light"
-        mode="horizontal"
-        selectedKeys={[activeKey]}
-        items={navItems}
-        onClick={onMenuClick}
-        style={{ flex: 1, minWidth: 0 }}
-      />
+        <Menu
+          theme="light"
+          mode="horizontal"
+          selectedKeys={[activeKey]}
+          items={navItems}
+          onClick={onMenuClick}
+          style={{ flex: 1, minWidth: 0 }}
+        />
 
-      <style>{`
+        <style>{`
         .demo-logo {
           width: 120px;
           min-width: 120px;
@@ -145,7 +147,8 @@ const Navbar = () => {
           }
         }
       `}</style>
-    </Header>
+      </Header>
+    </AntdProvider>
   );
 };
 
