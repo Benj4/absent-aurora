@@ -2,13 +2,14 @@
 // filepath: src/pages/user/reviews.astro
 import Layout from '../../layouts/Layout.astro';
 import UserReviews from '../../components/user/UserReviews';
+import { withBase } from '../../lib/paths';
 
 ---
 
 <Layout>
   <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
     <div class="mb-6">
-      <a href="/" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Volver al tablero</a>
+      <a href={withBase('/')} class="text-blue-600 hover:text-blue-800 text-sm">&larr; Volver al tablero</a>
     </div>
 
     <UserReviews client:load />

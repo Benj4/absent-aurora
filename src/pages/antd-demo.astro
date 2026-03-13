@@ -11,6 +11,7 @@
 import Layout from '../layouts/Layout.astro';
 import AntdProvider from '../components/AntdProvider';
 import AntdExample from '../components/AntdExample';
+import { withBase } from '../lib/paths';
 
 const pageTitle = 'Demostración de Ant Design';
 ---
@@ -66,7 +67,7 @@ import MiComponente from '../components/MiComponente.tsx';
 
     <div class="mt-8">
       <a 
-        href="/" 
+        href={withBase('/')} 
         class="inline-block px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
       >
         ← Volver al Dashboard

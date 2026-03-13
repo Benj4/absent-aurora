@@ -77,7 +77,7 @@
 			
 			// Redirect or update UI as needed
 			setTimeout(() => {
-				window.location.href = "/";
+				window.location.href = `${import.meta.env.BASE_URL}`;
 			}, 1000);
 		} catch (err: any) {
 			signinStatus.textContent = `✗ ${err.message ?? "Sign in failed"}`;

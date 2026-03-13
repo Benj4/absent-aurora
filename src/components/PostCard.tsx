@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from 'antd';
+import { withBase } from '../lib/paths';
 
 const { Title, Text } = Typography;
 
@@ -227,7 +228,7 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
 
       {showLinks && (
         <div style={{ marginTop: 12 }}>
-          <Button type="link" href={`/post?id=${post.id}`} style={{ paddingInline: 0 }}>
+          <Button type="link" href={withBase(`/post?id=${post.id}`)} style={{ paddingInline: 0 }}>
             Revisar y validar
           </Button>
         </div>

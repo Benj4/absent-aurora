@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import PostCard from '../PostCard';
 import AntdProvider from '../AntdProvider';
+import { withBase } from '../../lib/paths';
 
 interface Props { userId: string }
 
@@ -50,7 +51,7 @@ export default function UserEdit({ userId }: Props) {
             <div key={post.id} className="flex items-start gap-4">
               <div className="flex-1"><PostCard post={post} maxDataPoints={0} showLinks={false} /></div>
               <div className="shrink-0">
-                <a className="inline-block px-3 py-2 bg-blue-600 text-white rounded" href={`/edit/${post.id}`}>Editar</a>
+                <a className="inline-block px-3 py-2 bg-blue-600 text-white rounded" href={withBase(`/edit/${post.id}`)}>Editar</a>
               </div>
             </div>
           ))}

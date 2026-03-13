@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { Button, Form, Input, Select, Space } from 'antd';
+import { withBase } from '../lib/paths';
 
 type Filters = {
   status: string;
@@ -122,7 +123,7 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
         <Form.Item style={{ marginBottom: 0 }}>
           <Space>
             <Button type="primary" htmlType="submit">Filtrar</Button>
-            <Button href="/postlist">Borrar filtros</Button>
+            <Button href={withBase('/postlist')}>Borrar filtros</Button>
           </Space>
         </Form.Item>
       </Space>

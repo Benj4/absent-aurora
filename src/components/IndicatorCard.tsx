@@ -1,6 +1,7 @@
 import React from 'react';
 import type { FC } from 'react';
 import { normalizeFrequency } from '../lib/frequency';
+import { withBase } from '../lib/paths';
 
 export interface Indicator {
   id: string;
@@ -95,14 +96,14 @@ const IndicatorCard: FC<{ ind: Indicator }> = ({ ind }) => {
       {ind.unit?.notes ? <div className="text-sm text-[#666] mt-2">{ind.unit.notes}</div> : null}
 
       <div className="flex gap-3 mt-2">
-        <a href={`/edit/${ind.id}`} className="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
+        <a href={withBase(`/edit/${ind.id}`)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
         <a
-          href={`/series/${normalizeFrequency(ind.nativeFrequency ?? '')}/${ind.id}`}
+          href={withBase(`/series/${normalizeFrequency(ind.nativeFrequency ?? '')}/${ind.id}`)}
           className="text-green-600 hover:text-green-800 text-sm"
         >
           + Add Series
         </a>
-        <a href={`/indicators/${ind.id}/data`} className="text-purple-600 hover:text-purple-800 text-sm">View Data</a>
+        <a href={withBase(`/indicators/${ind.id}/data`)} className="text-purple-600 hover:text-purple-800 text-sm">View Data</a>
       </div>
     </article>
   );

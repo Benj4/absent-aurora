@@ -6,6 +6,7 @@ import { ArrowLeftOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/ico
 import dayjs from 'dayjs';
 import { supabase } from '../lib/supabase';
 import { normalizeFrequency, getDateHint, validateDate } from '../lib/frequency';
+import { withBase } from '../lib/paths';
 
 interface Indicator {
   id: string;
@@ -245,7 +246,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
       <div style={{ marginBottom: 16 }}>
         <Button
           icon={<ArrowLeftOutlined />}
-          href={`/indicators/${indicator.id}/data`}
+          href={withBase(`/indicators/${indicator.id}/data`)}
         >
           Volver a datos del indicador
         </Button>

@@ -4,6 +4,7 @@ import type { MenuProps } from 'antd';
 import { Layout, Menu } from 'antd';
 import { LogoutOutlined, ProfileOutlined, UserOutlined } from '@ant-design/icons';
 import { supabase } from '../lib/supabase';
+import { stripBase, withBase } from '../lib/paths';
 
 const { Header } = Layout;
 
@@ -30,7 +31,7 @@ const Navbar = () => {
     });
     const subscription = (data as any)?.subscription;
 
-    const pathname = window.location.pathname;
+    const pathname = stripBase(window.location.pathname);
     if (pathname === '/') setActiveKey('inicio');
     else if (pathname === '/postlist') setActiveKey('publicaciones');
     else if (pathname === '/antd-demo' || pathname === '/antd-test') setActiveKey('demo');
@@ -44,7 +45,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      window.location.href = '/login';
+      window.location.href = withBase('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -53,9 +54,9 @@ const Navbar = () => {
   const navItems = useMemo<MenuProps['items']>(
     () => {
       const baseItems: NonNullable<MenuProps['items']> = [
-        { key: 'inicio', label: <a href="/">Inicio</a> },
-        { key: 'publicaciones', label: <a href="/postlist">Publicaciones</a> },
-        { key: 'demo', label: <a href="/antd-demo">Demo Ant Design</a> },
+        { key: 'inicio', label: <a href={withBase('/')}>Inicio</a> },
+        { key: 'publicaciones', label: <a href={withBase('/postlist')}>Publicaciones</a> },
+        { key: 'demo', label: <a href={withBase('/antd-demo')}>Demo Ant Design</a> },
         {
           key: 'spacer',
           label: '',
@@ -65,7 +66,7 @@ const Navbar = () => {
       ];
 
       if (!user) {
-        return [...baseItems, { key: 'iniciar-sesion', label: <a href="/login">Iniciar sesion</a> }];
+        return [...baseItems, { key: 'iniciar-sesion', label: <a href={withBase('/login')}>Iniciar sesion</a> }];
       }
 
       return [
@@ -77,12 +78,12 @@ const Navbar = () => {
             {
               key: 'mis-publicaciones',
               icon: <ProfileOutlined />,
-              label: <a href={`/user?userId=${user.id}`}>Mis publicaciones</a>,
+              label: <a href={withBase(`/user?userId=${user.id}`)}>Mis publicaciones</a>,
             },
             {
               key: 'mis-reviews',
               icon: <UserOutlined />,
-              label: <a href={`/user/reviews?userId=${user.id}`}>Mis reviews</a>,
+              label: <a href={withBase(`/user/reviews?userId=${user.id}`)}>Mis reviews</a>,
             },
             { type: 'divider' },
             {

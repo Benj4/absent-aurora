@@ -6,6 +6,7 @@ import {
 } from 'antd';
 import { supabase } from '../lib/supabase';
 import { normalizeFrequency } from '../lib/frequency';
+import { withBase } from '../lib/paths';
 
 const { Title, Text } = Typography;
 
@@ -330,7 +331,7 @@ const PostDetail: FC = () => {
               message={
                 <span>
                   Por favor{' '}
-                  <a href="/login">inicia sesión</a> para validar esta
+                  <a href={withBase('/login')}>inicia sesión</a> para validar esta
                   publicación.
                 </span>
               }
