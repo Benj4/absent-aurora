@@ -2,11 +2,20 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar.tsx";
 
+// import AntdProvider from '../components/AntdProvider';
+import { Breadcrumb, Layout, Menu, theme } from 'antd';
+
+const { Header, Content, Footer } = Layout;
+
 interface Props {
 	title?: string;
+	breadcrumbItems?: { label: string; href: string }[];
 }
 
-const { title = 'Mites Absent Aurora' } = Astro.props;
+const { 
+	title = 'Mites Absent Aurora',
+	breadcrumbItems = []
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -25,10 +34,19 @@ const { title = 'Mites Absent Aurora' } = Astro.props;
 		<title>{title}</title>
 	</head>
 	<body>
-		<Navbar client:load />
+		<Layout>
+			<Navbar client:load />
+			
+			<!-- { JSON.stringify(breadcrumbItems) }
+			<Breadcrumb
+				style={{ margin: '24px 0' }}
+				items={[{ title: 'Home' }, { title: 'List' }, { title: 'App' }]}
+			/> -->
+
+			<slot />
+		</Layout>
 		<!-- <Navbar client:load /> -->
 		<!-- <Navbar /> -->
-		<slot />
 	</body>
 </html>
 

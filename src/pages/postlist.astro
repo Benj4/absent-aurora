@@ -1,8 +1,8 @@
 ---
 // filepath: src/pages/postlist.astro
 import Layout from '../layouts/Layout.astro';
-import { supabase } from '../lib/supabase';
-import PostCard from '../components/PostCard';
+// import { supabase } from '../lib/supabase';
+// import PostCard from '../components/PostCard';
 import PostListClient from '../components/PostListClient';
 
 
@@ -28,7 +28,7 @@ const { data: posts, error } = {
 
 ---
 
-<Layout>
+<Layout breadcrumbItems={[{ label: 'Home', href: '/' }]}>
   <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
     <h1>Publicaciones de Series</h1>
 

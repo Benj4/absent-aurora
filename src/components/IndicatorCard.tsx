@@ -1,5 +1,6 @@
 import React from 'react';
 import type { FC } from 'react';
+import { normalizeFrequency } from '../lib/frequency';
 
 export interface Indicator {
   id: string;
@@ -96,7 +97,7 @@ const IndicatorCard: FC<{ ind: Indicator }> = ({ ind }) => {
       <div className="flex gap-3 mt-2">
         <a href={`/edit/${ind.id}`} className="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
         <a
-          href={ind.nativeFrequency?.toLowerCase().includes('monthly') ? `/series/monthly/${ind.id}` : `/series/annual/${ind.id}`}
+          href={`/series/${normalizeFrequency(ind.nativeFrequency ?? '')}/${ind.id}`}
           className="text-green-600 hover:text-green-800 text-sm"
         >
           + Add Series

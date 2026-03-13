@@ -1,58 +1,34 @@
+import Highcharts from 'highcharts';
 import { useEffect, useRef } from 'react';
 
 export type SeriesPoint = { date: string; value: number | string };
 
 export default function IndicatorChart({ series = [], label = 'Serie' }: { series?: SeriesPoint[]; label?: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const scriptId = 'highcharts-js';
+  const chartRef = useRef<Highcharts.Chart | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const el = containerRef.current;
-    const data = (series || []).map((d) => ([new Date(d.date).getTime(), Number(d.value)]));
+    const data = (series || []).map((d) => [new Date(d.date).getTime(), Number(d.value)]);
 
-    function render() {
-      // @ts-ignore - Highcharts is loaded on window at runtime
-      if (typeof (window as any).Highcharts !== 'undefined') {
-        // @ts-ignore
-        (window as any).Highcharts.chart(el, {
-          chart: { type: 'line' },
-          title: { text: label },
-          xAxis: { type: 'datetime' },
-          yAxis: { title: { text: 'Valor' } },
-          series: [{ name: 'Valor', data }],
-          credits: { enabled: false },
-        });
-      }
-    }
-
-    // If Highcharts already loaded, just render
-    if (typeof (window as any).Highcharts !== 'undefined') {
-      render();
-      return;
-    }
-
-    // Otherwise inject script and render on load
-    let s = document.getElementById(scriptId) as HTMLScriptElement | null;
-    if (!s) {
-      s = document.createElement('script');
-      s.id = scriptId;
-      s.src = 'https://code.highcharts.com/highcharts.js';
-      s.async = true;
-      s.onload = () => {
-        render();
-      };
-      document.head.appendChild(s);
-    } else if (s && (window as any).Highcharts) {
-      render();
+    if (chartRef.current) {
+      chartRef.current.series[0].setData(data);
+      chartRef.current.setTitle({ text: label });
     } else {
-      s.addEventListener('load', render);
+      chartRef.current = Highcharts.chart(containerRef.current, {
+        chart: { type: 'line' },
+        title: { text: label },
+        xAxis: { type: 'datetime' },
+        yAxis: { title: { text: 'Valor' } },
+        series: [{ type: 'line', name: 'Valor', data }],
+        credits: { enabled: false },
+      });
     }
 
     return () => {
-      // Try to clean up by removing chart container content
-      if (el) el.innerHTML = '';
+      chartRef.current?.destroy();
+      chartRef.current = null;
     };
   }, [series, label]);
 

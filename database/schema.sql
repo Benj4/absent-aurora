@@ -121,6 +121,25 @@ GROUP BY sp.id, sp.indicator_id, sp.submitted_by, sp.submitted_at, sp.status;
 COMMENT ON VIEW validation_summary IS 'Summary of validation status for each post, showing approval/rejection counts and validators.';
 
 -- -----------------------------------------------------------------------------
+-- VIEW: approved_series_view
+-- Returns all datapoints for posts that have been APPROVED. Useful for charting.
+-- -----------------------------------------------------------------------------
+CREATE VIEW approved_series_view AS
+SELECT
+  sp.id AS post_id,
+  sp.indicator_id,
+  sp.data_source,
+  sp.frequency,
+  sd.date,
+  sd.value
+FROM serie_data sd
+JOIN serie_posts sp ON sd.post_id = sp.id
+WHERE sp.status = 'approved'
+ORDER BY sp.indicator_id, sd.date;
+
+COMMENT ON VIEW approved_series_view IS 'All datapoints for posts with status = approved. Useful for charting aggregated indicator series.';
+
+-- -----------------------------------------------------------------------------
 -- FUNCTION: update_updated_at_column
 -- Automatically updates the updated_at timestamp
 -- -----------------------------------------------------------------------------
