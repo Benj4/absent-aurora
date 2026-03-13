@@ -1,22 +1,24 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar.tsx";
+import Breadcrumbs from "../components/Breadcrumbs.tsx";
 import { withBase } from '../lib/paths';
 
 // import AntdProvider from '../components/AntdProvider';
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import { Layout as AntLayout } from 'antd';
 
 // const { Header, Content, Footer } = Layout;
 
 interface Props {
 	title?: string;
-	breadcrumbItems?: { label: string; href: string }[];
+	breadcrumbItems?: { label: string; href?: string }[];
 }
 
-const { 
+const {
 	title = 'Mites Absent Aurora',
-	breadcrumbItems = []
+	breadcrumbItems = [],
 } = Astro.props;
+
 ---
 
 <!doctype html>
@@ -31,17 +33,13 @@ const {
 		<title>{title}</title>
 	</head>
 	<body>
-		<Layout>
+		<AntLayout client:load >
 			<Navbar client:load />
-			
-			<!-- { JSON.stringify(breadcrumbItems) }
-			<Breadcrumb
-				style={{ margin: '24px 0' }}
-				items={[{ title: 'Home' }, { title: 'List' }, { title: 'App' }]}
-			/> -->
+
+			<Breadcrumbs client:load items={breadcrumbItems} />
 
 			<slot />
-		</Layout>
+		</AntLayout>
 		<!-- <Navbar client:load /> -->
 		<!-- <Navbar /> -->
 	</body>

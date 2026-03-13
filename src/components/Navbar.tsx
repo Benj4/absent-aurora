@@ -110,14 +110,16 @@ const Navbar = () => {
     <AntdProvider>
       <Header
         style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
+          // position: 'sticky',
+          // top: 0,
+          // zIndex: 100,
           width: '100%',
           display: 'flex',
           alignItems: 'center',
           gap: 16,
           paddingInline: 24,
+          maxHeight: 64,
+          overflowY: 'hidden',
         }}
       >
         <div className="demo-logo" />
