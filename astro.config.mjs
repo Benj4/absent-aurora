@@ -18,10 +18,8 @@ export default defineConfig({
       }
     : {}),
   vite: {
+    // @ts-ignore
     plugins: [tailwindcss()],
-    ssr: {
-      noExternal: [/^@ant-design\/cssinjs$/, /^@rc-component\//]
-    }
   },
 
   integrations: [react()]

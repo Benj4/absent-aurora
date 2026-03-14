@@ -1,6 +1,5 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import AntdProvider from '../../../components/AntdProvider';
 import SeriesForm from '../../../components/SeriesForm';
 import indicatorsData from '../../../data/indicators.json';
 import { normalizeFrequency } from '../../../lib/frequency';
@@ -33,8 +32,6 @@ const { indicator } = Astro.props;
     <h1>Agregar Datos de Series: {indicator.label}</h1>
     <p>ID del Indicador: <strong>{indicator.id}</strong> | Frecuencia: <strong>{indicator.nativeFrequency}</strong></p>
 
-    <AntdProvider client:load>
-      <SeriesForm client:load indicator={indicator} />
-    </AntdProvider>
+    <SeriesForm client:load indicator={indicator} />
   </main>
 </Layout>

@@ -1,25 +1,31 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
-/* @import 'antd/dist/reset.css'; */
 
-/* Ant Design CSS Variables Support */
-/* :root {
-  color-scheme: light;
-  --ant-layout-header-bg: #ffffff;
+@layer base {
+  /* Forzamos la eliminación de los anillos (rings) y outlines 
+     que causan un borde negro grueso.
+  */
+  .input:focus, 
+  .textarea:focus, 
+  .select:focus,
+  .checkbox:focus,
+  .radio:focus {
+    /* Eliminamos el outline del navegador */
+    outline: 2px solid transparent !important;
+    outline-offset: 2px !important;
+    
+    /* Eliminamos el 'ring' de Tailwind que parece un borde doble */
+    --tw-ring-offset-width: 0px !important;
+    --tw-ring-width: 0px !important;
+    --tw-ring-color: transparent !important;
+    box-shadow: none !important;
+
+    /* Opcional: Si quieres un borde fino de color de tu marca 
+       en lugar del negro grueso, descomenta la línea de abajo: */
+    border-color: hsl(var(--p)) !important;
+  }
 }
-
-body {
-  --ant-layout-header-bg: #ffffff;
-} */
-
-.ant-layout-header {
-  background: #ffffff !important;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* @import 'tailwindcss';
-@import 'katex/dist/katex.css'; */
-
 /* https://fontsource.org/fonts/jetbrains-mono/install */
 /* jetbrains-mono-latin-wght-normal */
 @font-face {

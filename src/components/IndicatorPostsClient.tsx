@@ -1,4 +1,3 @@
-import AntdProvider from './AntdProvider';
 import PostCard from './PostCard';
 
 interface IndicatorPostsClientProps {
@@ -11,12 +10,10 @@ export default function IndicatorPostsClient({ posts = [] }: IndicatorPostsClien
   }
 
   return (
-    <AntdProvider>
-      <div className="space-y-6">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
-    </AntdProvider>
+    <div className="space-y-6">
+      {posts.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
+    </div>
   );
 }

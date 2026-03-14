@@ -4,11 +4,6 @@ import Navbar from "../components/Navbar.tsx";
 import Breadcrumbs from "../components/Breadcrumbs.tsx";
 import { withBase } from '../lib/paths';
 
-// import AntdProvider from '../components/AntdProvider';
-import { Layout as AntLayout } from 'antd';
-
-// const { Header, Content, Footer } = Layout;
-
 interface Props {
 	title?: string;
 	breadcrumbItems?: { label: string; href?: string }[];
@@ -22,9 +17,7 @@ const {
 ---
 
 <!doctype html>
-<html
-	lang="es"
->
+<html lang="es">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -33,23 +26,10 @@ const {
 		<title>{title}</title>
 	</head>
 	<body>
-		<AntLayout client:load >
+		<div class="min-h-screen flex flex-col">
 			<Navbar client:load />
-
 			<Breadcrumbs client:load items={breadcrumbItems} />
-
 			<slot />
-		</AntLayout>
-		<!-- <Navbar client:load /> -->
-		<!-- <Navbar /> -->
+		</div>
 	</body>
 </html>
-
-<!-- <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style> -->

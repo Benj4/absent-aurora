@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import PostListFilters from './PostListFilters';
 import PostCard from './PostCard';
 import { supabase } from '../lib/supabase';
-import AntdProvider from './AntdProvider';
 
 type Filters = {
   status: string;
@@ -71,8 +70,7 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
   }, [runSearch]);
 
   return (
-    <AntdProvider>
-      <div>
+    <div>
         <PostListFilters onSearch={handleSearch} />
 
 
@@ -95,7 +93,6 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
           ))}
         </div>
       )}
-      </div>
-    </AntdProvider>
+    </div>
   );
 }

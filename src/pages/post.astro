@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import AntdProvider from '../components/AntdProvider';
 import PostDetail from '../components/PostDetail';
 ---
 
@@ -10,8 +9,6 @@ import PostDetail from '../components/PostDetail';
       <a href="/" class="text-sm opacity-70 hover:opacity-100">&larr; Volver al Dashboard</a>
     </div>
 
-    <AntdProvider client:load>
-      <PostDetail client:only />
-    </AntdProvider>
+    <PostDetail client:only />
   </div>
 </Layout>

@@ -1,5 +1,3 @@
-import { Breadcrumb } from 'antd';
-
 export interface BreadcrumbItem {
   label: string;
   href?: string;
@@ -10,13 +8,18 @@ interface Props {
 }
 
 const Breadcrumbs = ({ items }: Props) => {
+  if (items.length === 0) return null;
+
   return (
-    <Breadcrumb 
-      style={{ maxHeight: '22px', overflowY: 'hidden' }}
-      items={items.map(item => ({
-        title: item.href ? <a href={item.href}>{item.label}</a> : item.label,
-      }))}
-    />
+    <div className="breadcrumbs text-sm px-4 py-1 border-b border-base-200">
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>
+            {item.href ? <a href={item.href}>{item.label}</a> : <span>{item.label}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 
