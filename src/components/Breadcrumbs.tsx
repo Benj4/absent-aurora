@@ -11,15 +11,23 @@ const Breadcrumbs = ({ items }: Props) => {
   if (items.length === 0) return null;
 
   return (
-    <div className="breadcrumbs text-sm px-4 py-1 border-b border-base-200">
-      <ul>
-        {items.map((item, index) => (
-          <li key={index}>
-            {item.href ? <a href={item.href}>{item.label}</a> : <span>{item.label}</span>}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <nav aria-label="Breadcrumb" className="bg-base-100">
+      <div className="mx-auto w-full max-w-6xl px-4 py-2">
+        <div className="breadcrumbs text-sm text-base-content/70">
+          <ul>
+            {items.map((item, index) => (
+              <li key={index}>
+                {item.href ? (
+                  <a className="link link-hover" href={item.href}>{item.label}</a>
+                ) : (
+                  <span className="text-base-content">{item.label}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </nav>
   );
 };
 

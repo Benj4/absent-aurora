@@ -3,6 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import SeriesForm from '../../../components/SeriesForm';
 import indicatorsData from '../../../data/indicators.json';
 import { normalizeFrequency } from '../../../lib/frequency';
+import { withBase } from '../../../lib/paths';
 
 interface Props {
   indicator: {
@@ -27,11 +28,31 @@ export function getStaticPaths() {
 const { indicator } = Astro.props;
 ---
 
-<Layout>
-  <main class="prose" style="padding:1.25rem">
-    <h1>Agregar Datos de Series: {indicator.label}</h1>
-    <p>ID del Indicador: <strong>{indicator.id}</strong> | Frecuencia: <strong>{indicator.nativeFrequency}</strong></p>
+<Layout
+  title={`Agregar datos | ${indicator.label}`}
+  breadcrumbItems={[
+    { label: 'Inicio', href: withBase('/') },
+    { label: 'Indicadores' },
+    { label: indicator.label, href: withBase(`/indicators/${indicator.id}/data`) },
+    { label: 'Agregar datos' },
+  ]}
+>
+  <section class="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
+    <div class="card border border-base-200 bg-base-100 shadow-sm">
+      <div class="card-body gap-4 md:gap-5">
+        <header class="space-y-2">
+          <h1 class="text-2xl font-semibold leading-tight">Agregar datos de series</h1>
+          <p class="text-sm text-base-content/70">Cargue nuevos puntos para el indicador seleccionado. Esta acción crea un nuevo registro para validación.</p>
+        </header>
 
-    <SeriesForm client:load indicator={indicator} />
-  </main>
+        <div class="grid gap-3 rounded-box bg-base-200/60 p-3 text-sm md:grid-cols-2">
+          <p><span class="font-medium">Indicador:</span> {indicator.label}</p>
+          <p><span class="font-medium">ID:</span> {indicator.id}</p>
+          <p class="md:col-span-2"><span class="font-medium">Frecuencia:</span> {indicator.nativeFrequency}</p>
+        </div>
+
+        <SeriesForm client:load indicator={indicator} />
+      </div>
+    </div>
+  </section>
 </Layout>

@@ -19,7 +19,7 @@ export default function UserEdit({ userId }: Props) {
 
       const { data, error } = await supabase
         .from('serie_posts')
-        .select('id, indicator_id, data_source, frequency, status, created_at, updated_at')
+        .select('id, indicator_id, data_source, url, frequency, status, created_at, updated_at')
         .eq('submitted_by', userId)
         .order('created_at', { ascending: false });
 

@@ -37,7 +37,7 @@
 serie_posts (immutable) ─┬─> serie_data (immutable)
                          └─> serie_validations (append-only)
 ```
-- **Posts**: UUID-keyed metadata (indicator_id, source, frequency, status)
+- **Posts**: UUID-keyed metadata (indicator_id, source, source_url opcional, frequency, status)
 - **Status transitions**: `pending` → `approved|rejected` OR `any` → `disabled` (soft delete only)
 - **No edits allowed**: New data = new post submission
 
@@ -147,7 +147,7 @@ const supabase = createClient(...); // DO NOT create multiple clients
 const { data, error } = await supabase
   .from('serie_posts')
   .select(`
-    id, indicator_id, data_source, frequency, status,
+    id, indicator_id, data_source, url, frequency, status,
     serie_data(id, date, value)
   `)
   .order('created_at', { ascending: false });

@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalizeFrequency, getDateHint, validateDate } from '../lib/frequency';
+import { getDomainFromUrl, isValidHttpUrl } from '../lib/url-title';
 import { withBase } from '../lib/paths';
+import {
+  clearSeriesFormDraft,
+  getSeriesFormDraftKey,
+  loadSeriesFormDraft,
+  saveSeriesFormDraft,
+} from '../lib/series-form-draft';
 
 interface Indicator {
   id: string;
@@ -32,12 +39,32 @@ const INITIAL_ROWS: DataRow[] = [
   { date: '', value: '' },
 ];
 
+const MIN_YEAR = 1950;
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - MIN_YEAR + 1 }, (_, index) => String(CURRENT_YEAR - index));
+const MONTH_OPTIONS = [
+  { value: '01', label: 'Enero' },
+  { value: '02', label: 'Febrero' },
+  { value: '03', label: 'Marzo' },
+  { value: '04', label: 'Abril' },
+  { value: '05', label: 'Mayo' },
+  { value: '06', label: 'Junio' },
+  { value: '07', label: 'Julio' },
+  { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Septiembre' },
+  { value: '10', label: 'Octubre' },
+  { value: '11', label: 'Noviembre' },
+  { value: '12', label: 'Diciembre' },
+];
+
 const SeriesForm: FC<Props> = ({ indicator }) => {
   const [dataSource, setDataSource] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [rows, setRows] = useState<DataRow[]>(INITIAL_ROWS);
   const [status, setStatus] = useState<StatusType>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+  const [savedPostId, setSavedPostId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const canonicalFreq = normalizeFrequency(indicator.nativeFrequency ?? '');
@@ -112,6 +139,96 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
     }
   };
 
+  const createMonthlyRows = (year: number, rows: DataRow[]): DataRow[] => {
+    return MONTH_OPTIONS.map((m, i) => (i === 0 || !rows[i]?.date ?
+      { ...rows[i], date: `${year}-${m.value}-01` }
+      :
+      rows[i]));
+  };
+
+  const updateYearMonthRow = (index: number, field: 'year' | 'month', value: string) => {
+    const current = getInputValue(rows[index].date);
+    const [currentYear = '', currentMonth = '01'] = current.split('-');
+
+    const year = field === 'year' ? value : currentYear;
+    const month = field === 'month' ? value : currentMonth;
+
+    if (!year || !month) {
+      updateRow(index, 'date', '');
+      return;
+    }
+
+    updateDateRow(index, `${year}-${month}`);
+  };
+
+  const prevFirstDateRef = useRef<string>('');
+  const isDraftHydratedRef = useRef(false);
+  const draftStorageKey = getSeriesFormDraftKey(indicator.id, canonicalFreq);
+
+  useEffect(() => {
+    const firstDate = rows[0]?.date ?? '';
+
+    if (firstDate === prevFirstDateRef.current) return;
+    prevFirstDateRef.current = firstDate;
+    if (!firstDate) return;
+
+    if (canonicalFreq === 'annual') {
+      const year = parseInt(firstDate.slice(0, 4), 10);
+      if (isNaN(year)) return;
+      setRows(prev =>
+        prev.map((row, i) => (i === 0 || !row.date ? { ...row, date: `${year - i}-01-01` } : row))
+      );
+    } else if (canonicalFreq === 'monthly') {
+      const year = parseInt(firstDate.slice(0, 4), 10);
+      if (isNaN(year)) return;
+      setRows(createMonthlyRows(year, rows));
+    }
+  }, [rows[0]?.date, rows[1]?.date, canonicalFreq]);
+
+  useEffect(() => {
+    const draft = loadSeriesFormDraft(draftStorageKey);
+    if (draft) {
+      setDataSource(draft.dataSource);
+      setSourceUrl(draft.sourceUrl);
+      setNotes(draft.notes);
+      if (draft.rows.length > 0) {
+        setRows(draft.rows);
+      }
+    }
+
+    isDraftHydratedRef.current = true;
+  }, [draftStorageKey]);
+
+  useEffect(() => {
+    console.log('isDraftHydratedRef.current :>> ', isDraftHydratedRef.current);
+    if (!isDraftHydratedRef.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      saveSeriesFormDraft(draftStorageKey, {
+        dataSource,
+        sourceUrl,
+        notes,
+        rows,
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [draftStorageKey, dataSource, sourceUrl, notes, rows]);
+
+  useEffect(() => {
+    const trimmedUrl = sourceUrl.trim();
+    if (!trimmedUrl || dataSource.trim() !== '' || !isValidHttpUrl(trimmedUrl)) {
+      return;
+    }
+
+    const domain = getDomainFromUrl(trimmedUrl);
+    if (domain) {
+      setDataSource(domain);
+    }
+  }, [sourceUrl]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('loading');
@@ -127,11 +244,24 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         throw new Error('Por favor, completa todos los campos requeridos.');
       }
 
-      const validRows = rows.filter(row => row.date.trim() !== '' && row.value.trim() !== '');
+      const trimmedUrl = sourceUrl.trim();
+      if (trimmedUrl) {
+        try {
+          new URL(trimmedUrl);
+        } catch {
+          throw new Error('La URL de la fuente no es valida. Usa un formato como https://sitio.com.');
+        }
+      }
+
+      const validRows = rows.filter(row => row.date?.trim() && row.value?.trim());
       if (validRows.length < 1) {
         throw new Error('Por favor, proporciona al menos 1 punto de datos.');
       }
-
+      const dates = validRows.map((row) => row.date);
+      const hasDuplicates = dates.some((date, idx) => dates.indexOf(date) !== idx);
+      if (hasDuplicates) {
+        throw new Error('Hay fechas duplicadas. Por favor corrige las filas repetidas.');
+      }
       for (const row of validRows) {
         const dateError = validateDate(row.date, canonicalFreq);
         if (dateError) throw new Error(dateError);
@@ -152,6 +282,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         .insert({
           indicator_id: indicator.id,
           data_source: dataSource,
+          url: trimmedUrl || null,
           frequency: indicator.nativeFrequency,
           status: 'pending',
           notes: notes.trim() || null,
@@ -167,12 +298,17 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         value: item.value,
       }));
 
+      console.log('dataPoints :>> ', dataPoints);
+
       const { error: dataError } = await supabase.from('serie_data').insert(dataPoints);
       if (dataError) throw dataError;
 
+      clearSeriesFormDraft(draftStorageKey);
       setStatus('success');
       setStatusMessage(`✓ ¡Datos enviados exitosamente! ${validData.length} puntos de datos agregados.`);
+      setSavedPostId(postData.id);
       setDataSource('');
+      setSourceUrl('');
       setNotes('');
       setRows(INITIAL_ROWS);
     } catch (error: any) {
@@ -182,54 +318,67 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
     }
   };
 
-  const unitSymbol = indicator.unit?.symbol || indicator.unit?.type || '';
+  const handleRefreshForm = () => {
+    clearSeriesFormDraft(draftStorageKey);
+    window.location.reload();
+  };
 
-  const dateInputType = canonicalFreq === 'annual' ? 'number' :
-    canonicalFreq === 'monthly' || canonicalFreq === 'quarterly' ? 'month' : 'date';
+  const unitSymbol = indicator.unit?.symbol || indicator.unit?.type || '';
 
   return (
     <div className="mx-auto w-full max-w-4xl">
-      <div className="mb-4">
-        <a href={withBase(`/indicators/${indicator.id}/data`)} className="btn btn-ghost btn-sm gap-2">
-          {/* Back arrow */}
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clipRule="evenodd" />
-          </svg>
-          Volver a datos del indicador
-        </a>
-      </div>
-
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <label className="form-control">
-          <div className="label py-0">
-            <span className="label-text font-semibold">Fuente de Datos <span className="text-error">*</span></span>
-          </div>
-          <input
-            type="text"
-            className="input input-bordered"
-            value={dataSource}
-            onChange={(e) => setDataSource(e.target.value)}
-            placeholder="ej., Banco Central, INE"
-            required
-          />
-        </label>
+        <div className="flex justify-end">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={handleRefreshForm}>
+            Limpiar formulario
+          </button>
+        </div>
 
-        <label className="form-control">
-          <div className="label py-0">
-            <span className="label-text font-semibold">Notas <span className="text-base-content/50">(opcional)</span></span>
-          </div>
-          <textarea
-            className="textarea textarea-bordered"
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Comentarios adicionales sobre este ingreso de datos..."
-          />
-        </label>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="form-control md:col-span-1">
+            <div className="label py-0">
+              <span className="label-text font-semibold">Fuente de Datos <span className="text-error">*</span></span>
+            </div>
+            <input
+              type="text"
+              className="input input-bordered w-full"
+              value={dataSource}
+              onChange={(e) => setDataSource(e.target.value)}
+              placeholder="ej., Banco Central, INE"
+              required
+            />
+          </label>
 
-        <div>
-          <p className="font-semibold text-sm mb-1">Valores de la Serie <span className="text-error">*</span> <span className="font-normal text-base-content/50">(mínimo 1 fila)</span></p>
-          <p className="text-sm text-base-content/60 mb-3">{dateHint}</p>
+          <label className="form-control md:col-span-1">
+            <div className="label py-0">
+              <span className="label-text font-semibold">URL de la Fuente <span className="text-base-content/50">(opcional)</span></span>
+            </div>
+            <input
+              type="url"
+              className="input input-bordered w-full"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              placeholder="https://ejemplo.cl/dataset"
+            />
+          </label>
+
+          <label className="form-control md:col-span-2">
+            <div className="label py-0">
+              <span className="label-text font-semibold">Notas <span className="text-base-content/50">(opcional)</span></span>
+            </div>
+            <textarea
+              className="textarea textarea-bordered w-full"
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Comentarios adicionales sobre este ingreso de datos..."
+            />
+          </label>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-semibold text-sm">Valores de la Serie <span className="text-error">*</span> <span className="font-normal text-base-content/50">(mínimo 1 fila)</span></p>
+          <p className="text-sm text-base-content/60">{dateHint}</p>
 
           <div className="overflow-x-auto">
             <table className="table table-sm w-full">
@@ -244,18 +393,57 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, index) => (
+                {rows.map((row, index) => (!row ? 'nana' :
                   <tr key={index}>
                     <td>
-                      <input
-                        type={dateInputType}
-                        className="input input-sm input-bordered w-full"
-                        value={getInputValue(row.date)}
-                        onChange={(e) => updateDateRow(index, e.target.value)}
-                        min={canonicalFreq === 'annual' ? 1900 : undefined}
-                        max={canonicalFreq === 'annual' ? 2100 : undefined}
-                        placeholder={canonicalFreq === 'annual' ? 'ej. 2024' : undefined}
-                      />
+                      {/* [{row.date}] */}
+                      {canonicalFreq === 'annual' && (
+                        <select
+                          className="select select-sm select-bordered w-full"
+                          value={getInputValue(row.date)}
+                          onChange={(e) => updateDateRow(index, e.target.value)}
+                        >
+                          <option value="">Selecciona un año</option>
+                          {YEAR_OPTIONS.map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      {(canonicalFreq === 'monthly' || canonicalFreq === 'quarterly') && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            className="select select-sm select-bordered w-full"
+                            value={getInputValue(row.date).split('-')[0] ?? ''}
+                            onChange={(e) => updateYearMonthRow(index, 'year', e.target.value)}
+                          >
+                            <option value="">Anio</option>
+                            {YEAR_OPTIONS.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+
+                          <select
+                            className="select select-sm select-bordered w-full"
+                            value={getInputValue(row.date).split('-')[1] ?? ''}
+                            onChange={(e) => updateYearMonthRow(index, 'month', e.target.value)}
+                          >
+                            <option value="">Mes</option>
+                            {MONTH_OPTIONS.map((month) => (
+                              <option key={month.value} value={month.value}>{month.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {canonicalFreq === 'daily' && (
+                        <input
+                          type="date"
+                          className="input input-sm input-bordered w-full"
+                          value={getInputValue(row.date)}
+                          onChange={(e) => updateDateRow(index, e.target.value)}
+                        />
+                      )}
                     </td>
                     <td>
                       <input
@@ -287,7 +475,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
             </table>
           </div>
 
-          <button type="button" className="btn btn-dashed btn-sm mt-3 gap-2" onClick={addRow}>
+          <button type="button" className="btn btn-dashed btn-sm mt-1 gap-2" onClick={addRow}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
             </svg>
@@ -318,6 +506,18 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
               <span>{statusMessage}</span>
             </div>
           )}
+
+          {status === 'success' && savedPostId && (
+            <div className="mt-2">
+              <a
+                href={withBase(`/post?id=${savedPostId}`)}
+                className="link link-primary"
+              >
+                Ver publicación
+              </a>
+            </div>
+          )}
+
         </div>
       </form>
     </div>

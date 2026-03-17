@@ -14,6 +14,7 @@ CREATE TABLE serie_posts (
     submitted_by UUID NOT NULL default auth.uid (),
     submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     data_source TEXT NOT NULL,                   -- e.g., 'Banco Central de Chile'
+    url TEXT,                                    -- Optional source URL (e.g., original dataset/report link)
     frequency VARCHAR(50) NOT NULL,              -- e.g., 'monthly', 'annual', 'quarterly'
     status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'disabled')),
     notes TEXT,                                  -- Optional submission notes
@@ -129,6 +130,7 @@ SELECT
   sp.id AS post_id,
   sp.indicator_id,
   sp.data_source,
+    sp.url,
   sp.frequency,
   sd.date,
   sd.value
@@ -177,7 +179,7 @@ CREATE TRIGGER trigger_serie_posts_updated_at
 -- ORDER BY sv.validated_at;
 
 -- Query 3: Get all approved data for a specific indicator
--- SELECT sp.data_source, sd.date, sd.value
+-- SELECT sp.data_source, sp.url, sd.date, sd.value
 -- FROM serie_posts sp
 -- JOIN serie_data sd ON sp.id = sd.post_id
 -- WHERE sp.indicator_id = 'E01' 

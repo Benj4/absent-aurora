@@ -23,6 +23,7 @@ interface Post {
   id: string;
   indicator_id: string;
   data_source: string;
+  url?: string | null;
   frequency: string;
   status: PostStatus;
   notes: string | null;
@@ -94,7 +95,7 @@ const PostDetail: FC = () => {
     const { data: postData, error: postError } = await supabase
       .from('serie_posts')
       .select(`
-        id, indicator_id, data_source, frequency, status, notes,
+        id, indicator_id, data_source, url, frequency, status, notes,
         created_at, updated_at, submitted_by,
         serie_data(id, date, value)
       `)
@@ -210,6 +211,14 @@ const PostDetail: FC = () => {
         {/* Metadata */}
         <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
           <div><dt className="text-base-content/60 inline">Fuente: </dt><dd className="inline">{post.data_source || '—'}</dd></div>
+          {post.url && (
+            <div className="col-span-2 sm:col-span-3">
+              <dt className="text-base-content/60 inline">URL fuente: </dt>
+              <dd className="inline break-all">
+                <a className="link link-primary" href={post.url} target="_blank" rel="noopener noreferrer">{post.url}</a>
+              </dd>
+            </div>
+          )}
           <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div>
           <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{new Date(post.created_at).toLocaleString('es-ES')}</dd></div>
           {post.updated_at && (

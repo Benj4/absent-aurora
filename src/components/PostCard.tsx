@@ -12,6 +12,7 @@ interface Post {
   id: number | string;
   indicator_id: string;
   data_source?: string;
+  url?: string | null;
   frequency: string;
   status: string;
   created_at: string;
@@ -108,6 +109,14 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
         {/* Metadata */}
         <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
           <div><dt className="text-base-content/60 inline">Fuente: </dt><dd className="inline">{post.data_source || 'N/A'}</dd></div>
+          {post.url && (
+            <div className="col-span-2 sm:col-span-3">
+              <dt className="text-base-content/60 inline">URL fuente: </dt>
+              <dd className="inline break-all">
+                <a className="link link-primary" href={post.url} target="_blank" rel="noopener noreferrer">{post.url}</a>
+              </dd>
+            </div>
+          )}
           <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div>
           <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{formatDate(post.created_at)}</dd></div>
           {post.updated_at && (

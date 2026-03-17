@@ -26,10 +26,12 @@ const {
 		<title>{title}</title>
 	</head>
 	<body>
-		<div class="min-h-screen flex flex-col">
+		<div class="min-h-screen flex flex-col bg-base-100 text-base-content">
 			<Navbar client:load />
-			<Breadcrumbs client:load items={breadcrumbItems} />
-			<slot />
+			<Breadcrumbs items={breadcrumbItems} />
+			<main class="flex-1">
+				<slot />
+			</main>
 		</div>
 	</body>
 </html>

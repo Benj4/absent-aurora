@@ -23,7 +23,7 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
     try {
       let q = supabase
         .from('serie_posts')
-        .select(`id, indicator_id, data_source, frequency, status, created_at, updated_at, serie_data(id, date, value)`)
+        .select(`id, indicator_id, data_source, url, frequency, status, created_at, updated_at, serie_data(id, date, value)`)
         .limit(50);
 
       if (f.status && f.status !== 'all') q = q.eq('status', f.status);

@@ -15,6 +15,7 @@ export interface SeriePost {
   submitted_by?: string;
   submitted_at?: string;
   data_source: string;
+  url?: string | null;
   frequency: string;
   status?: 'pending' | 'approved' | 'rejected' | 'disabled';
   notes?: string;

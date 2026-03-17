@@ -17,6 +17,7 @@ CREATE TABLE serie_posts (
     indicator_id VARCHAR(10) NOT NULL,           -- 'E01', 'S15', etc.
     submitted_by UUID NOT NULL DEFAULT auth.uid(),
     data_source TEXT NOT NULL,                   -- 'Banco Central de Chile'
+    url TEXT,                                    -- Optional source URL
     frequency VARCHAR(50) NOT NULL,              -- 'monthly' | 'annual' | 'quarterly'
     status VARCHAR(20) DEFAULT 'pending'         -- 'pending' | 'approved' | 'rejected' | 'disabled'
         CHECK (status IN ('pending', 'approved', 'rejected', 'disabled')),
@@ -215,7 +216,7 @@ ALTER TABLE serie_data ENABLE ROW LEVEL SECURITY;
 ## Data Integrity Rules
 
 ### Immutability
-1. **Posts**: Cannot modify `indicator_id`, `data_source`, `frequency`, `submitted_by`, `submitted_at`
+1. **Posts**: Cannot modify `indicator_id`, `data_source`, `url`, `frequency`, `submitted_by`, `submitted_at`
 2. **Data Points**: Never update - delete post and create new one if wrong
 3. **Validations**: Append-only - no updates or deletes
 
@@ -243,7 +244,7 @@ disabled (final state)
 const { data, error } = await supabase
   .from('serie_posts')
   .select(`
-    id, indicator_id, data_source, frequency, status, created_at,
+        id, indicator_id, data_source, url, frequency, status, created_at,
     serie_data(id, date, value)
   `)
   .order('created_at', { ascending: false });
