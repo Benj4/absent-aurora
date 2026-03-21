@@ -1,3 +1,5 @@
+import { useAuthSession } from '../lib/use-auth-session';
+
 export interface BreadcrumbItem {
   label: string;
   href?: string;
@@ -8,6 +10,12 @@ interface Props {
 }
 
 const Breadcrumbs = ({ items }: Props) => {
+
+  const { user } = useAuthSession();
+
+  const resolveHref = (href: string) =>
+    user?.id ? href.replace(/\{id\}/g, user.id) : href;
+
   if (items.length === 0) return null;
 
   return (
@@ -18,7 +26,7 @@ const Breadcrumbs = ({ items }: Props) => {
             {items.map((item, index) => (
               <li key={index}>
                 {item.href ? (
-                  <a className="link link-hover" href={item.href}>{item.label}</a>
+                  <a className="link link-hover" href={resolveHref(item.href)}>{item.label}</a>
                 ) : (
                   <span className="text-base-content">{item.label}</span>
                 )}

@@ -9,9 +9,11 @@
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.8",
     "@astrojs/react": "^4.4.2",
     "@bentogrid/core": "^1.1.1",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -21,7 +23,8 @@
     "astro": "^5.18.0",
     "highcharts": "^12.5.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "typescript": "^5.9.3"
   },
   "volta": {
     "node": "24.12.0",

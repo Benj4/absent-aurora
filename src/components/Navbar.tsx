@@ -1,37 +1,16 @@
 import { useEffect, useState } from 'react';
-import type { User } from '@supabase/auth-js';
 import { supabase } from '../lib/supabase';
+import { useAuthSession } from '../lib/use-auth-session';
 import { stripBase, withBase } from '../lib/paths';
 
 const Navbar = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuthSession();
   const [activePath, setActivePath] = useState('/');
 
   useEffect(() => {
-    let mounted = true;
-
-    async function fetchUser() {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (mounted) setUser(data?.user ?? null);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-      }
-    }
-
-    fetchUser();
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) setUser(session?.user ?? null);
-    });
-    const subscription = (data as any)?.subscription;
-
     setActivePath(stripBase(window.location.pathname));
 
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe?.();
-    };
+    return undefined;
   }, []);
 
   const handleLogout = async () => {

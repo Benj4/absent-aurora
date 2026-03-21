@@ -67,10 +67,10 @@ serie_posts (immutable) ─┬─> serie_data (immutable)
 /login                      # Auth
 /post?id={uuid}             # Single post + validation
 /postlist                   # All posts
-/user/[iduser]/             # User-specific posts
-/indicators/[id]/           # Indicator detail pages
-/series/annual|monthly/     # Frequency-filtered series
-/edit/[id]                  # Post edit (disabled status only)
+/user?userId=               # User-specific posts
+/user/reviews?userId=       # User-specific reviews
+/indicators/[id]/data       # Indicator detail pages
+/series/annual|monthly/[id] # Create a Post, add serie data
 ```
 
 ---
@@ -263,7 +263,7 @@ INSERT INTO serie_validations (approved/rejected + notes)
     ↓
 UPDATE serie_posts SET status = 'approved'
     ↓
-Dashboard renders approved posts via BentoGrid
+Dashboard renders approved posts
     ↓
 SVG sparkline generated from sorted serie_data
 ```
@@ -299,6 +299,7 @@ SVG sparkline generated from sorted serie_data
 - Test database changes with RLS policies in mind even though currently disabled
 - Preserve existing Tailwind configuration and CSS variable naming
 - Extract reusable logic to `src/lib/` utilities rather than duplicating in pages
+- Update this AGENTS.md file in the appropriate section
 
 ### When suggesting changes:
 - Reference specific files/line numbers from project structure
@@ -353,6 +354,6 @@ if (error) {
 
 ---
 
-**Last Updated**: 2026-02-05  
-**Version**: 0.0.1  
+**Last Updated**: 2026-03-20  
+**Version**: 0.0.2  
 **Status**: Active Development

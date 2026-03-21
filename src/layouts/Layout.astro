@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar.tsx";
 import Breadcrumbs from "../components/Breadcrumbs.tsx";
+import AuthSessionBootstrap from "../components/AuthSessionBootstrap.tsx";
 import { withBase } from '../lib/paths';
 
 interface Props {
@@ -27,8 +28,9 @@ const {
 	</head>
 	<body>
 		<div class="min-h-screen flex flex-col bg-base-100 text-base-content">
+			<AuthSessionBootstrap client:load />
 			<Navbar client:load />
-			<Breadcrumbs items={breadcrumbItems} />
+			<Breadcrumbs items={breadcrumbItems} client:load />
 			<main class="flex-1">
 				<slot />
 			</main>

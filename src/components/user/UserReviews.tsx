@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { withBase } from '../../lib/paths';
 
 
 export default function UserReviews() {
@@ -9,6 +10,10 @@ export default function UserReviews() {
   const [error, setError] = useState<string | null>(null);
 
   const [userId, setUserId] = useState<string | null>(null);
+  const dateFormatter = new Intl.DateTimeFormat('es-ES', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 
   useEffect(() => {
     const idFromUrl = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('userId');
@@ -16,6 +21,12 @@ export default function UserReviews() {
   }, []);
 
   useEffect(() => {
+    if (!userId) {
+      setReviews([]);
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
     (async function load() {
       setLoading(true);
@@ -38,26 +49,88 @@ export default function UserReviews() {
     return () => { mounted = false };
   }, [userId]);
 
-  if (loading) return <p>Cargando validaciones…</p>;
-  if (error) return <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error: {error}</div>;
-  if (!reviews || reviews.length === 0) return <p className="text-gray-600">No se encontraron validaciones realizadas por este usuario.</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3 text-base-content/70" aria-live="polite">
+        <span className="loading loading-spinner loading-md" aria-hidden="true"></span>
+        <p>Cargando revisiones…</p>
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <div className="alert alert-warning" role="status" aria-live="polite">
+        <span>No se detecto el usuario. Abra esta vista con el parametro userId en la URL.</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-error" role="alert" aria-live="polite">
+        <span>Error al cargar revisiones: {error}. Intente recargar la pagina.</span>
+      </div>
+    );
+  }
+
+  if (!reviews || reviews.length === 0) {
+    return (
+      <div className="card border border-base-300 bg-base-100 shadow-sm">
+        <div className="card-body">
+          <h2 className="card-title text-lg">Sin Revisiones</h2>
+          <p className="text-base-content/70">No se encontraron revisiones realizadas por este usuario.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <p className="text-gray-600">Total de validaciones: <strong>{reviews.length}</strong></p>
+      {/* <div className="stats stats-vertical w-full border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
+        <div className="stat">
+          <div className="stat-title">Total de revisiones</div>
+          <div className="stat-value text-primary">{reviews.length}</div>
+          <div className="stat-desc">Historial del usuario actual</div>
+        </div>
+      </div> */}
+
       <div className="space-y-3">
         {reviews.map((r) => (
-          <article key={r.id} className="p-3 border rounded">
-            <div className="flex justify-between">
-              <div>
-                <strong>Post:</strong> {r.post_id} {r.serie_posts?.indicator_id ? `• Indicador: ${r.serie_posts.indicator_id}` : ''}
+          <article key={r.id} className="card border border-base-300 bg-base-100 shadow-sm">
+            <div className="card-body gap-3 p-4 md:p-5">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0 space-y-1">
+                  <h3 className="card-title wrap-break-word text-base">Post: {String(r.post_id).slice(-8)}</h3>
+                  {r.serie_posts?.indicator_id ? (
+                    <p className="text-sm text-base-content/70">
+                      Indicador:{' '}
+                      <a
+                        href={withBase(`/post?id=${r.post_id}`)}
+                        className="link link-primary font-medium"
+                        aria-label={`Abrir post ${r.post_id} del indicador ${r.serie_posts.indicator_id}`}
+                      >
+                        {r.serie_posts.indicator_id}
+                      </a>
+                    </p>
+                  ) : null}
+                </div>
+                <span className={`badge badge-outline whitespace-nowrap ${r.validation_status === 'approved' ? 'badge-success' : 'badge-error'}`}>
+                  {r.validation_status === 'approved' ? 'Aprobado' : 'Rechazado'}
+                </span>
               </div>
-              <div className="text-sm text-gray-600">{new Date(r.validated_at).toLocaleString('es-ES')}</div>
-            </div>
 
-            <div className="mt-2 text-sm">
-              <strong>Resultado:</strong> {r.validation_status}
-              {r.validation_notes && <p className="mt-2 text-gray-700">Notas: {r.validation_notes}</p>}
+              <p className="text-sm text-base-content/70">
+                Fecha: {r.validated_at ? dateFormatter.format(new Date(r.validated_at)) : 'Sin fecha'}
+              </p>
+
+              <div className="rounded-box bg-base-200/60 p-3 text-sm">
+                {r.validation_notes ? (
+                  <p className="mt-2 wrap-break-word text-base-content/80">
+                    <span className="font-medium">Notas:</span> {r.validation_notes}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </article>
         ))}

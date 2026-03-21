@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { withBase } from '../lib/paths';
-
+import indicatorsNames from '../data/names.json';
 // NOTE: Use local types compatible with server responses. Prefer importing from `src/lib/supabase` when possible.
 interface SerieData {
   id?: number | string;
@@ -91,17 +91,24 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
     };
   });
 
+  //@ts-ignore
+  const indicadorInfo = indicatorsNames[post.indicator_id];
+
   return (
     <div className="card bg-base-100 border border-base-200 shadow-sm w-full">
       <div className="card-body gap-3 p-4">
         {/* Card header */}
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h2 className="card-title text-base">{post.indicator_id}</h2>
-            <p className="text-sm text-base-content/60">Publicación #{post.id}</p>
+            <h2 className="card-title text-base">
+              {post.indicator_id} {' - '}
+              {indicadorInfo?.label}
+              <p className="text-sm font-light text-base-content/60">#{String(post.id).slice(-8)}</p>
+            </h2>
+            
           </div>
           <div className="flex gap-2 flex-wrap">
-            <span className="badge badge-neutral badge-sm">{post.frequency}</span>
+            {/* <span className="badge badge-neutral badge-sm">{post.frequency}</span> */}
             <span className={`badge badge-sm ${statusBadge(post.status)}`}>{statusLabel(post.status)}</span>
           </div>
         </div>
@@ -117,14 +124,8 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
               </dd>
             </div>
           )}
-          <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div>
+          {/* <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div> */}
           <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{formatDate(post.created_at)}</dd></div>
-          {post.updated_at && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-base-content/60 inline">Actualizado: </dt>
-              <dd className="inline">{formatDate(post.updated_at)}</dd>
-            </div>
-          )}
         </dl>
 
         {/* Series data table */}
@@ -132,14 +133,14 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
           <div className="mt-2">
             <div className="flex flex-wrap gap-4 text-sm mb-2">
               <span className="font-semibold">Puntos: {serie.length}</span>
-              {latest && (
-                <span className="text-base-content/60">
-                  Último: {formatSeriesDate(latest.date, post.frequency)} ({formatValue(latest.value)})
-                </span>
-              )}
               {oldest && (
                 <span className="text-base-content/60">
-                  Primero: {formatSeriesDate(oldest.date, post.frequency)}
+                  Desde {formatSeriesDate(oldest.date, post.frequency)}
+                </span>
+              )}
+              {latest && (
+                <span className="text-base-content/60">
+                  hasta {formatSeriesDate(latest.date, post.frequency)} ({formatValue(latest.value)})
                 </span>
               )}
             </div>
@@ -150,8 +151,8 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
                   <tr>
                     <th className="w-12 text-center">#</th>
                     <th>Periodo</th>
-                    <th className="text-right">Valor reportado</th>
-                    <th className="text-right">Variación</th>
+                    <th>Valor reportado</th>
+                    <th>Variación</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,8 +163,8 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
                       <tr key={row.key}>
                         <td className="text-center text-base-content/50">{row.rank}</td>
                         <td>{row.date}</td>
-                        <td className="text-right font-semibold">{row.value}</td>
-                        <td className={`text-right ${varIsPositive ? 'text-success' : varIsNegative ? 'text-error' : 'text-base-content/50'}`}>
+                        <td className="font-semibold">{row.value}</td>
+                        <td className={`${varIsPositive ? 'text-success' : varIsNegative ? 'text-error' : 'text-base-content/50'}`}>
                           {row.variation === null
                             ? '-'
                             : row.variation === 0

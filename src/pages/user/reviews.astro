@@ -1,21 +1,39 @@
 ---
-// filepath: src/pages/user/reviews.astro
-import Layout from '../../layouts/Layout.astro';
-import UserReviews from '../../components/user/UserReviews';
-import { withBase } from '../../lib/paths';
-
+import Layout from "../../layouts/Layout.astro";
+import UserReviews from "../../components/user/UserReviews";
+import { withBase } from "../../lib/paths";
 ---
 
-<Layout>
-  <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
-    <div class="mb-6">
-      <a href={withBase('/')} class="text-blue-600 hover:text-blue-800 text-sm">&larr; Volver al tablero</a>
-    </div>
+<Layout
+  title="Validaciones del Usuario"
+  breadcrumbItems={[
+    { label: "Inicio", href: withBase("/") },
+    { label: "Usuario", href: withBase(`/user?userId={id}`) },
+    { label: "Validaciones" },
+  ]}
+>
+  <main class="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
+    <section class="bg-base-100">
+      <div class="card-body gap-4 md:gap-5">
+        <header class="space-y-2">
+          <h1 class="text-2xl font-semibold leading-tight text-pretty">
+            Validaciones del Usuario
+          </h1>
+          <p class="text-sm text-base-content/70">
+            Revise las validaciones emitidas por el usuario seleccionado.
+          </p>
+        </header>
 
-    <UserReviews client:load />
+        <UserReviews client:load />
 
-    <noscript>
-      <div class="mt-4 text-gray-600">Esta página requiere JavaScript para mostrar las validaciones.</div>
-    </noscript>
+        <noscript>
+          <div class="alert alert-info mt-2">
+            <span
+              >Esta pagina requiere JavaScript para mostrar las validaciones.</span
+            >
+          </div>
+        </noscript>
+      </div>
+    </section>
   </main>
 </Layout>

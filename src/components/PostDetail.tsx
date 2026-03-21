@@ -41,9 +41,9 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  approved: 'Aprobado',
+  approved: 'Datos validados',
   pending: 'Pendiente',
-  rejected: 'Rechazado',
+  rejected: 'Datos no correctos o confiables',
   disabled: 'Deshabilitado',
 };
 
@@ -197,11 +197,10 @@ const PostDetail: FC = () => {
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h2 className="card-title">{post.indicator_id}</h2>
-            <p className="text-sm text-base-content/60">Publicación #{post.id.slice(-8)}</p>
+            <h2 className="card-title">{post.indicator_id} <p className="text-sm font-light text-base-content/60">Publicación #{post.id.slice(-8)}</p></h2>
+
           </div>
           <div className="flex gap-2 flex-wrap">
-            <span className="badge badge-neutral">{post.frequency}</span>
             <span className={`badge ${STATUS_BADGE[post.status] ?? 'badge-neutral'}`}>
               {STATUS_LABEL[post.status] ?? post.status}
             </span>
@@ -221,12 +220,6 @@ const PostDetail: FC = () => {
           )}
           <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div>
           <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{new Date(post.created_at).toLocaleString('es-ES')}</dd></div>
-          {post.updated_at && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-base-content/60 inline">Actualizado: </dt>
-              <dd className="inline">{new Date(post.updated_at).toLocaleString('es-ES')}</dd>
-            </div>
-          )}
           {post.notes && (
             <div className="col-span-2 sm:col-span-3">
               <dt className="text-base-content/60 inline">Notas: </dt>
@@ -247,7 +240,7 @@ const PostDetail: FC = () => {
                 <tr>
                   <th className="w-12 text-center">#</th>
                   <th>Periodo</th>
-                  <th className="text-right">Valor reportado</th>
+                  <th className="">Valor reportado</th>
                 </tr>
               </thead>
               <tbody>
@@ -255,7 +248,7 @@ const PostDetail: FC = () => {
                   <tr key={d.id || String(index)}>
                     <td className="text-center text-base-content/50">{index + 1}</td>
                     <td>{formatSeriesDate(d.date, post.frequency)}</td>
-                    <td className="text-right font-semibold">
+                    <td className=" font-semibold">
                       {new Intl.NumberFormat('es-ES', { maximumFractionDigits: 6 }).format(d.value)}
                     </td>
                   </tr>
@@ -301,7 +294,7 @@ const PostDetail: FC = () => {
         {/* Revisión entre pares */}
         {post.status === 'pending' && (
           <>
-            <div className="divider my-1">Revisión entre pares</div>
+            <div className="divider my-1">Revisiones</div>
 
             {!currentUser ? (
               <div role="alert" className="alert alert-warning">
@@ -311,8 +304,10 @@ const PostDetail: FC = () => {
                   {' '}para validar esta publicación.
                 </span>
               </div>
-            ) : existingValidation ? (
-              <div role="alert" className="alert alert-info">
+            ) : null}
+
+            {existingValidation ? (
+              <div role="alert" className="alert">
                 <div className="flex flex-col gap-1">
                   <span>
                     Ya validaste esta publicación como:{' '}
@@ -325,67 +320,70 @@ const PostDetail: FC = () => {
                   )}
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleValidationSubmit} className="flex flex-col gap-4 max-w-lg">
-                <fieldset className="fieldset">
-                  <legend className="fieldset-legend text-sm font-medium">Decisión de validación <span className="text-error">*</span></legend>
-                  <div className="flex gap-6 mt-1">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="validation_status"
-                        value="approved"
-                        className="radio radio-success"
-                        checked={validationStatus === 'approved'}
-                        onChange={(e) => setValidationStatus(e.target.value)}
-                      />
-                      <span className="text-success font-medium">Aprobar</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="validation_status"
-                        value="rejected"
-                        className="radio radio-error"
-                        checked={validationStatus === 'rejected'}
-                        onChange={(e) => setValidationStatus(e.target.value)}
-                      />
-                      <span className="text-error font-medium">Rechazar</span>
-                    </label>
-                  </div>
-                </fieldset>
+            ) : null}
 
-                <label className="form-control">
-                  <div className="label py-0">
-                    <span className="label-text font-medium">Notas (opcional)</span>
-                  </div>
-                  <textarea
-                    className="textarea textarea-bordered"
-                    rows={3}
-                    placeholder="Agrega comentarios u observaciones sobre estos datos..."
-                    value={validationNotes}
-                    onChange={(e) => setValidationNotes(e.target.value)}
-                  />
+            <form onSubmit={handleValidationSubmit} className="w-full max-w-2xl space-y-4">
+              <div className="form-control w-full">
+                <label className="label pb-2">
+                  <span className="label-text font-medium">Decisión de validación <span className="text-error">*</span></span>
                 </label>
-
-                {submitResult && (
-                  <div role="alert" className={`alert ${submitResult.type === 'success' ? 'alert-success' : 'alert-error'}`}>
-                    <span>{submitResult.message}</span>
-                  </div>
-                )}
-
-                <div>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={!validationStatus || submitting}
-                  >
-                    {submitting && <span className="loading loading-spinner loading-sm" />}
-                    Enviar Validación
-                  </button>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 rounded-box border border-success/40 bg-success/10 p-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="validation_status"
+                      value="approved"
+                      className="radio radio-success"
+                      checked={validationStatus === 'approved'}
+                      onChange={(e) => setValidationStatus(e.target.value)}
+                    />
+                    <span className="font-medium text-success">Los datos son correctos y confiables</span>
+                  </label>
+                  <label className="flex items-center gap-3 rounded-box border border-error/40 bg-error/10 p-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="validation_status"
+                      value="rejected"
+                      className="radio radio-error"
+                      checked={validationStatus === 'rejected'}
+                      onChange={(e) => setValidationStatus(e.target.value)}
+                    />
+                    <span className="font-medium text-error">Los datos no son correctos o confiables</span>
+                  </label>
                 </div>
-              </form>
-            )}
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label pb-2">
+                  <span className="label-text font-medium">Notas (opcional)</span>
+                </label>
+                <textarea
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Agrega comentarios u observaciones sobre estos datos..."
+                  value={validationNotes}
+                  onChange={(e) => setValidationNotes(e.target.value)}
+                />
+              </div>
+
+              {submitResult && (
+                <div role="alert" className={`alert ${submitResult.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+                  <span>{submitResult.message}</span>
+                </div>
+              )}
+
+              <div className="pt-1">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={!validationStatus || submitting}
+                >
+                  {submitting && <span className="loading loading-spinner loading-sm" />}
+                  Enviar Revisión
+                </button>
+              </div>
+            </form>
+
           </>
         )}
       </div>
