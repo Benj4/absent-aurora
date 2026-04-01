@@ -63,6 +63,10 @@ function formatSeriesDate(raw: string, frequency: string): string {
 const PostDetail: FC = () => {
   const { user: currentUser } = useAuthSession();
   const [post, setPost] = useState<Post | null>(null);
+  const [postStatus, setPostStatus] = useState<PostStatus>('pending');
+  const [pendingStatus, setPendingStatus] = useState<PostStatus>('pending');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string>('');
   const [validations, setValidations] = useState<Validation[]>([]);
   const [existingValidation, setExistingValidation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +77,11 @@ const PostDetail: FC = () => {
   const [validationNotes, setValidationNotes] = useState('');
 
   const postId = new URLSearchParams(window.location.search).get('id');
+
+  const userRoles = currentUser?.app_metadata?.role || [];
+
+  const isEditor = userRoles.includes('editor');
+  // const isEditor = true;
 
   const loadData = async () => {
     setLoading(true);
@@ -104,6 +113,8 @@ const PostDetail: FC = () => {
     }
 
     setPost(postData as Post);
+    setPostStatus(postData.status);
+    setPendingStatus(postData.status);
 
     if (postData.status !== 'pending') {
       const { data: valsData, error: valsError } = await supabase
@@ -120,7 +131,16 @@ const PostDetail: FC = () => {
         .eq('post_id', postId!)
         .eq('validated_by', currentUser.id)
         .single();
-      setExistingValidation(existVal ?? null);
+      const userValidation = existVal ?? null;
+      setExistingValidation(userValidation);
+
+      if (userValidation) {
+        const { data: valsData, error: valsError } = await supabase
+          .from('serie_validations')
+          .select('id, validation_status, validation_notes, validated_at')
+          .eq('post_id', postId!);
+        if (!valsError && valsData) setValidations(valsData);
+      }
     }
 
     setLoading(false);
@@ -135,6 +155,29 @@ const PostDetail: FC = () => {
 
     void loadData();
   }, [currentUser?.id]);
+
+  const handleStatusUpdate = async () => {
+    if (!isEditor || !post || pendingStatus === postStatus) return;
+
+    setIsUpdating(true);
+    setStatusMessage('Actualizando estado...');
+
+    const { error } = await supabase
+      .from('serie_posts')
+      .update({ status: pendingStatus })
+      .eq('id', post.id);
+
+    setIsUpdating(false);
+
+    if (error) {
+      setStatusMessage(`Error al actualizar estado: ${error.message}`);
+      return;
+    }
+
+    setPostStatus(pendingStatus);
+    setPost((prev) => (prev ? { ...prev, status: pendingStatus } : prev));
+    setStatusMessage('Estado actualizado correctamente.');
+  };
 
   const handleValidationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,10 +242,34 @@ const PostDetail: FC = () => {
             <h2 className="card-title">{post.indicator_id} <p className="text-sm font-light text-base-content/60">Publicación #{post.id.slice(-8)}</p></h2>
 
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <span className={`badge ${STATUS_BADGE[post.status] ?? 'badge-neutral'}`}>
-              {STATUS_LABEL[post.status] ?? post.status}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className={`badge ${STATUS_BADGE[postStatus] ?? 'badge-neutral'}`}>
+              {STATUS_LABEL[postStatus] ?? postStatus}
             </span>
+
+            {isEditor ? (
+              <div className="flex items-center gap-2">
+                <select
+                  className="select select-sm select-bordered"
+                  value={pendingStatus}
+                  onChange={(e) => setPendingStatus(e.target.value as PostStatus)}
+                  disabled={isUpdating}
+                >
+                  <option value="pending">Pendiente</option>
+                  <option value="approved">Aprobado</option>
+                  <option value="rejected">Rechazado</option>
+                  <option value="disabled">Deshabilitado</option>
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={handleStatusUpdate}
+                  disabled={isUpdating || pendingStatus === postStatus}
+                >
+                  {isUpdating ? 'Guardando…' : 'Confirmar cambio'}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -218,6 +285,14 @@ const PostDetail: FC = () => {
             </div>
           )}
           <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div>
+
+        {statusMessage && (
+          <div className="col-span-2 sm:col-span-3">
+            <div role="status" className="alert alert-info text-sm">
+              <span>{statusMessage}</span>
+            </div>
+          </div>
+        )}
           <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{new Date(post.created_at).toLocaleString('es-ES')}</dd></div>
           {post.notes && (
             <div className="col-span-2 sm:col-span-3">
@@ -306,82 +381,105 @@ const PostDetail: FC = () => {
             ) : null}
 
             {existingValidation ? (
-              <div role="alert" className="alert">
-                <div className="flex flex-col gap-1">
-                  <span>
-                    Ya validaste esta publicación como:{' '}
-                    <span className={`badge badge-sm ${STATUS_BADGE[existingValidation.validation_status] ?? 'badge-neutral'}`}>
-                      {STATUS_LABEL[existingValidation.validation_status] ?? existingValidation.validation_status}
+              <>
+                <div role="alert" className="alert">
+                  <div className="flex flex-col gap-1">
+                    <span>
+                      Ya validaste esta publicación como:{' '}
+                      <span className={`badge badge-sm ${STATUS_BADGE[existingValidation.validation_status] ?? 'badge-neutral'}`}>
+                        {STATUS_LABEL[existingValidation.validation_status] ?? existingValidation.validation_status}
+                      </span>
                     </span>
-                  </span>
-                  {existingValidation.validation_notes && (
-                    <span className="text-sm opacity-70">Notas: {existingValidation.validation_notes}</span>
-                  )}
+                    {existingValidation.validation_notes && (
+                      <span className="text-sm opacity-70">Notas: {existingValidation.validation_notes}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
+
+                {/* Si ya validó, mostramos todas las validaciones cargadas (post pending + user existingValidation) */}
+                {validations.length > 0 && (
+                  <div className="space-y-2">
+                    {validations.map((val) => (
+                      <div key={val.id} className="card bg-base-100 border border-base-200 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className={`badge badge-sm ${STATUS_BADGE[val.validation_status] ?? 'badge-neutral'}`}>
+                            {STATUS_LABEL[val.validation_status] ?? val.validation_status}
+                          </span>
+                          <span className="text-xs text-base-content/50">{new Date(val.validated_at).toLocaleString('es-ES')}</span>
+                        </div>
+                        {val.validation_notes ? (
+                          <p className="text-sm pt-2">{val.validation_notes}</p>
+                        ) : (
+                          <p className="text-sm text-base-content/50 italic mt-2">Sin notas.</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : currentUser ? (
+              <form onSubmit={handleValidationSubmit} className="w-full max-w-2xl space-y-4">
+                <div className="form-control w-full">
+                  <label className="label pb-2">
+                    <span className="label-text font-medium">Decisión de validación <span className="text-error">*</span></span>
+                  </label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="flex items-center gap-3 rounded-box border border-success/40 bg-success/10 p-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="validation_status"
+                        value="approved"
+                        className="radio radio-success"
+                        checked={validationStatus === 'approved'}
+                        onChange={(e) => setValidationStatus(e.target.value)}
+                      />
+                      <span className="font-medium text-success">Los datos son correctos y confiables</span>
+                    </label>
+                    <label className="flex items-center gap-3 rounded-box border border-error/40 bg-error/10 p-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="validation_status"
+                        value="rejected"
+                        className="radio radio-error"
+                        checked={validationStatus === 'rejected'}
+                        onChange={(e) => setValidationStatus(e.target.value)}
+                      />
+                      <span className="font-medium text-error">Los datos no son correctos o confiables</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-control w-full">
+                  <label className="label pb-2">
+                    <span className="label-text font-medium">Notas (opcional)</span>
+                  </label>
+                  <textarea
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Agrega comentarios u observaciones sobre estos datos..."
+                    value={validationNotes}
+                    onChange={(e) => setValidationNotes(e.target.value)}
+                  />
+                </div>
+
+                {submitResult && (
+                  <div role="alert" className={`alert ${submitResult.type === 'success' ? 'alert-success' : 'alert-error'}`}>
+                    <span>{submitResult.message}</span>
+                  </div>
+                )}
+
+                <div className="pt-1">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={!validationStatus || submitting}
+                  >
+                    {submitting && <span className="loading loading-spinner loading-sm" />}
+                    Enviar Revisión
+                  </button>
+                </div>
+              </form>
             ) : null}
-
-            <form onSubmit={handleValidationSubmit} className="w-full max-w-2xl space-y-4">
-              <div className="form-control w-full">
-                <label className="label pb-2">
-                  <span className="label-text font-medium">Decisión de validación <span className="text-error">*</span></span>
-                </label>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="flex items-center gap-3 rounded-box border border-success/40 bg-success/10 p-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="validation_status"
-                      value="approved"
-                      className="radio radio-success"
-                      checked={validationStatus === 'approved'}
-                      onChange={(e) => setValidationStatus(e.target.value)}
-                    />
-                    <span className="font-medium text-success">Los datos son correctos y confiables</span>
-                  </label>
-                  <label className="flex items-center gap-3 rounded-box border border-error/40 bg-error/10 p-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="validation_status"
-                      value="rejected"
-                      className="radio radio-error"
-                      checked={validationStatus === 'rejected'}
-                      onChange={(e) => setValidationStatus(e.target.value)}
-                    />
-                    <span className="font-medium text-error">Los datos no son correctos o confiables</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-control w-full">
-                <label className="label pb-2">
-                  <span className="label-text font-medium">Notas (opcional)</span>
-                </label>
-                <textarea
-                  className="textarea textarea-bordered w-full"
-                  rows={3}
-                  placeholder="Agrega comentarios u observaciones sobre estos datos..."
-                  value={validationNotes}
-                  onChange={(e) => setValidationNotes(e.target.value)}
-                />
-              </div>
-
-              {submitResult && (
-                <div role="alert" className={`alert ${submitResult.type === 'success' ? 'alert-success' : 'alert-error'}`}>
-                  <span>{submitResult.message}</span>
-                </div>
-              )}
-
-              <div className="pt-1">
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={!validationStatus || submitting}
-                >
-                  {submitting && <span className="loading loading-spinner loading-sm" />}
-                  Enviar Revisión
-                </button>
-              </div>
-            </form>
 
           </>
         )}

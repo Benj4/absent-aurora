@@ -4,10 +4,12 @@ import { useAuthSession } from '../lib/use-auth-session';
 import { stripBase, withBase } from '../lib/paths';
 
 const Navbar = () => {
-  const { user } = useAuthSession();
+  const { user, ready } = useAuthSession();
   const [activePath, setActivePath] = useState('/');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setActivePath(stripBase(window.location.pathname));
 
     return undefined;
@@ -57,11 +59,13 @@ const Navbar = () => {
 
       {/* Right section */}
       <div className="navbar-end">
-        {!user ? (
+        {!mounted ? (
+          // Server/initial render: always show login button to avoid hydration mismatch
           <a href={withBase('/login')} className="btn btn-primary btn-sm">
             Iniciar sesión
           </a>
-        ) : (
+        ) : user ? (
+          // Client-side: show dropdown if user is logged in
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-sm gap-2">
               {/* User icon */}
@@ -111,6 +115,11 @@ const Navbar = () => {
               </li>
             </ul>
           </div>
+        ) : (
+          // Client-side: show login button if no user
+          <a href={withBase('/login')} className="btn btn-primary btn-sm">
+            Iniciar sesión
+          </a>
         )}
       </div>
     </div>

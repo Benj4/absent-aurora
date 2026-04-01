@@ -19,6 +19,29 @@ let state: AuthSessionState = {
 let initPromise: Promise<void> | null = null;
 const listeners = new Set<Listener>();
 
+type NullableUser = User | null;
+
+function normalizeUser(rawUser: NullableUser): NullableUser {
+  if (!rawUser) return null;
+
+  const normalized = { ...rawUser } as User & { app_metadata?: any };
+  const roleValue = normalized.app_metadata?.role;
+
+  if (typeof roleValue === 'string') {
+    const roles = roleValue
+      .split(',')
+      .map((role) => role.trim())
+      .filter(Boolean);
+
+    normalized.app_metadata = {
+      ...normalized.app_metadata,
+      role: roles,
+    };
+  }
+
+  return normalized;
+}
+
 function persistState(nextState: AuthSessionState): void {
   if (typeof window === 'undefined') {
     return;
@@ -58,7 +81,7 @@ function hydrateStateFromCache(): void {
 
     const parsed = JSON.parse(raw) as { user?: User | null };
     state = {
-      user: parsed.user ?? null,
+      user: normalizeUser(parsed.user ?? null),
       ready: true,
     };
   } catch {
@@ -86,9 +109,12 @@ function emitState(): void {
 }
 
 function setState(next: Partial<AuthSessionState>): void {
+  const normalizedUser = next.user ? normalizeUser(next.user) : null;
+
   state = {
     ...state,
     ...next,
+    user: normalizedUser ?? next.user ?? state.user,
   };
   emitState();
 }

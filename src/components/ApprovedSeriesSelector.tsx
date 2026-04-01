@@ -1,14 +1,22 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import IndicatorChart, { type SeriesPoint } from './IndicatorChart';
 
+interface RawPoint {
+  post_id?: string;
+  data_source?: string;
+  date: string;
+  value: number | string;
+}
+
 interface ApprovedSeriesSelectorProps {
-  series?: SeriesPoint[];
+  series?: RawPoint[];
   label?: string;
 }
 
-interface GroupedPoint {
+interface SourcePoint {
   key: string;
   date: string;
+  source: string;
   value: number;
   rawValue: string | number;
 }
@@ -18,128 +26,150 @@ function parseNumericValue(value: string | number): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export default function ApprovedSeriesSelector({ series = [], label = 'Serie' }: ApprovedSeriesSelectorProps) {
-  const groupedByDate = useMemo(() => {
-    const grouped = new Map<string, GroupedPoint[]>();
+/** Groups points by date across all approved entries. */
+function groupByDate(points: RawPoint[]): { date: string; points: SourcePoint[] }[] {
+  const grouped = new Map<string, SourcePoint[]>();
 
-    series.forEach((point, index) => {
-      const bucket = grouped.get(point.date) ?? [];
-      bucket.push({
-        key: `${point.date}-${index}`,
-        date: point.date,
-        value: parseNumericValue(point.value),
-        rawValue: point.value,
-      });
-      grouped.set(point.date, bucket);
+  points.forEach((point, index) => {
+    const bucket = grouped.get(point.date) ?? [];
+    const source = point.data_source ?? 'Sin fuente';
+    bucket.push({
+      key: `${point.date}-${point.post_id ?? 'no-post'}-${index}`,
+      date: point.date,
+      source,
+      value: parseNumericValue(point.value),
+      rawValue: point.value,
     });
-
-    return Array.from(grouped.entries())
-      .map(([date, points]) => ({ date, points }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [series]);
-
-  const [selectedPointByDate, setSelectedPointByDate] = useState<Record<string, string>>(() => {
-    const initialSelection: Record<string, string> = {};
-    groupedByDate.forEach(({ date, points }) => {
-      if (points.length > 0) {
-        initialSelection[date] = points[0].key;
-      }
-    });
-    return initialSelection;
+    grouped.set(point.date, bucket);
   });
 
-  const resolvedSeries = useMemo<SeriesPoint[]>(() => {
-    return groupedByDate.reduce<SeriesPoint[]>((accumulator, { date, points }) => {
-      const selectedKey = selectedPointByDate[date] ?? points[0]?.key;
-      const selectedPoint = points.find((point) => point.key === selectedKey) ?? points[0];
+  return Array.from(grouped.entries())
+    .map(([date, pts]) => ({ date, points: pts }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
 
-      if (selectedPoint) {
-        accumulator.push({
-          date,
-          value: selectedPoint.value,
-        });
+export default function ApprovedSeriesSelector({ series = [], label = 'Serie' }: ApprovedSeriesSelectorProps) {
+  // Collect unique sources preserving first-seen order
+  const sources = useMemo<string[]>(() => {
+    const seen = new Set<string>();
+    series.forEach((p) => {
+      const src = p.data_source ?? 'Sin fuente';
+      if (!seen.has(src)) seen.add(src);
+    });
+    return Array.from(seen);
+  }, [series]);
+
+  const [selectedSource, setSelectedSource] = useState<string>(() => sources[0] ?? '');
+
+  useEffect(() => {
+    if (!sources.length) {
+      setSelectedSource('');
+      return;
+    }
+
+    if (!sources.includes(selectedSource)) {
+      setSelectedSource(sources[0]);
+    }
+  }, [sources, selectedSource]);
+
+  // Keep all available dates visible, regardless of selected source.
+  const groupedByDate = useMemo(() => groupByDate(series), [series]);
+
+  const selectedPointByDate = useMemo<Record<string, SourcePoint>>(() => {
+    return groupedByDate.reduce<Record<string, SourcePoint>>((acc, { date, points }) => {
+      const point = points.find((p) => p.source === selectedSource) ?? points[0];
+      if (point) {
+        acc[date] = point;
       }
+      return acc;
+    }, {});
+  }, [groupedByDate, selectedSource]);
 
-      return accumulator;
+  const resolvedSeries = useMemo<SeriesPoint[]>(() => {
+    return groupedByDate.reduce<SeriesPoint[]>((acc, { date }) => {
+      const point = selectedPointByDate[date];
+      if (point) acc.push({ date, value: point.value });
+      return acc;
     }, []);
   }, [groupedByDate, selectedPointByDate]);
 
-  const conflictDatesCount = groupedByDate.filter(({ points }) => {
-    const distinctValues = new Set(points.map((point) => point.value));
-    return distinctValues.size > 1;
-  }).length;
-
-  if (!series.length) {
-    return null;
-  }
+  if (!series.length) return null;
 
   return (
     <section className="space-y-4">
+      {/* Chart */}
       <div>
-        <h2 className="text-lg font-semibold mb-2">Grafico (datos aprobados)</h2>
+        <h2 className="text-lg font-semibold mb-2">Gráfico (datos aprobados)</h2>
         <IndicatorChart series={resolvedSeries} label={label} />
       </div>
 
-      <div className="rounded border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-base font-semibold m-0">Datos usados en el grafico</h3>
-          {conflictDatesCount > 0 && (
-            <>
-              <p className="m-0 text-sm text-slate-600 dark:text-slate-300">
-                Selecciona manualmente el valor por fecha cuando existan duplicados con valores distintos.
-              </p>
-              <p className="m-0 mt-1 text-xs text-amber-700 dark:text-amber-300">
-                Fechas con conflicto de valores: {conflictDatesCount}
-              </p>
-            </>
-          )}
+      {/* Data table */}
+      <div className="rounded border border-base-200 overflow-hidden">
+        <div className="px-4 py-3 bg-base-200/60 border-b border-base-200 space-y-2">
+          <h3 className="text-base font-semibold m-0">Datos usados en el gráfico</h3>
+          <div className="flex flex-col gap-1">
+            <div role="tablist" className="tabs tabs-box w-fit flex-wrap">
+              {sources.map((src) => (
+                <button
+                  key={src}
+                  role="tab"
+                  type="button"
+                  className={`tab${selectedSource === src ? ' tab-active' : ''}`}
+                  onClick={() => setSelectedSource(src)}
+                >
+                  {src}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+            <thead className="bg-base-200 text-base-content">
               <tr>
                 <th className="text-left px-4 py-2">Fecha</th>
-                <th className="text-left px-4 py-2">Valor a graficar</th>
-                <th className="text-left px-4 py-2">Opciones encontradas</th>
+                {sources.map((source) => (
+                  <th
+                    key={source}
+                    className={`text-left px-4 py-2${selectedSource === source ? ' bg-base-300/50' : ''}`}
+                  >
+                    {source}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {groupedByDate.map(({ date, points }) => {
-                const distinctValues = Array.from(new Set(points.map((point) => point.value)));
-                const hasConflict = distinctValues.length > 1;
-                const selectedKey = selectedPointByDate[date] ?? points[0]?.key;
-                const selectedPoint = points.find((point) => point.key === selectedKey) ?? points[0];
-
                 return (
-                  <tr key={date} className="border-t border-slate-200 dark:border-slate-700">
+                  <tr key={date} className="border-t border-base-200">
                     <td className="px-4 py-2 whitespace-nowrap">{date}</td>
-                    <td className="px-4 py-2 font-semibold">{selectedPoint?.rawValue ?? '-'}</td>
-                    <td className="px-4 py-2">
-                      {hasConflict ? (
-                        <div className="flex flex-wrap gap-3">
-                          {points.map((point) => (
-                            <label key={point.key} className="inline-flex items-center gap-1">
-                              <input
-                                type="radio"
-                                name={`date-${date}`}
-                                value={point.key}
-                                checked={selectedKey === point.key}
-                                onChange={() =>
-                                  setSelectedPointByDate((prev) => ({
-                                    ...prev,
-                                    [date]: point.key,
-                                  }))
-                                }
-                              />
-                              <span>{point.rawValue}</span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-slate-600 dark:text-slate-300">{points[0]?.rawValue}</span>
-                      )}
-                    </td>
+                    {sources.map((source) => {
+                      const pointsFromSource = points.filter((p) => p.source === source);
+
+                      return (
+                        <td
+                          key={`${date}-${source}`}
+                          className={`px-4 py-2${selectedSource === source ? ' bg-base-300/20 font-semibold' : ''}`}
+                        >
+                          {pointsFromSource.length === 0 ? (
+                            <span className="text-base-content/50">—</span>
+                          ) : pointsFromSource.length === 1 ? (
+                            <span className={selectedPointByDate[date]?.key === pointsFromSource[0].key ? 'font-bold' : ''}>
+                              {pointsFromSource[0].rawValue}
+                            </span>
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              {pointsFromSource.map((point) => (
+                                <span key={point.key} className={selectedPointByDate[date]?.key === point.key ? 'font-bold' : ''}>
+                                  {point.rawValue}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}
