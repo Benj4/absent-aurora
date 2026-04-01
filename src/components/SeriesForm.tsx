@@ -72,8 +72,48 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
   const canonicalFreq = normalizeFrequency(indicator.nativeFrequency ?? '');
   const dateHint = getDateHint(canonicalFreq);
 
+  const getNextDateForRow = (): string => {
+    const filledRows = rows.filter((row) => row.date);
+    if (filledRows.length === 0) {
+      return '';
+    }
+
+    const lastDate = filledRows[filledRows.length - 1].date;
+    if (!lastDate) {
+      return '';
+    }
+
+    const [year, month, day] = lastDate.split('-').map(Number);
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+      return '';
+    }
+
+    const next = new Date(Date.UTC(year, month - 1, day));
+
+    switch (canonicalFreq) {
+      case 'annual':
+        return `${year - 1}-01-01`;
+      case 'quarterly': {
+        const nextMonth = month - 3;
+        const nextYear = year - Math.floor((nextMonth - 1) / 12);
+        const normalizedMonth = ((nextMonth - 1) % 12) + 1;
+        return `${nextYear}-${String(normalizedMonth).padStart(2, '0')}-01`;
+      }
+      case 'monthly': {
+        next.setUTCMonth(next.getUTCMonth() - 1);
+        return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-01`;
+      }
+      case 'daily':
+        next.setUTCDate(next.getUTCDate() - 1);
+        return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+      default:
+        return '';
+    }
+  };
+
   const addRow = () => {
-    setRows([...rows, { date: '', value: '' }]);
+    const nextDate = getNextDateForRow();
+    setRows([...rows, { date: nextDate, value: '' }]);
   };
 
   const removeRow = (index: number) => {

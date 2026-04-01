@@ -4,7 +4,7 @@ import Layout from '../../../layouts/Layout.astro';
 import { supabase } from '../../../lib/supabase';
 import indicatorsData from '../../../data/indicators.json';
 import ApprovedSeriesSelector from '../../../components/ApprovedSeriesSelector';
-import IndicatorPostsClient from '../../../components/IndicatorPostsClient';
+import IndicatorPostsLoader from '../../../components/IndicatorPostsLoader';
 import { normalizeFrequency } from '../../../lib/frequency';
 import { withBase } from '../../../lib/paths';
 
@@ -23,24 +23,10 @@ const { id } = Astro.params;
 const { indicators = [] } = indicatorsData || {};
 const indicator = indicators.find((ind: any) => ind.id === id);
 
-// Fetch all posts for this indicator with their data
-const { data: posts, error } = await supabase
-  .from('serie_posts')
-  .select(`
-    id, indicator_id, data_source, url, frequency, status, created_at, updated_at,
-    serie_data(id, date, value)
-  `)
-  .eq('indicator_id', id)
-  .order('created_at', { ascending: false });
-
-if (error) {
-  console.error('Error fetching posts:', error);
-}
-
 // Fetch approved datapoints for the indicator (view)
 const { data: approvedSeries = [], error: approvedError } = await supabase
   .from('approved_series_view')
-  .select('date, value')
+  .select('post_id, data_source, date, value')
   .eq('indicator_id', id)
   .order('date', { ascending: true });
 
@@ -82,9 +68,9 @@ if (approvedError) {
           </div>
         )}
 
-        {error && (
+        {approvedError && (
           <div role="alert" class="alert alert-error">
-            <span>Error cargando publicaciones: {error.message}</span>
+            <span>Error cargando datos aprobados: {approvedError.message}</span>
           </div>
         )}
 
@@ -100,21 +86,9 @@ if (approvedError) {
           </div>
         )}
 
-        <div class="stats stats-vertical border border-base-200 bg-base-100 md:stats-horizontal">
-          <div class="stat px-4 py-3">
-            <div class="stat-title">Publicaciones</div>
-            <div class="stat-value text-2xl">{posts?.length ?? 0}</div>
-            <div class="stat-desc">Total para este indicador</div>
-          </div>
-        </div>
+        <IndicatorPostsLoader client:load indicatorId={id} />
 
-        {posts && posts.length > 0 ? (
-          <IndicatorPostsClient client:load posts={posts} />
-        ) : (
-          <div role="alert" class="alert">
-            <span>No hay publicaciones registradas para este indicador.</span>
-          </div>
-        )}
+        
       </div>
     </div>
   </section>
