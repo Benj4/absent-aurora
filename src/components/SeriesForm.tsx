@@ -10,6 +10,7 @@ import {
   loadSeriesFormDraft,
   saveSeriesFormDraft,
 } from '../lib/series-form-draft';
+import { useAuthSession } from '../lib/use-auth-session';
 
 interface Indicator {
   id: string;
@@ -65,20 +66,11 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
   const [status, setStatus] = useState<StatusType>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [savedPostId, setSavedPostId] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, ready: isAuthReady } = useAuthSession();
+  const isAuthenticated = Boolean(user);
 
   const canonicalFreq = normalizeFrequency(indicator.nativeFrequency ?? '');
   const dateHint = getDateHint(canonicalFreq);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    setIsAuthenticated(!error && !!user);
-    if (error || !user) console.log('No authenticated user');
-  };
 
   const addRow = () => {
     setRows([...rows, { date: '', value: '' }]);
@@ -235,8 +227,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
     setStatusMessage('');
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
+      if (!user) {
         throw new Error('Debes iniciar sesión para enviar datos. Por favor, inicia sesión primero.');
       }
 
@@ -483,7 +474,13 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
           </button>
         </div>
 
-        {!isAuthenticated && (
+        {!isAuthReady && (
+          <div role="alert" className="alert alert-info">
+            <span>...</span>
+          </div>
+        )}
+
+        {isAuthReady && !isAuthenticated && (
           <div role="alert" className="alert alert-warning">
             <span>Debes iniciar sesión para enviar datos.</span>
           </div>

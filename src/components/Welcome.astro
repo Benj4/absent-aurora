@@ -115,11 +115,6 @@
 		}
 	});
 
-	// Check current session on load
-	(async () => {
-		const { data: { user }, error } = await supabase.auth.getUser();
-		console.log('Current session:', { user, error });
-	})();
 </script>
 
 <style>

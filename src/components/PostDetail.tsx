@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuthSession } from '../lib/use-auth-session';
 import { normalizeFrequency } from '../lib/frequency';
 import { withBase } from '../lib/paths';
 
@@ -60,9 +61,9 @@ function formatSeriesDate(raw: string, frequency: string): string {
 }
 
 const PostDetail: FC = () => {
+  const { user: currentUser } = useAuthSession();
   const [post, setPost] = useState<Post | null>(null);
   const [validations, setValidations] = useState<Validation[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [existingValidation, setExistingValidation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
@@ -73,24 +74,12 @@ const PostDetail: FC = () => {
 
   const postId = new URLSearchParams(window.location.search).get('id');
 
-  useEffect(() => {
-    if (!postId) {
-      setPageError('No se proporcionó ID de publicación en la URL.');
-      setLoading(false);
-      return;
-    }
-    loadData();
-  }, []);
-
   const loadData = async () => {
     setLoading(true);
     setPageError(null);
     setSubmitResult(null);
     setExistingValidation(null);
     setValidations([]);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUser(user);
 
     const { data: postData, error: postError } = await supabase
       .from('serie_posts')
@@ -124,18 +113,28 @@ const PostDetail: FC = () => {
       if (!valsError && valsData) setValidations(valsData);
     }
 
-    if (user && postData.status === 'pending') {
+    if (currentUser && postData.status === 'pending') {
       const { data: existVal } = await supabase
         .from('serie_validations')
         .select('id, validation_status, validation_notes')
         .eq('post_id', postId!)
-        .eq('validated_by', user.id)
+        .eq('validated_by', currentUser.id)
         .single();
       setExistingValidation(existVal ?? null);
     }
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!postId) {
+      setPageError('No se proporcionó ID de publicación en la URL.');
+      setLoading(false);
+      return;
+    }
+
+    void loadData();
+  }, [currentUser?.id]);
 
   const handleValidationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

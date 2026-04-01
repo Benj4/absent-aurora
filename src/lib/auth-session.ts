@@ -74,12 +74,14 @@ export async function initializeAuthSession(): Promise<void> {
 
   initPromise = (async () => {
     try {
-      const { data, error } = await supabase.auth.getUser();
+      // getSession() hydrates from local persisted auth state and avoids
+      // an unnecessary user fetch on every island mount/navigation.
+      const { data, error } = await supabase.auth.getSession();
       if (error) {
         console.error('Error fetching user session:', error);
       }
 
-      setState({ user: data?.user ?? null, ready: true });
+      setState({ user: data?.session?.user ?? null, ready: true });
     } catch (error) {
       console.error('Unexpected error fetching user session:', error);
       setState({ user: null, ready: true });
