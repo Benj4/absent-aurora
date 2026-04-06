@@ -54,6 +54,14 @@ const Navbar = () => {
               Publicaciones
             </a>
           </li>
+          <li>
+            <a
+              href={withBase('/analisis/nuevo')}
+              className={isActive('/analisis/nuevo') ? 'active' : ''}
+            >
+              Crear análisis
+            </a>
+          </li>
         </ul>
       </div>
 
