@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import MacroEventsPage from '../../components/macro-events/MacroEventsPage';
+---
+
+<Layout
+  title="Eventos Macroeconómicos — Absent Aurora"
+  breadcrumbItems={[
+    { label: 'Inicio', href: '/' },
+    { label: 'Eventos Macroeconómicos' },
+  ]}
+>
+  <section class="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
+    <div class="card border border-base-200 bg-base-100 shadow-sm">
+      <div class="card-body gap-4 md:gap-5">
+        <header class="space-y-2">
+          <h1 class="text-2xl font-semibold leading-tight">Eventos macroeconómicos</h1>
+          <p class="text-sm text-base-content/70">
+            Gestione hitos y periodos para usarlos como contexto en los gráficos.
+          </p>
+        </header>
+
+        <MacroEventsPage client:load />
+      </div>
+    </div>
+  </section>
+</Layout>
