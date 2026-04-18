@@ -33,13 +33,15 @@ const IndicatorSelector: FC<{ selected: string[]; onToggle: (id: string) => void
 
   return (
     <div ref={containerRef} className="relative">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Abrir selector de indicadores"
-        className="w-full min-h-10 rounded-btn border border-base-300 bg-base-100 px-3 py-1.5 text-left text-sm flex flex-wrap gap-1 items-center hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+        className="w-full min-h-10 rounded-btn border border-base-300 bg-base-100 px-3 py-1.5 text-left text-sm flex flex-wrap gap-1 items-center hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors cursor-pointer"
         onClick={() => setOpen(v => !v)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(v => !v); } }}
       >
         {selected.length === 0 ? (
           <span className="text-base-content/40 text-sm">Buscar indicador…</span>
@@ -56,7 +58,7 @@ const IndicatorSelector: FC<{ selected: string[]; onToggle: (id: string) => void
             </span>
           ))
         )}
-      </button>
+      </div>
 
       {open && (
         <div

@@ -1,11 +1,12 @@
 import type { FC, ReactNode } from 'react';
 
-const SidebarSection: FC<{ title: string; defaultOpen?: boolean; children: ReactNode }> = ({
+const SidebarSection: FC<{ title: string; defaultOpen?: boolean; children: ReactNode; className?: string }> = ({
   title,
   defaultOpen = true,
   children,
+  className,
 }) => (
-  <details open={defaultOpen} className="group border-b border-base-200 last:border-b-0">
+  <details open={defaultOpen} className={`group border-b border-base-200 last:border-b-0 ${className ?? ''}`}>
     <summary className="flex cursor-pointer select-none items-center justify-between px-4 py-3 text-xs font-bold uppercase tracking-widest text-base-content/50 hover:bg-base-200/60 transition-colors list-none">
       {title}
       <svg

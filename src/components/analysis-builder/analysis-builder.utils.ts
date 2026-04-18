@@ -6,8 +6,8 @@ import type {
   SourceSelection,
   SourceConflict,
   ModoAlineacion,
-  Transformacion,
   HCSeriesData,
+  HCEventMarker,
   KPIRow,
   KPICell,
 } from './analysis-builder.types';
@@ -24,7 +24,6 @@ export function makeInitialState(): AnalisisState {
     titulo: '',
     descripcion: '',
     modoAlineacion: 'calendario',
-    transformacion: 'nominal',
     region: '',
     indicadores: [],
     periodos: [
@@ -37,20 +36,15 @@ export function makeInitialState(): AnalisisState {
       },
     ],
     sourceSelections: {},
+    macroEventIds: [],
+    markerModeByEventId: {},
+    markerColorByEventId: {},
+    showBase100Line: true,
   };
 }
 
 export function isModoAlineacion(value: unknown): value is ModoAlineacion {
   return value === 'calendario' || value === 'indice_cero';
-}
-
-export function isTransformacion(value: unknown): value is Transformacion {
-  return (
-    value === 'nominal' ||
-    value === 'variacion_interanual_pct' ||
-    value === 'acumulado_pct' ||
-    value === 'base_100'
-  );
 }
 
 export function sanitizeState(input: unknown): AnalisisState | null {
@@ -77,7 +71,6 @@ export function sanitizeState(input: unknown): AnalisisState | null {
     titulo: typeof raw.titulo === 'string' ? raw.titulo : '',
     descripcion: typeof raw.descripcion === 'string' ? raw.descripcion : '',
     modoAlineacion: isModoAlineacion(raw.modoAlineacion) ? raw.modoAlineacion : fallback.modoAlineacion,
-    transformacion: isTransformacion(raw.transformacion) ? raw.transformacion : fallback.transformacion,
     region: typeof raw.region === 'string' ? raw.region : '',
     indicadores: Array.isArray(raw.indicadores)
       ? raw.indicadores.filter((id): id is string => typeof id === 'string')
@@ -86,6 +79,26 @@ export function sanitizeState(input: unknown): AnalisisState | null {
     sourceSelections: typeof raw.sourceSelections === 'object' && raw.sourceSelections !== null
       ? (raw.sourceSelections as SourceSelection)
       : {},
+    macroEventIds: Array.isArray(raw.macroEventIds)
+      ? raw.macroEventIds.filter((id): id is string => typeof id === 'string')
+      : [],
+    markerModeByEventId: typeof raw.markerModeByEventId === 'object' && raw.markerModeByEventId !== null
+      ? Object.fromEntries(
+        Object.entries(raw.markerModeByEventId).filter((entry): entry is [string, 'none' | 'start' | 'end' | 'both'] => {
+          const [key, value] = entry;
+          return typeof key === 'string' && (value === 'none' || value === 'start' || value === 'end' || value === 'both');
+        })
+      )
+      : {},
+    markerColorByEventId: typeof raw.markerColorByEventId === 'object' && raw.markerColorByEventId !== null
+      ? Object.fromEntries(
+        Object.entries(raw.markerColorByEventId).filter((entry): entry is [string, string] => {
+          const [key, value] = entry;
+          return typeof key === 'string' && typeof value === 'string';
+        })
+      )
+      : {},
+    showBase100Line: typeof raw.showBase100Line === 'boolean' ? raw.showBase100Line : true,
   };
 }
 
@@ -95,7 +108,6 @@ export function reducer(state: AnalisisState, action: Action): AnalisisState {
     case 'SET_DESCRIPCION': return { ...state, descripcion: action.value };
     case 'SET_REGION': return { ...state, region: action.value };
     case 'SET_MODO': return { ...state, modoAlineacion: action.value };
-    case 'SET_TRANSFORMACION': return { ...state, transformacion: action.value };
 
     case 'TOGGLE_INDICATOR':
       return {
@@ -146,6 +158,14 @@ export function reducer(state: AnalisisState, action: Action): AnalisisState {
         },
       };
 
+    case 'TOGGLE_MACRO_EVENT':
+      return {
+        ...state,
+        macroEventIds: state.macroEventIds.includes(action.id)
+          ? state.macroEventIds.filter(id => id !== action.id)
+          : [...state.macroEventIds, action.id],
+      };
+
     case 'LOAD_STATE':
       return action.payload;
 
@@ -154,37 +174,15 @@ export function reducer(state: AnalisisState, action: Action): AnalisisState {
   }
 }
 
-export function applyTransformation(data: RawPoint[], t: Transformacion): RawPoint[] {
+export function applyBase100(data: RawPoint[]): RawPoint[] {
   if (data.length === 0) return [];
-  switch (t) {
-    case 'nominal': return data;
-    case 'acumulado_pct': {
-      const base = data[0].value;
-      if (base === 0) return data;
-      return data.map(d => ({ ...d, value: ((d.value - base) / Math.abs(base)) * 100 }));
-    }
-    case 'base_100': {
-      const base = data[0].value;
-      if (base === 0) return data;
-      return data.map(d => ({ ...d, value: (d.value / base) * 100 }));
-    }
-    case 'variacion_interanual_pct':
-      return data.slice(1).map((curr, i) => ({
-        ...curr,
-        value: data[i].value !== 0
-          ? ((curr.value - data[i].value) / Math.abs(data[i].value)) * 100
-          : 0,
-      }));
-  }
+  const base = data[0].value;
+  if (base === 0) return data;
+  return data.map(d => ({ ...d, value: (d.value / base) * 100 }));
 }
 
-export function isPercent(t: Transformacion): boolean {
-  return t !== 'nominal' && t !== 'base_100';
-}
-
-export function fmt(v: number, pct = false): string {
-  const n = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(v);
-  return pct ? `${n}%` : n;
+export function fmt(v: number): string {
+  return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(v);
 }
 
 export function getSourceKey(indicId: string, date: string): string {
@@ -255,7 +253,7 @@ export function filterByPeriod(data: RawPoint[], indicId: string, periodo: Perio
 export function buildKPIRows(rawData: RawPoint[], state: AnalisisState): KPIRow[] {
   return state.indicadores.map(indicId => {
     const cells: KPICell[] = state.periodos.map(periodo => {
-      const pts = applyTransformation(filterByPeriod(rawData, indicId, periodo, state.sourceSelections), state.transformacion);
+      const pts = filterByPeriod(rawData, indicId, periodo, state.sourceSelections);
       const values = pts.map(d => d.value);
       const mean = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
       return { periodId: periodo.id, periodNombre: periodo.nombre, periodColor: periodo.color, valor: mean, delta: null };
@@ -281,7 +279,7 @@ export function buildChartSeries(rawData: RawPoint[], state: AnalisisState): HCS
   state.periodos.forEach(periodo => {
     if (!periodo.fechaInicio || !periodo.fechaFin) return;
     state.indicadores.forEach((indicId, indicIdx) => {
-      const pts = applyTransformation(filterByPeriod(rawData, indicId, periodo, state.sourceSelections), state.transformacion);
+      const pts = filterByPeriod(rawData, indicId, periodo, state.sourceSelections);
       const data: [number, number][] =
         state.modoAlineacion === 'calendario'
           ? pts.map(d => [new Date(d.date).getTime(), d.value])
@@ -299,5 +297,138 @@ export function buildChartSeries(rawData: RawPoint[], state: AnalisisState): HCS
   });
 
   return series;
+}
+
+export function buildBase100OverlaySeries(rawData: RawPoint[], state: AnalisisState): HCSeriesData[] {
+  const series: HCSeriesData[] = [];
+
+  state.periodos.forEach(periodo => {
+    if (!periodo.fechaInicio || !periodo.fechaFin) return;
+    state.indicadores.forEach((indicId, indicIdx) => {
+      const pts = applyBase100(
+        filterByPeriod(rawData, indicId, periodo, state.sourceSelections)
+      );
+      const data: [number, number][] =
+        state.modoAlineacion === 'calendario'
+          ? pts.map(d => [new Date(d.date).getTime(), d.value])
+          : pts.map((d, i) => [i, d.value]);
+
+      if (data.length === 0) return;
+
+      series.push({
+        name: `Base 100 – ${INDICATOR_MAP.get(indicId) ?? indicId} – ${periodo.nombre}`,
+        color: periodo.color,
+        dashStyle: DASH_STYLES[indicIdx % DASH_STYLES.length],
+        data,
+        yAxis: 1,
+        isReference: true,
+      });
+    });
+  });
+
+  return series;
+}
+
+function monthDiff(startDate: string, targetDate: string): number {
+  const start = new Date(startDate);
+  const target = new Date(targetDate);
+
+  return ((target.getUTCFullYear() - start.getUTCFullYear()) * 12)
+    + (target.getUTCMonth() - start.getUTCMonth());
+}
+
+const MACRO_EVENT_COLORS = ['#0ea5e9', '#f43f5e', '#8b5cf6', '#14b8a6', '#f59e0b', '#22c55e', '#ef4444', '#6366f1'];
+
+function markerColor(index: number): string {
+  return PERIOD_COLORS[index % PERIOD_COLORS.length];
+}
+
+export function getDefaultMacroEventColor(eventId: string, fallbackIndex = 0): string {
+  const hash = Array.from(eventId).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return MACRO_EVENT_COLORS[(hash + fallbackIndex) % MACRO_EVENT_COLORS.length];
+}
+
+export function buildMacroEventMarkers(
+  macroEvents: Array<{ id: string; name: string; start_date: string; end_date: string | null }> ,
+  state: AnalisisState,
+  markerModeByEventId: Record<string, 'none' | 'start' | 'end' | 'both'> = {},
+  markerColorByEventId: Record<string, string> = {},
+): HCEventMarker[] {
+  if (macroEvents.length === 0) return [];
+
+  const markers: HCEventMarker[] = [];
+
+  if (state.modoAlineacion === 'calendario') {
+    macroEvents.forEach((event, eventIndex) => {
+      const markerMode = markerModeByEventId[event.id] ?? 'both';
+      const eventColor = markerColorByEventId[event.id] ?? getDefaultMacroEventColor(event.id, eventIndex);
+      if (markerMode === 'none') return;
+
+      if (markerMode === 'start' || markerMode === 'both') {
+        markers.push({
+          id: `${event.id}:start`,
+          label: `${event.name} · inicio`,
+          value: new Date(event.start_date).getTime(),
+          color: eventColor,
+        });
+      }
+
+      if (
+        (markerMode === 'end' || markerMode === 'both')
+        && event.end_date
+        && event.end_date !== event.start_date
+      ) {
+        markers.push({
+          id: `${event.id}:end`,
+          label: `${event.name} · fin`,
+          value: new Date(event.end_date).getTime(),
+          color: eventColor,
+        });
+      }
+    });
+
+    return markers.sort((a, b) => a.value - b.value);
+  }
+
+  state.periodos.forEach((periodo, periodoIndex) => {
+    if (!periodo.fechaInicio || !periodo.fechaFin) return;
+
+    macroEvents.forEach((event, eventIndex) => {
+      const markerMode = markerModeByEventId[event.id] ?? 'both';
+      const eventColor = markerColorByEventId[event.id] ?? getDefaultMacroEventColor(event.id, eventIndex);
+      if (markerMode === 'none') return;
+
+      if (
+        (markerMode === 'start' || markerMode === 'both')
+        && event.start_date >= periodo.fechaInicio
+        && event.start_date <= periodo.fechaFin
+      ) {
+        markers.push({
+          id: `${periodo.id}:${event.id}:start`,
+          label: `${event.name} · ${periodo.nombre}`,
+          value: monthDiff(periodo.fechaInicio, event.start_date),
+          color: eventColor || periodo.color || markerColor(periodoIndex),
+        });
+      }
+
+      if (
+        (markerMode === 'end' || markerMode === 'both')
+        &&
+        event.end_date
+        && event.end_date !== event.start_date
+        && event.end_date >= periodo.fechaInicio
+        && event.end_date <= periodo.fechaFin
+      ) {
+        markers.push({
+          id: `${periodo.id}:${event.id}:end`,
+          label: `${event.name} · ${periodo.nombre} fin`,
+          value: monthDiff(periodo.fechaInicio, event.end_date),
+          color: eventColor || periodo.color || markerColor(periodoIndex),
+        });
+      }
+    });
+  });
+
+  return markers.sort((a, b) => a.value - b.value);
 }
 

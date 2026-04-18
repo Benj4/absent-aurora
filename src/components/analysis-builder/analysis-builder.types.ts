@@ -1,6 +1,5 @@
 // shared types and constants for AnalysisBuilder
 
-type Transformacion = 'nominal' | 'variacion_interanual_pct' | 'acumulado_pct' | 'base_100';
 type ModoAlineacion = 'calendario' | 'indice_cero';
 
 interface Periodo {
@@ -15,11 +14,14 @@ interface AnalisisState {
   titulo: string;
   descripcion: string;
   modoAlineacion: ModoAlineacion;
-  transformacion: Transformacion;
   region: string;
   indicadores: string[];
   periodos: Periodo[];
   sourceSelections?: SourceSelection;
+  macroEventIds: string[];
+  markerModeByEventId?: Record<string, 'none' | 'start' | 'end' | 'both'>;
+  markerColorByEventId?: Record<string, string>;
+  showBase100Line?: boolean;
 }
 
 type Action =
@@ -27,12 +29,12 @@ type Action =
   | { type: 'SET_DESCRIPCION'; value: string }
   | { type: 'SET_REGION'; value: string }
   | { type: 'SET_MODO'; value: ModoAlineacion }
-  | { type: 'SET_TRANSFORMACION'; value: Transformacion }
   | { type: 'TOGGLE_INDICATOR'; id: string }
   | { type: 'ADD_PERIODO' }
   | { type: 'UPDATE_PERIODO'; id: string; field: keyof Periodo; value: string }
   | { type: 'REMOVE_PERIODO'; id: string }
   | { type: 'SET_SOURCE_SELECTION'; key: string; value: string }
+  | { type: 'TOGGLE_MACRO_EVENT'; id: string }
   | { type: 'LOAD_STATE'; payload: AnalisisState };
 
 interface RawPoint {
@@ -52,6 +54,15 @@ interface HCSeriesData {
   color: string;
   dashStyle: 'Solid' | 'ShortDash' | 'Dot' | 'DashDot';
   data: [number, number][];
+  isReference?: boolean;
+  yAxis?: number;
+}
+
+interface HCEventMarker {
+  id: string;
+  label: string;
+  value: number;
+  color: string;
 }
 
 interface KPICell {
@@ -79,17 +90,9 @@ const PERIOD_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const MAX_PERIODS = 6;
 const MAX_INDICATORS = 5;
 
-const TRANSFORMACIONES: { value: Transformacion; label: string; hint: string }[] = [
-  { value: 'nominal', label: 'Nominal', hint: 'Valores originales sin transformar.' },
-  { value: 'variacion_interanual_pct', label: 'Variación interanual (%)', hint: 'Cambio respecto al período anterior.' },
-  { value: 'acumulado_pct', label: 'Variación acumulada (%)', hint: 'Cambio total desde el inicio del período.' },
-  { value: 'base_100', label: 'Índice base 100', hint: 'Primera observación = 100, resto proporcional.' },
-];
-
 const ANALISIS_DRAFT_KEY = 'analysis-builder-draft:v1';
 
 export type {
-  Transformacion,
   ModoAlineacion,
   Periodo,
   AnalisisState,
@@ -97,6 +100,7 @@ export type {
   RawPoint,
   SourceSelection,
   HCSeriesData,
+  HCEventMarker,
   KPICell,
   KPIRow,
   SourceConflict,
@@ -107,6 +111,5 @@ export {
   PERIOD_LETTERS,
   MAX_PERIODS,
   MAX_INDICATORS,
-  TRANSFORMACIONES,
   ANALISIS_DRAFT_KEY,
 };
