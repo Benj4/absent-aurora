@@ -268,13 +268,27 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
       {saveError && (
         <p className="text-xs text-error leading-snug" role="alert">{saveError}</p>
       )}
-      <button
-        type="button"
-        className="btn btn-sm btn-outline btn-error w-full"
-        onClick={onReset}
-      >
-        Reiniciar formulario
-      </button>
+      {isEditMode ?
+        <button
+          type="button"
+          className="btn btn-sm btn-outline btn-error w-full"
+          onClick={() => {
+            if (window.confirm('Se perderan los cambios sin guardar. ¿Continuar?')) {
+              window.location.href = '/analisis/nuevo';
+            }
+          }}
+        >
+          Crear nuevo análisis
+        </button>
+        :
+        <button
+          type="button"
+          className="btn btn-sm btn-outline btn-error w-full"
+          onClick={onReset}
+        >
+          Reiniciar formulario
+        </button>
+      }
     </div>
   </aside>
 );

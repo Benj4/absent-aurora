@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import { withBase } from '../../lib/paths';
 import type { MacroEvent } from '../../lib/macro-events';
 import type { AnalisisState, HCSeriesData, HCEventMarker, SourceConflict } from './analysis-builder.types';
+import type { MacroMarkerMode } from './use-analisis-state';
 import { fmt, getDefaultMacroEventColor } from './analysis-builder.utils';
 import AnalysisChart from './AnalysisChart';
 import KPICard from './KPICard';
@@ -17,8 +18,6 @@ interface TableRow {
   postId: string;
   sourceName: string;
 }
-
-type MacroMarkerMode = 'none' | 'start' | 'end' | 'both';
 
 interface AnalysisContentProps {
   state: AnalisisState;

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json"
+    "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json",
+    "generate:types": "tsx scripts/generate-types.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -40,6 +41,7 @@
     "dotenv": "^17.2.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.19.2",
     "vitest": "^4.0.16"
   }
 }

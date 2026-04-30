@@ -1,6 +1,8 @@
 // shared types and constants for AnalysisBuilder
+import type { Analysis, AnalysisMacroEvent } from '../../lib/supabase';
 
-type ModoAlineacion = 'calendario' | 'indice_cero';
+/** Derived from the canonical Analysis.alignment_mode union. */
+type ModoAlineacion = Analysis['alignment_mode'];
 
 interface Periodo {
   id: string;
@@ -19,7 +21,7 @@ interface AnalisisState {
   periodos: Periodo[];
   sourceSelections?: SourceSelection;
   macroEventIds: string[];
-  markerModeByEventId?: Record<string, 'none' | 'start' | 'end' | 'both'>;
+  markerModeByEventId?: Record<string, NonNullable<AnalysisMacroEvent['marker_mode']>>;
   markerColorByEventId?: Record<string, string>;
   showBase100Line?: boolean;
 }

@@ -1,22 +1,26 @@
 import type { FC } from 'react';
 import { withBase } from '../lib/paths';
 import indicatorsNames from '../data/names.json';
-// NOTE: Use local types compatible with server responses. Prefer importing from `src/lib/supabase` when possible.
-interface SerieData {
-  id?: number | string;
-  date: string;
-  value: number;
-}
+import type { SeriePost, SerieDataPoint } from '../lib/supabase';
 
+/** Projection of SerieDataPoint used for the nested join result (post_id excluded). */
+type SerieData = Pick<SerieDataPoint, 'id' | 'date' | 'value'>;
+
+/**
+ * Display-oriented subset of SeriePost with an optional nested serie_data join.
+ * Fields mirror SeriePost field types to stay anchored to the canonical schema;
+ * data_source and updated_at are optional because this component is also used
+ * in list contexts where those fields may not be selected.
+ */
 interface Post {
-  id: number | string;
-  indicator_id: string;
-  data_source?: string;
-  url?: string | null;
-  frequency: string;
-  status: string;
-  created_at: string;
-  updated_at?: string;
+  id: SeriePost['id'];
+  indicator_id: SeriePost['indicator_id'];
+  data_source?: SeriePost['data_source'];
+  url?: SeriePost['url'];
+  frequency: SeriePost['frequency'];
+  status: SeriePost['status'];
+  created_at: SeriePost['created_at'];
+  updated_at?: SeriePost['updated_at'];
   serie_data?: SerieData[];
 }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import type { AnalysisMacroEvent } from '../../lib/supabase';
 import { fetchMacroEvents } from '../../lib/macro-events';
 import { loadAnalysis } from '../../lib/analysis';
 import type { MacroEvent } from '../../lib/macro-events';
@@ -19,7 +20,8 @@ import {
 } from './analysis-builder.utils';
 import { INDICATOR_MAP } from './analysis-builder.data';
 
-export type MacroMarkerMode = 'none' | 'start' | 'end' | 'both';
+/** Derived from AnalysisMacroEvent.marker_mode — the non-nullable variant. */
+export type MacroMarkerMode = NonNullable<AnalysisMacroEvent['marker_mode']>;
 
 export function useAnalisisState(analysisId?: string) {
   const initial = makeInitialState();

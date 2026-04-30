@@ -1,38 +1,25 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
+import type { SeriePost, SerieDataPoint, SerieValidation } from '../lib/supabase';
 import { useAuthSession } from '../lib/use-auth-session';
 import { normalizeFrequency } from '../lib/frequency';
 import { withBase } from '../lib/paths';
 
-type PostStatus = 'pending' | 'approved' | 'rejected' | 'disabled';
+/** Derived from the canonical SeriePost status union. */
+type PostStatus = SeriePost['status'];
 
-interface SerieDataItem {
-  id: string;
-  date: string;
-  value: number;
-}
+/** Projection of SerieDataPoint used for the nested join result (post_id excluded). */
+type SerieDataItem = Pick<SerieDataPoint, 'id' | 'date' | 'value'>;
 
-interface Validation {
-  id: string;
-  validation_status: string;
-  validation_notes: string | null;
-  validated_at: string;
-}
+/** Projection of SerieValidation for display; omits server-only fields. */
+type Validation = Pick<SerieValidation, 'id' | 'validation_status' | 'validation_notes' | 'validated_at'>;
 
-interface Post {
-  id: string;
-  indicator_id: string;
-  data_source: string;
-  url?: string | null;
-  frequency: string;
-  status: PostStatus;
-  notes: string | null;
-  created_at: string;
-  updated_at: string | null;
-  submitted_by: string | null;
-  serie_data: SerieDataItem[];
-}
+/**
+ * SeriePost extended with its joined serie_data rows.
+ * submitted_at is omitted because it is not selected in the detail query.
+ */
+type Post = Omit<SeriePost, 'submitted_at'> & { serie_data: SerieDataItem[] };
 
 const STATUS_BADGE: Record<string, string> = {
   approved: 'badge-success',
