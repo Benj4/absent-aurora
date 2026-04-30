@@ -65,19 +65,19 @@ interface HCEventMarker {
   color: string;
 }
 
-interface KPICell {
-  periodId: string;
-  periodNombre: string;
-  periodColor: string;
-  valor: number | null;
-  delta: number | null;
-}
+// interface KPICell {
+//   periodId: string;
+//   periodNombre: string;
+//   periodColor: string;
+//   valor: number | null;
+//   delta: number | null;
+// }
 
-interface KPIRow {
-  indicadorId: string;
-  label: string;
-  cells: KPICell[];
-}
+// interface KPIRow {
+//   indicadorId: string;
+//   label: string;
+//   cells: KPICell[];
+// }
 
 interface SourceConflict {
   indicatorId: string;
@@ -101,8 +101,8 @@ export type {
   SourceSelection,
   HCSeriesData,
   HCEventMarker,
-  KPICell,
-  KPIRow,
+  // KPICell,
+  // KPIRow,
   SourceConflict,
 };
 

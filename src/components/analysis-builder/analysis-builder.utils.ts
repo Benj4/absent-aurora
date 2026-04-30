@@ -7,9 +7,7 @@ import type {
   SourceConflict,
   ModoAlineacion,
   HCSeriesData,
-  HCEventMarker,
-  KPIRow,
-  KPICell,
+  HCEventMarker
 } from './analysis-builder.types';
 import {
   PERIOD_COLORS,
@@ -250,26 +248,26 @@ export function filterByPeriod(data: RawPoint[], indicId: string, periodo: Perio
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-export function buildKPIRows(rawData: RawPoint[], state: AnalisisState): KPIRow[] {
-  return state.indicadores.map(indicId => {
-    const cells: KPICell[] = state.periodos.map(periodo => {
-      const pts = filterByPeriod(rawData, indicId, periodo, state.sourceSelections);
-      const values = pts.map(d => d.value);
-      const mean = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
-      return { periodId: periodo.id, periodNombre: periodo.nombre, periodColor: periodo.color, valor: mean, delta: null };
-    });
+// export function buildKPIRows(rawData: RawPoint[], state: AnalisisState): KPIRow[] {
+//   return state.indicadores.map(indicId => {
+//     const cells: KPICell[] = state.periodos.map(periodo => {
+//       const pts = filterByPeriod(rawData, indicId, periodo, state.sourceSelections);
+//       const values = pts.map(d => d.value);
+//       const mean = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
+//       return { periodId: periodo.id, periodNombre: periodo.nombre, periodColor: periodo.color, valor: mean, delta: null };
+//     });
 
-    const ref = cells.find(c => c.valor !== null);
-    if (ref) {
-      cells.forEach((cell, i) => {
-        if (i === 0 || cell.valor === null || ref.valor === null || ref.valor === 0) return;
-        cell.delta = ((cell.valor - ref.valor) / Math.abs(ref.valor)) * 100;
-      });
-    }
+//     const ref = cells.find(c => c.valor !== null);
+//     if (ref) {
+//       cells.forEach((cell, i) => {
+//         if (i === 0 || cell.valor === null || ref.valor === null || ref.valor === 0) return;
+//         cell.delta = ((cell.valor - ref.valor) / Math.abs(ref.valor)) * 100;
+//       });
+//     }
 
-    return { indicadorId: indicId, label: INDICATOR_MAP.get(indicId) ?? indicId, cells };
-  });
-}
+//     return { indicadorId: indicId, label: INDICATOR_MAP.get(indicId) ?? indicId, cells };
+//   });
+// }
 
 const DASH_STYLES: HCSeriesData['dashStyle'][] = ['Solid', 'ShortDash', 'Dot', 'DashDot'];
 

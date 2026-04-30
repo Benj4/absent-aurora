@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FC } from 'react';
 import { withBase } from '../../lib/paths';
 import type { MacroEvent } from '../../lib/macro-events';
-import type { AnalisisState, HCSeriesData, HCEventMarker, KPIRow, SourceConflict } from './analysis-builder.types';
+import type { AnalisisState, HCSeriesData, HCEventMarker, SourceConflict } from './analysis-builder.types';
 import { fmt, getDefaultMacroEventColor } from './analysis-builder.utils';
 import AnalysisChart from './AnalysisChart';
 import KPICard from './KPICard';
@@ -29,7 +29,7 @@ interface AnalysisContentProps {
   chartSeries: HCSeriesData[];
   selectedMacroEvents: MacroEvent[];
   chartMarkers: HCEventMarker[];
-  kpiRows: KPIRow[];
+  // kpiRows: KPIRow[];
   hasData: boolean;
   isConfigured: boolean;
   displayTitle: string;
@@ -51,7 +51,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
   chartSeries,
   selectedMacroEvents,
   chartMarkers,
-  kpiRows,
+  // kpiRows,
   hasData,
   isConfigured,
   displayTitle,
@@ -121,7 +121,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
         />
       )}
 
-      {state.indicadores.length > 0 && (
+      {/* {state.indicadores.length > 0 && (
         <section aria-label="Tarjetas de indicadores clave">
           {loading ? (
             <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
@@ -145,7 +145,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
             </div>
           )}
         </section>
-      )}
+      )} */}
 
       <section aria-label="Gráfico comparativo" className="bg-base-100 rounded-2xl border border-base-200 p-5">
         <div className="flex items-center justify-between mb-4">

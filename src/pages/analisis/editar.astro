@@ -1,7 +1,8 @@
 ---
-// filepath: src/pages/analisis/nuevo.astro
+// filepath: src/pages/analisis/editar.astro
 import Layout from '../../layouts/Layout.astro';
 import AnalysisBuilder from '../../components/AnalysisBuilder';
+
 ---
 
 <style is:global>
@@ -9,11 +10,11 @@ import AnalysisBuilder from '../../components/AnalysisBuilder';
 </style>
 
 <Layout
-  title="Crear análisis — Absent Aurora"
+  title="Editar análisis — Absent Aurora"
   breadcrumbItems={[
     { label: 'Inicio', href: '/' },
-    { label: 'Crear análisis'},
+    { label: 'Editar análisis' },
   ]}
 >
-  <AnalysisBuilder client:load mode="new" />
+  <AnalysisBuilder client:load mode="edit" />
 </Layout>

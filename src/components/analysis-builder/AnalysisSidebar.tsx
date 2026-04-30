@@ -22,6 +22,10 @@ interface AnalysisSidebarProps {
   macroEventsSearch: string;
   setMacroEventsSearch: Dispatch<SetStateAction<string>>;
   onReset: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+  saveError: string | null;
+  isEditMode: boolean;
 }
 
 const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
@@ -41,6 +45,10 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
   macroEventsSearch,
   setMacroEventsSearch,
   onReset,
+  onSave,
+  isSaving,
+  saveError,
+  isEditMode,
 }) => (
   <aside
     aria-label="Panel de configuración del analisis"
@@ -247,7 +255,19 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
       </SidebarSection>
     </div>
 
-    <div className="shrink-0 border-t border-base-200 bg-base-100 px-4 pb-4 pt-3">
+    <div className="shrink-0 border-t border-base-200 bg-base-100 px-4 pb-4 pt-3 space-y-2">
+      <button
+        type="button"
+        className="btn btn-sm btn-primary w-full"
+        onClick={onSave}
+        disabled={isSaving}
+      >
+        {isSaving ? <span className="loading loading-spinner loading-xs" /> : null}
+        {isSaving ? 'Guardando…' : isEditMode ? 'Actualizar análisis' : 'Guardar análisis'}
+      </button>
+      {saveError && (
+        <p className="text-xs text-error leading-snug" role="alert">{saveError}</p>
+      )}
       <button
         type="button"
         className="btn btn-sm btn-outline btn-error w-full"

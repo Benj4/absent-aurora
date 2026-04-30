@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { fetchMacroEvents } from '../../lib/macro-events';
+import { loadAnalysis } from '../../lib/analysis';
 import type { MacroEvent } from '../../lib/macro-events';
 
 import type { RawPoint, AnalisisState, Periodo, ModoAlineacion } from './analysis-builder.types';
@@ -10,7 +11,7 @@ import {
   sanitizeState,
   findSourceConflicts,
   filterByPeriod,
-  buildKPIRows,
+  // buildKPIRows,
   buildChartSeries,
   buildBase100OverlaySeries,
   buildMacroEventMarkers,
@@ -20,7 +21,7 @@ import { INDICATOR_MAP } from './analysis-builder.data';
 
 export type MacroMarkerMode = 'none' | 'start' | 'end' | 'both';
 
-export function useAnalisisState() {
+export function useAnalisisState(analysisId?: string) {
   const initial = makeInitialState();
 
   const [titulo, setTitulo] = useState(initial.titulo);
@@ -60,6 +61,16 @@ export function useAnalisisState() {
   const [isDraftReady, setIsDraftReady] = useState(false);
 
   useEffect(() => {
+    // Edit mode: load from Supabase, skip localStorage entirely
+    if (analysisId) {
+      loadAnalysis(analysisId).then(result => {
+        if (!('error' in result)) loadState(result);
+        setIsDraftReady(true);
+      });
+      return;
+    }
+
+    // New mode: restore from ?s= share param or localStorage draft
     let restored: AnalisisState | null = null;
     const encoded = new URLSearchParams(window.location.search).get('s');
     try {
@@ -72,19 +83,20 @@ export function useAnalisisState() {
     } catch {
       // Ignore malformed state.
     }
-    console.log('restored :>> ', restored);
     if (restored) loadState(restored);
     setIsDraftReady(true);
-  }, [loadState]);
+  }, [loadState, analysisId]);
 
   useEffect(() => {
+    // Edit mode: don't persist to localStorage
+    if (analysisId) return;
     if (!isDraftReady) return;
     try {
       window.localStorage.setItem(ANALISIS_DRAFT_KEY, JSON.stringify(state));
     } catch {
       // Ignore quota/private-mode errors.
     }
-  }, [state, isDraftReady]);
+  }, [state, isDraftReady, analysisId]);
 
   // ── State mutations ────────────────────────────────────────────────────────
 
@@ -225,7 +237,7 @@ export function useAnalisisState() {
   const chartSeries = [...buildChartSeries(rawData, state), ...base100Overlay];
   const selectedMacroEvents = macroEvents.filter(ev => state.macroEventIds.includes(ev.id));
   const chartMarkers = buildMacroEventMarkers(selectedMacroEvents, state, markerModeByEventId, markerColorByEventId);
-  const kpiRows = buildKPIRows(rawData, state);
+  // const kpiRows = buildKPIRows(rawData, state);
   const hasActivePeriods = state.periodos.some(p => p.fechaInicio && p.fechaFin);
   const hasData = rawData.length > 0;
   const isConfigured = state.indicadores.length > 0 && hasActivePeriods;
@@ -282,7 +294,7 @@ export function useAnalisisState() {
     chartSeries,
     selectedMacroEvents,
     chartMarkers,
-    kpiRows,
+    // kpiRows,
     hasData,
     isConfigured,
     displayTitle,

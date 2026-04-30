@@ -1,9 +1,18 @@
 import type { FC } from 'react';
+import { useState, useCallback } from 'react';
 import { useAnalisisState } from './analysis-builder/use-analisis-state';
 import AnalysisSidebar from './analysis-builder/AnalysisSidebar';
 import AnalysisContent from './analysis-builder/AnalysisContent';
+import { saveAnalysis, updateAnalysis } from '../lib/analysis';
 
-const AnalysisBuilder: FC = () => {
+interface AnalysisBuilderProps {
+  mode: 'new' | 'edit';
+}
+
+const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
+  const analysisId = mode === 'edit' && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('id') ?? undefined
+    : undefined;
   const {
     state,
     onSetTitulo, onSetDescripcion, onSetRegion, onSetModo,
@@ -15,8 +24,25 @@ const AnalysisBuilder: FC = () => {
     markerColorByEventId, setMarkerColorByEventId,
     loading, copied, handleShare,
     sourceConflicts, chartSeries, selectedMacroEvents, chartMarkers,
-    kpiRows, hasData, isConfigured, displayTitle, periodsSummary, tableRows,
-  } = useAnalisisState();
+    hasData, isConfigured, displayTitle, periodsSummary, tableRows,
+  } = useAnalisisState(analysisId);
+
+  const isEditMode = Boolean(analysisId);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    setSaveError(null);
+    const result = isEditMode
+      ? await updateAnalysis(analysisId!, state)
+      : await saveAnalysis(state);
+    setIsSaving(false);
+    if ('error' in result) {
+      setSaveError(result.error);
+    }
+  }, [state, isEditMode, analysisId]);
 
   return (
     <div className="flex bg-base-200/20" style={{ height: 'calc(100svh - 7rem)', overflow: 'hidden' }}>
@@ -37,6 +63,10 @@ const AnalysisBuilder: FC = () => {
         macroEventsSearch={macroEventsSearch}
         setMacroEventsSearch={setMacroEventsSearch}
         onReset={onReset}
+        onSave={handleSave}
+        isSaving={isSaving}
+        saveError={saveError}
+        isEditMode={isEditMode}
       />
 
       <AnalysisContent
@@ -48,7 +78,7 @@ const AnalysisBuilder: FC = () => {
         chartSeries={chartSeries}
         selectedMacroEvents={selectedMacroEvents}
         chartMarkers={chartMarkers}
-        kpiRows={kpiRows}
+        // kpiRows={kpiRows}
         hasData={hasData}
         isConfigured={isConfigured}
         displayTitle={displayTitle}

@@ -175,6 +175,182 @@ CREATE VIEW public.validation_summary AS
   GROUP BY sp.id, sp.indicator_id, sp.submitted_by, sp.submitted_at, sp.status;
 
 
+
+
+
+-- ------------------------------------------------------------
+-- 0. HELPER: updated_at trigger function
+-- ------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+
+-- ------------------------------------------------------------
+-- 1. analysis
+--    One row = one saved analysis configuration.
+--    Maps: titulo, descripcion, modoAlineacion, region, showBase100Line
+-- ------------------------------------------------------------
+
+CREATE TABLE public.analysis (
+    id               uuid                     DEFAULT gen_random_uuid() NOT NULL,
+    title            text                     NOT NULL,
+    description      text,
+    alignment_mode   varchar(20)              NOT NULL DEFAULT 'indice_cero',
+    region           text,
+    show_base100     boolean                  NOT NULL DEFAULT false,
+    created_by       uuid                     NOT NULL DEFAULT auth.uid(),
+    created_at       timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at       timestamp with time zone NOT NULL DEFAULT now(),
+    status           text                     NOT NULL DEFAULT 'draft'
+
+    CONSTRAINT analysis_pkey PRIMARY KEY (id),
+    CONSTRAINT analysis_alignment_mode_check
+        CHECK (alignment_mode IN ('indice_cero', 'calendario')),
+    CONSTRAINT analysis_created_by_fkey
+        FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_analysis_created_by ON public.analysis USING btree (created_by);
+CREATE INDEX idx_analysis_created_at ON public.analysis USING btree (created_at DESC);
+
+CREATE TRIGGER analysis_set_updated_at
+    BEFORE UPDATE ON public.analysis
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+
+
+
+-- ------------------------------------------------------------
+-- 2. analysis_indicators
+--    Many-to-many: analysis ↔ indicator catalog IDs.
+--    Maps: indicadores[]
+--    sort_order preserves array position for display.
+-- ------------------------------------------------------------
+
+CREATE TABLE public.analysis_indicators (
+    analysis_id  uuid        NOT NULL,
+    indicator_id varchar(10) NOT NULL,
+    sort_order   smallint    NOT NULL DEFAULT 0,
+
+    CONSTRAINT analysis_indicators_pkey
+        PRIMARY KEY (analysis_id, indicator_id),
+    CONSTRAINT analysis_indicators_analysis_fkey
+        FOREIGN KEY (analysis_id) REFERENCES public.analysis(id) ON DELETE CASCADE
+);
+-- Note: indicator_id references indicators.json (static catalog), no FK needed.
+-- PK (analysis_id, indicator_id) already covers btree lookups by analysis_id.
+
+
+-- ------------------------------------------------------------
+-- 3. analysis_periods
+--    Ordered list of comparison periods for an analysis.
+--    Maps: periodos[{ id, nombre, fechaInicio, fechaFin, color }]
+--    Client-generated UUIDs are accepted (id is NOT auto-generated).
+-- ------------------------------------------------------------
+
+CREATE TABLE public.analysis_periods (
+    id           uuid       NOT NULL,
+    analysis_id  uuid       NOT NULL,
+    name         text       NOT NULL,
+    start_date   date       NOT NULL,
+    end_date     date       NOT NULL,
+    color        varchar(7) NOT NULL,
+    sort_order   smallint   NOT NULL DEFAULT 0,
+
+    CONSTRAINT analysis_periods_pkey PRIMARY KEY (id),
+    CONSTRAINT analysis_periods_analysis_fkey
+        FOREIGN KEY (analysis_id) REFERENCES public.analysis(id) ON DELETE CASCADE,
+    CONSTRAINT analysis_periods_color_check
+        CHECK (color ~ '^#[0-9a-fA-F]{6}$'),
+    CONSTRAINT analysis_periods_dates_check
+        CHECK (end_date >= start_date)
+);
+
+-- analysis_id is not the leading key in the PK → needs its own index
+CREATE INDEX idx_analysis_periods_analysis_id
+    ON public.analysis_periods USING btree (analysis_id);
+
+
+-- ------------------------------------------------------------
+-- 4. analysis_source_selections
+--    Per-indicator-date override: which approved post to use.
+--    Maps: sourceSelections{ "E02:2024-01-01": "<post_id>" }
+--    Key is split into (indicator_id, date) columns for queryability.
+-- ------------------------------------------------------------
+
+CREATE TABLE public.analysis_source_selections (
+    analysis_id  uuid        NOT NULL,
+    indicator_id varchar(10) NOT NULL,
+    date         date        NOT NULL,
+    post_id      uuid        NOT NULL,
+
+    CONSTRAINT analysis_source_selections_pkey
+        PRIMARY KEY (analysis_id, indicator_id, date),
+    CONSTRAINT analysis_source_selections_analysis_fkey
+        FOREIGN KEY (analysis_id) REFERENCES public.analysis(id) ON DELETE CASCADE,
+    CONSTRAINT analysis_source_selections_post_fkey
+        FOREIGN KEY (post_id) REFERENCES public.serie_posts(id) ON DELETE RESTRICT
+);
+
+-- PK covers analysis_id lookups. Index post_id for integrity checks / reverse lookups.
+CREATE INDEX idx_analysis_source_selections_post_id
+    ON public.analysis_source_selections USING btree (post_id);
+
+
+-- ------------------------------------------------------------
+-- 5. analysis_macro_events
+--    Macro events displayed on the chart + per-event marker config.
+--    Maps: macroEventIds[], markerModeByEventId{}, markerColorByEventId{}
+--    Rows where macro_event_id is in macroEventIds but not in the maps
+--    simply have NULL marker_mode / marker_color (defaults applied client-side).
+-- ------------------------------------------------------------
+
+CREATE TABLE public.analysis_macro_events (
+    analysis_id    uuid        NOT NULL,
+    macro_event_id uuid        NOT NULL,
+    marker_mode    varchar(10),
+    marker_color   varchar(7),
+
+    CONSTRAINT analysis_macro_events_pkey
+        PRIMARY KEY (analysis_id, macro_event_id),
+    CONSTRAINT analysis_macro_events_analysis_fkey
+        FOREIGN KEY (analysis_id) REFERENCES public.analysis(id) ON DELETE CASCADE,
+    CONSTRAINT analysis_macro_events_event_fkey
+        FOREIGN KEY (macro_event_id) REFERENCES public.macro_events(id) ON DELETE CASCADE,
+    CONSTRAINT analysis_macro_events_marker_mode_check
+        CHECK (marker_mode IS NULL OR marker_mode IN ('none', 'start', 'end', 'both')),
+    CONSTRAINT analysis_macro_events_marker_color_check
+        CHECK (marker_color IS NULL OR marker_color ~ '^#[0-9a-fA-F]{6}$')
+);
+
+-- macro_event_id is not the leading key → index for reverse lookups and CASCADE
+CREATE INDEX idx_analysis_macro_events_event_id
+    ON public.analysis_macro_events USING btree (macro_event_id);
+
+
+-- ============================================================
+-- COMMENTS
+-- ============================================================
+
+COMMENT ON TABLE  public.analysis                     IS 'One row per saved analysis configuration. Root of the AnalysisState graph.';
+
+COMMENT ON TABLE  public.analysis_indicators          IS 'Many-to-many join between an analysis and indicator catalog IDs. Maps: indicadores[].';
+
+COMMENT ON TABLE  public.analysis_periods             IS 'Ordered comparison periods for an analysis. Maps: periodos[]. Client-generated UUIDs are stored as-is.';
+
+COMMENT ON TABLE  public.analysis_source_selections   IS 'Per-indicator-date post override. Maps: sourceSelections{"E02:2024-01-01": "<post_id>"}. Composite key replaces the string key for queryability and FK integrity.';
+
+COMMENT ON TABLE  public.analysis_macro_events        IS 'Macro events shown on the chart with per-event marker config. Merges macroEventIds[], markerModeByEventId{}, markerColorByEventId{}. NULL columns mean use client-side default.';
+
+
 --
 -- TOC entry 3681 (class 2606 OID 27495)
 -- Name: serie_data serie_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
