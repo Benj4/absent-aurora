@@ -9,6 +9,7 @@ src/
 │   └── background.svg
 ├── components/
 │   ├── AnalysisBuilder.tsx
+│   ├── AnalysisViewer.tsx
 │   ├── ApprovedSeriesSelector.tsx
 │   ├── AuthSessionBootstrap.tsx
 │   ├── Breadcrumbs.tsx
@@ -35,7 +36,8 @@ src/
 │   │   ├── KPICard.tsx
 │   │   ├── PeriodRow.tsx
 │   │   ├── SidebarSection.tsx
-│   │   └── SourceConflictResolver.tsx
+│   │   ├── SourceConflictResolver.tsx
+│   │   └── use-analisis-state.ts
 │   ├── macro-events/
 │   │   ├── MacroEventForm.tsx
 │   │   └── MacroEventsPage.tsx
@@ -67,6 +69,7 @@ src/
 │   ├── admin/
 │   │   └── macro-events.astro
 │   ├── analisis/
+│   │   ├── [id].astro
 │   │   ├── editar.astro
 │   │   └── nuevo.astro
 │   ├── indicators/[id]/
@@ -91,7 +94,10 @@ src/
 | File | Purpose |
 |------|---------|
 | `src/pages/series/[frequency]/[id].astro` | Create post + add serie data |
+| `src/pages/analisis/[id].astro` | Public read-only analysis viewer page (SSR) |
 | `src/components/SeriesForm.tsx` | Series data entry form |
+| `src/components/AnalysisBuilder.tsx` | Analysis builder shell (create/edit modes) |
+| `src/components/AnalysisViewer.tsx` | Public read-only analysis viewer component |
 | `src/components/analysis-builder/*` | Advanced analysis builder UI |
 | `src/components/ApprovedSeriesSelector.tsx` | Indicator selector |
 
@@ -119,6 +125,22 @@ src/
 | `src/pages/user/index.astro` | User posts page |
 | `src/pages/user/reviews.astro` | User reviews page |
 
+### Analysis Builder (`src/components/analysis-builder/`)
+| File | Purpose |
+|------|---------|
+| `analysis-builder.types.ts` | Shared types and constants |
+| `analysis-builder.utils.ts` | Pure utility functions (chart series, markers, filtering) |
+| `analysis-builder.data.ts` | Indicator map and static data |
+| `use-analisis-state.ts` | React hook — state management, data fetching, derived values |
+| `AnalysisChart.tsx` | Highcharts time-series chart wrapper |
+| `AnalysisContent.tsx` | Main editable content canvas |
+| `AnalysisSidebar.tsx` | Configuration sidebar |
+| `IndicatorSelector.tsx` | Indicator multi-select |
+| `KPICard.tsx` | Single KPI metric card |
+| `PeriodRow.tsx` | Period configuration row |
+| `SidebarSection.tsx` | Collapsible sidebar section |
+| `SourceConflictResolver.tsx` | Duplicate source resolution UI |
+
 ### Macro Events
 | File | Purpose |
 |------|---------|
@@ -134,5 +156,5 @@ src/
 | `url-title.ts` | Slug generation |
 | `frequency.ts` | Frequency utilities |
 | `series-form-draft.ts` | Draft persistence |
-| `analysis.ts` | Analysis logic |
+| `analysis.ts` | Analysis load/save/update logic |
 | `macro-events.ts` | Macro events helpers |
