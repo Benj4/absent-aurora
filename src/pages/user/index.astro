@@ -8,12 +8,11 @@ import { withBase } from "../../lib/paths";
 <Layout
   breadcrumbItems={[
     { label: "Inicio", href: withBase("/") },
-    { label: "Usuario", href: withBase(`/user?userId={id}`) },
+    { label: "Usuario" },
     { label: "Post" },
   ]}
 >
   <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
-
     <UserPosts client:load />
 
     <noscript>

@@ -18,10 +18,6 @@ import {
 import { INDICATOR_MAP } from './analysis-builder/analysis-builder.data';
 import type { AnalisisState, ModoAlineacion, RawPoint } from './analysis-builder/analysis-builder.types';
 
-interface AnalysisViewerProps {
-  analysisId: string;
-}
-
 type LoadState = 'loading' | 'error' | 'ready';
 
 interface TableRow {
@@ -34,7 +30,12 @@ interface TableRow {
   sourceName: string;
 }
 
-const AnalysisViewer: FC<AnalysisViewerProps> = ({ analysisId }) => {
+const AnalysisViewer: FC = () => {
+
+  const analysisId = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('id') ?? ''
+    : '';
+
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [state, setState] = useState<AnalisisState | null>(null);

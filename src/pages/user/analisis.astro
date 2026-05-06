@@ -1,15 +1,15 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import UserReviews from "../../components/user/UserReviews";
+import UserAnalyses from "../../components/user/UserAnalyses";
 import { withBase } from "../../lib/paths";
 ---
 
 <Layout
-  title="Validaciones del Usuario"
+  title="Mis análisis"
   breadcrumbItems={[
     { label: "Inicio", href: withBase("/") },
     { label: "Usuario" },
-    { label: "Validaciones" },
+    { label: "Análisis" },
   ]}
 >
   <main class="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
@@ -17,20 +17,18 @@ import { withBase } from "../../lib/paths";
       <div class="card-body gap-4 md:gap-5">
         <header class="space-y-2">
           <h1 class="text-2xl font-semibold leading-tight text-pretty">
-            Validaciones del Usuario
+            Mis análisis
           </h1>
           <p class="text-sm text-base-content/70">
-            Revise las validaciones emitidas por el usuario seleccionado.
+            Aquí puedes ver todos los análisis que creaste.
           </p>
         </header>
-
-        <UserReviews client:load />
-
+        <UserAnalyses client:load />
         <noscript>
           <div class="alert alert-info mt-2">
-            <span
-              >Esta pagina requiere JavaScript para mostrar las validaciones.</span
-            >
+            <span>
+              Esta página requiere JavaScript para mostrar la lista de análisis.
+            </span>
           </div>
         </noscript>
       </div>

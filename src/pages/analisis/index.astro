@@ -1,0 +1,17 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+import AnalysisViewer from '../../components/AnalysisViewer';
+
+---
+
+<Layout
+  title={`Analisis — Absent Aurora`}
+  breadcrumbItems={[
+    { label: 'Inicio', href: '/' },
+    { label: 'Análisis', href: '/analisis' },
+    // { label: title },
+  ]}
+>
+  <AnalysisViewer client:load />
+</Layout>

@@ -99,6 +99,15 @@ const Navbar = () => {
                 </a>
               </li>
               <li>
+                <a href={withBase(`/user/analisis?userId=${user.id}`)}>
+                  {/* Analysis icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                    <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5V19.5A1.5 1.5 0 0 1 19.5 21h-15A1.5 1.5 0 0 1 3 19.5V4.5ZM5.25 5.25v13.5h13.5V5.25H5.25Zm2.25 12V7.5h1.5v9.75h-1.5Zm3.75 0V10.5h1.5v7.5h-1.5Zm3.75 0v-6h1.5v6h-1.5Z"/>
+                  </svg>
+                  Mis análisis
+                </a>
+              </li>
+              <li>
                 <a href={withBase(`/user/reviews?userId=${user.id}`)}>
                   {/* Reviews icon */}
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
