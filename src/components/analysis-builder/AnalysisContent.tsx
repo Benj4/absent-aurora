@@ -6,8 +6,9 @@ import type { AnalisisState, HCSeriesData, HCEventMarker, SourceConflict } from 
 import type { MacroMarkerMode } from './use-analisis-state';
 import { fmt, getDefaultMacroEventColor } from './analysis-builder.utils';
 import AnalysisChart from './AnalysisChart';
-import KPICard from './KPICard';
 import SourceConflictResolver from './SourceConflictResolver';
+import { supabase } from '../../lib/supabase';
+import type { Analysis } from '../../types/database';
 
 interface TableRow {
   date: string;
@@ -20,10 +21,9 @@ interface TableRow {
 }
 
 interface AnalysisContentProps {
+  analysisId?: string;
   state: AnalisisState;
   loading: boolean;
-  copied: boolean;
-  handleShare: () => void;
   sourceConflicts: SourceConflict[];
   chartSeries: HCSeriesData[];
   selectedMacroEvents: MacroEvent[];
@@ -34,6 +34,7 @@ interface AnalysisContentProps {
   displayTitle: string;
   periodsSummary: string;
   tableRows: TableRow[];
+  onSetStatus: React.Dispatch<React.SetStateAction<Analysis['status']>>;
   onSelectSource: (key: string, sourceId: string) => void;
   markerModeByEventId: Record<string, MacroMarkerMode>;
   setMarkerModeByEventId: React.Dispatch<React.SetStateAction<Record<string, MacroMarkerMode>>>;
@@ -42,10 +43,9 @@ interface AnalysisContentProps {
 }
 
 const AnalysisContent: FC<AnalysisContentProps> = ({
+  analysisId,
   state,
   loading,
-  copied,
-  handleShare,
   sourceConflicts,
   chartSeries,
   selectedMacroEvents,
@@ -56,6 +56,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
   displayTitle,
   periodsSummary,
   tableRows,
+  onSetStatus,
   onSelectSource,
   markerModeByEventId,
   setMarkerModeByEventId,
@@ -80,25 +81,83 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
     };
   }, []);
 
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  // Track last saved status to enable button only if changed
+  const [lastSavedStatus, setLastSavedStatus] = useState(state.status);
+
+  // Keep lastSavedStatus in sync with state.status if analysisId or state.status changes (e.g. on load)
+  useEffect(() => {
+    setLastSavedStatus(state.status);
+  }, [analysisId]);
+
+  // Opciones válidas de status
+  const statusOptions: Analysis['status'][] = ['draft', 'public', 'hidden' ];
+
+  // Actualiza el status en la base de datos
+  const handleStatusChange = async () => {
+    setStatusLoading(true);
+    setStatusError(null);
+    try {
+      if (!analysisId) {
+        setStatusError('ID de análisis no disponible.');
+        setStatusLoading(false);
+        return;
+      }
+      const { error } = await supabase.from('analysis').update({ status: state.status }).eq('id', analysisId);
+      if (error) {
+        setStatusError(error.message);
+      } else {
+        setLastSavedStatus(state.status);
+      }
+    } catch (err: any) {
+      setStatusError(err.message || 'Error desconocido');
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   return (
-  <main aria-label="Lienzo de resultados del análisis" className="flex-1 overflow-y-auto overscroll-contain min-w-0">
-    <div className="max-w-5xl mx-auto p-5 space-y-5">
-      <section className="bg-base-100 rounded-2xl border border-base-200 p-5 lg:p-7">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold leading-tight tracking-tight" style={{ textWrap: 'balance' } as React.CSSProperties}>{displayTitle}</h1>
-            {(periodsSummary || state.region) && (
-              <p className="mt-1.5 text-base-content/50 text-sm">{periodsSummary} {state.region && <span>· {state.region}</span>}</p>
-            )}
-            {state.descripcion && (<p className="mt-2 text-sm text-base-content/60 max-w-2xl leading-relaxed">{state.descripcion}</p>)}
+    <main aria-label="Lienzo de resultados del análisis" className="flex-1 overflow-y-auto overscroll-contain min-w-0">
+      <div className="max-w-5xl mx-auto p-5 space-y-5">
+        <section className="bg-base-100 rounded-2xl border border-base-200 p-5 lg:p-7">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold leading-tight tracking-tight" style={{ textWrap: 'balance' } as React.CSSProperties}>{displayTitle}</h1>
+              {(periodsSummary || state.region) && (
+                <p className="mt-1.5 text-base-content/50 text-sm">{periodsSummary} {state.region && <span>· {state.region}</span>}</p>
+              )}
+              {state.descripcion && (<p className="mt-2 text-sm text-base-content/60 max-w-2xl leading-relaxed">{state.descripcion}</p>)}
+            </div>
+            <div className="flex flex-col gap-2 items-end">
+              <div className="flex items-center gap-2 mt-2">
+                <select
+                  className="select select-sm select-bordered"
+                  value={state.status}
+                  onChange={e => onSetStatus(e.target.value as Analysis['status'])}
+                  aria-label="Cambiar estado del análisis"
+                  disabled={statusLoading}
+                >
+                  {statusOptions.map(opt => (
+                    <option key={opt} value={opt}>{
+                      opt === 'draft' ? 'Borrador' :
+                      opt === 'public' ? 'Publico' :
+                      opt === 'hidden' ? 'Oculto' : opt
+                    }</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={handleStatusChange}
+                  disabled={statusLoading || state.status === lastSavedStatus}
+                >
+                  {statusLoading ? 'Guardando...' : 'Confirmar'}
+                </button>
+              </div>
+              {statusError && <span className="text-error text-xs mt-1">{statusError}</span>}
+            </div>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline shrink-0"
-            onClick={handleShare}
-            aria-label="Copiar enlace compartible de este análisis"
-          >{copied ? '✓ Copiado' : '⤴ Compartir URL'}</button>
-        </div>
         {state.periodos.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {state.periodos.map(p => (
@@ -119,32 +178,6 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
           onSelectSource={onSelectSource}
         />
       )}
-
-      {/* {state.indicadores.length > 0 && (
-        <section aria-label="Tarjetas de indicadores clave">
-          {loading ? (
-            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
-              {Array.from({ length: state.indicadores.length * state.periodos.length }).map((_, i) => (
-                <div key={i} className="skeleton h-28 rounded-box" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
-              {kpiRows.flatMap(row => row.cells.map(cell => (
-                <KPICard
-                  key={`${row.indicadorId}-${cell.periodId}`}
-                  label={row.label}
-                  periodNombre={cell.periodNombre}
-                  periodColor={cell.periodColor}
-                  valor={cell.valor}
-                  delta={cell.delta}
-                  pct={false}
-                />
-              )))}
-            </div>
-          )}
-        </section>
-      )} */}
 
       <section aria-label="Gráfico comparativo" className="bg-base-100 rounded-2xl border border-base-200 p-5">
         <div className="flex items-center justify-between mb-4">

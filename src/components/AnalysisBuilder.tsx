@@ -15,14 +15,14 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     : undefined;
   const {
     state,
-    onSetTitulo, onSetDescripcion, onSetRegion, onSetModo,
+    onSetTitulo, onSetDescripcion, onSetStatus, onSetRegion, onSetModo,
     onSetShowBase100Line,
     onToggleIndicator, onAddPeriodo, onUpdatePeriodo, onRemovePeriodo,
     onToggleMacroEvent, onSelectSource, onReset,
     macroEvents, macroEventsLoading, macroEventsSearch, setMacroEventsSearch,
     markerModeByEventId, setMarkerModeByEventId,
     markerColorByEventId, setMarkerColorByEventId,
-    loading, copied, handleShare,
+    loading,
     sourceConflicts, chartSeries, selectedMacroEvents, chartMarkers,
     hasData, isConfigured, displayTitle, periodsSummary, tableRows,
   } = useAnalisisState(analysisId);
@@ -43,7 +43,6 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
       setSaveError(result.error);
     }
   }, [state, isEditMode, analysisId]);
-
   return (
     <div className="flex bg-base-200/20" style={{ height: 'calc(100svh - 7rem)', overflow: 'hidden' }}>
       <AnalysisSidebar
@@ -70,10 +69,10 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
       />
 
       <AnalysisContent
+        analysisId={analysisId}
         state={state}
         loading={loading}
-        copied={copied}
-        handleShare={handleShare}
+        onSetStatus={onSetStatus}
         sourceConflicts={sourceConflicts}
         chartSeries={chartSeries}
         selectedMacroEvents={selectedMacroEvents}

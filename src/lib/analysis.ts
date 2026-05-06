@@ -21,7 +21,7 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
   const [rootRes, indicatorsRes, periodsRes, selectionsRes, eventsRes] = await Promise.all([
     supabase
       .from('analysis')
-      .select('title, description, alignment_mode, region, show_base100')
+      .select('title, description, status, alignment_mode, region, show_base100')
       .eq('id', id)
       .single(),
     supabase
@@ -74,6 +74,7 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
   return {
     titulo: root.title as string,
     descripcion: (root.description as string) ?? '',
+    status: (root.status as string) ?? 'draft',
     modoAlineacion: root.alignment_mode as 'indice_cero' | 'calendario',
     region: (root.region as string) ?? '',
     indicadores,
@@ -103,6 +104,7 @@ export async function saveAnalysis(
     .insert({
       title: state.titulo,
       description: state.descripcion || null,
+      status: state.status,
       alignment_mode: state.modoAlineacion,
       region: state.region || null,
       show_base100: state.showBase100Line ?? true,
@@ -188,6 +190,7 @@ export async function updateAnalysis(
     .update({
       title: state.titulo,
       description: state.descripcion || null,
+      status: state.status,
       alignment_mode: state.modoAlineacion,
       region: state.region || null,
       show_base100: state.showBase100Line ?? true,

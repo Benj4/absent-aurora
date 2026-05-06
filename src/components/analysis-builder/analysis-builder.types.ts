@@ -15,6 +15,7 @@ interface Periodo {
 interface AnalisisState {
   titulo: string;
   descripcion: string;
+  status: Analysis['status'];
   modoAlineacion: ModoAlineacion;
   region: string;
   indicadores: string[];

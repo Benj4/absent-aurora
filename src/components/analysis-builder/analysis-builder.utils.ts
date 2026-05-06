@@ -21,6 +21,7 @@ export function makeInitialState(): AnalisisState {
   return {
     titulo: '',
     descripcion: '',
+    status: 'draft',
     modoAlineacion: 'calendario',
     region: '',
     indicadores: [],
@@ -68,6 +69,7 @@ export function sanitizeState(input: unknown): AnalisisState | null {
   return {
     titulo: typeof raw.titulo === 'string' ? raw.titulo : '',
     descripcion: typeof raw.descripcion === 'string' ? raw.descripcion : '',
+    status: typeof raw.status === 'string' && raw.status.length > 0 ? raw.status : fallback.status,
     modoAlineacion: isModoAlineacion(raw.modoAlineacion) ? raw.modoAlineacion : fallback.modoAlineacion,
     region: typeof raw.region === 'string' ? raw.region : '',
     indicadores: Array.isArray(raw.indicadores)

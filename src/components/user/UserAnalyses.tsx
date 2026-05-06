@@ -26,7 +26,7 @@ const UserAnalyses = () => {
       const { data, error } = await supabase
         .from("analysis")
         .select(
-          "id, title, description, created_at, updated_at"
+          "id, title, description, created_at, updated_at, status",
         )
         .eq("created_by", userId)
         .order("created_at", { ascending: false });
@@ -65,7 +65,16 @@ const UserAnalyses = () => {
         {analyses.map(a => (
           <a key={a.id} href={withBase(`/analisis?id=${a.id}`)} className="block card border border-base-300 bg-base-100 shadow-sm hover:shadow ring-1 ring-inset ring-base-200/10 transition">
             <div className="card-body py-4 gap-2">
-              <div className="font-semibold text-base">{a.title || <span className="italic text-base-content/50">Sin título</span>}</div>
+              <div className="font-semibold text-base flex items-center gap-2">
+                {a.title || <span className="italic text-base-content/50">Sin título</span>}
+                {a.status === 'public' ? (
+                  <span className="badge badge-xs badge-success capitalize">Público</span>
+                ) : a.status === 'draft' ? (
+                  <span className="text-xs text-base-content/40">Borrador</span>
+                ) : a.status === 'hidden' ? (
+                  <span className="text-xs text-base-content/40">Oculto</span>
+                ) : null}
+              </div>
               {a.description && <div className="text-sm text-base-content/60 line-clamp-2">{a.description}</div>}
               <div className="text-xs mt-2 flex gap-2 text-base-content/40">
                 <span>Creado: {new Date(a.created_at).toLocaleString("es-ES")}</span>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { AnalysisMacroEvent } from '../../lib/supabase';
+import type { Analysis, AnalysisMacroEvent } from '../../lib/supabase';
 import { fetchMacroEvents } from '../../lib/macro-events';
 import { loadAnalysis } from '../../lib/analysis';
 import type { MacroEvent } from '../../lib/macro-events';
@@ -28,6 +28,7 @@ export function useAnalisisState(analysisId?: string) {
 
   const [titulo, setTitulo] = useState(initial.titulo);
   const [descripcion, setDescripcion] = useState(initial.descripcion);
+  const [status, setStatus] = useState<Analysis['status']>(initial.status);
   const [region, setRegion] = useState(initial.region);
   const [modoAlineacion, setModoAlineacion] = useState<ModoAlineacion>(initial.modoAlineacion);
   const [indicadores, setIndicadores] = useState<string[]>(initial.indicadores);
@@ -39,7 +40,7 @@ export function useAnalisisState(analysisId?: string) {
   const [showBase100Line, setShowBase100Line] = useState<boolean>(initial.showBase100Line ?? true);
 
   const state: AnalisisState = {
-    titulo, descripcion, region, modoAlineacion,
+    titulo, descripcion, status, region, modoAlineacion,
     indicadores, periodos, sourceSelections, macroEventIds,
     markerModeByEventId, markerColorByEventId, showBase100Line,
   };
@@ -49,6 +50,7 @@ export function useAnalisisState(analysisId?: string) {
   const loadState = useCallback((s: AnalisisState) => {
     setTitulo(s.titulo);
     setDescripcion(s.descripcion);
+    setStatus(s.status);
     setRegion(s.region);
     setModoAlineacion(s.modoAlineacion);
     setIndicadores(s.indicadores);
@@ -72,16 +74,10 @@ export function useAnalisisState(analysisId?: string) {
       return;
     }
 
-    // New mode: restore from ?s= share param or localStorage draft
     let restored: AnalisisState | null = null;
-    const encoded = new URLSearchParams(window.location.search).get('s');
     try {
-      if (encoded) {
-        restored = sanitizeState(JSON.parse(atob(encoded)));
-      } else {
-        const localRaw = window.localStorage.getItem(ANALISIS_DRAFT_KEY);
-        if (localRaw) restored = sanitizeState(JSON.parse(localRaw));
-      }
+      const localRaw = window.localStorage.getItem(ANALISIS_DRAFT_KEY);
+      if (localRaw) restored = sanitizeState(JSON.parse(localRaw));
     } catch {
       // Ignore malformed state.
     }
@@ -216,21 +212,8 @@ export function useAnalisisState(analysisId?: string) {
       });
 
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(indicadores), JSON.stringify(periodos.map(p => ({ i: p.fechaInicio, f: p.fechaFin })))]);
-
-  // ── Share ──────────────────────────────────────────────────────────────────
-
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = useCallback(() => {
-    const encoded = btoa(JSON.stringify(state));
-    const url = `${window.location.origin}${window.location.pathname}?s=${encoded}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    });
-  }, [state]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
 
@@ -266,6 +249,7 @@ export function useAnalisisState(analysisId?: string) {
     // Form callbacks
     onSetTitulo: setTitulo,
     onSetDescripcion: setDescripcion,
+    onSetStatus: setStatus,
     onSetRegion: setRegion,
     onSetModo: setModoAlineacion,
     onSetShowBase100Line: setShowBase100Line,
@@ -288,9 +272,6 @@ export function useAnalisisState(analysisId?: string) {
     setMarkerColorByEventId,
     // Data
     loading,
-    // Share
-    copied,
-    handleShare,
     // Derived
     sourceConflicts,
     chartSeries,
