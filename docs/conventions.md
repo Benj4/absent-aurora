@@ -71,11 +71,13 @@ const { data: { user } } = await supabase.auth.getUser();
 
 ## Testing Rules
 
-- **Admin client**: `getAdminClient()` for setup/teardown only (bypasses RLS)
-- **User clients**: `getAuthenticatedClient(email, password)` for policy tests
-- **Cleanup**: Always call `cleanupTestData()` in `afterAll`
-- **Timeout**: 30s for database operations (`vitest.config.ts`)
-- **Orphaned data**: Failing tests leave orphaned data — always run cleanup in hooks
+- **Unit tests**: Keep isolated tests under `tests/unit/`; `pnpm test` must not contact external services.
+- **Integration tests**: Keep Supabase and RLS tests under `tests/rls/` and run them explicitly with `pnpm test:integration`.
+- **Test project only**: Integration tests require a local or dedicated Supabase test project and the safety variables documented in `.env.test.example`.
+- **Admin client**: Use `getAdminClient()` for setup and teardown only; it bypasses RLS.
+- **Unique accounts**: Every integration run must create its own users and delete only those users.
+- **Scoped cleanup**: `cleanupTestData()` must receive the exact test-user IDs for the current run. Never delete all rows from a table.
+- **Timeout**: Integration database operations use 30-second test and hook timeouts in `vitest.integration.config.ts`.
 
 ---
 
@@ -101,4 +103,3 @@ if (error) return Astro.redirect('/');
   // Client-side JavaScript
 </script>
 ```
-

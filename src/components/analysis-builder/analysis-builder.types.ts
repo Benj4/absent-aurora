@@ -1,8 +1,9 @@
 // shared types and constants for AnalysisBuilder
-import type { Analysis, AnalysisMacroEvent } from '../../lib/supabase';
+import type { Analysis } from '../../lib/supabase';
 
-/** Derived from the canonical Analysis.alignment_mode union. */
-type ModoAlineacion = Analysis['alignment_mode'];
+// UI choices are narrower than PostgreSQL text columns in the generated types.
+type ModoAlineacion = 'calendario' | 'indice_cero';
+type MarkerMode = 'none' | 'start' | 'end' | 'both';
 
 interface Periodo {
   id: string;
@@ -22,7 +23,7 @@ interface AnalisisState {
   periodos: Periodo[];
   sourceSelections?: SourceSelection;
   macroEventIds: string[];
-  markerModeByEventId?: Record<string, NonNullable<AnalysisMacroEvent['marker_mode']>>;
+  markerModeByEventId?: Record<string, MarkerMode>;
   markerColorByEventId?: Record<string, string>;
   showBase100Line?: boolean;
 }
@@ -96,6 +97,7 @@ const MAX_INDICATORS = 5;
 const ANALISIS_DRAFT_KEY = 'analysis-builder-draft:v1';
 
 export type {
+  MarkerMode,
   ModoAlineacion,
   Periodo,
   AnalisisState,

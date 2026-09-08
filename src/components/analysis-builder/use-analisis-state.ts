@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { Analysis, AnalysisMacroEvent } from '../../lib/supabase';
+import type { Analysis } from '../../lib/supabase';
 import { fetchMacroEvents } from '../../lib/macro-events';
 import { loadAnalysis } from '../../lib/analysis';
 import type { MacroEvent } from '../../lib/macro-events';
 
-import type { RawPoint, AnalisisState, Periodo, ModoAlineacion } from './analysis-builder.types';
+import type { RawPoint, AnalisisState, Periodo, ModoAlineacion, MarkerMode } from './analysis-builder.types';
 import { ANALISIS_DRAFT_KEY, PERIOD_COLORS, PERIOD_LETTERS, MAX_INDICATORS, MAX_PERIODS } from './analysis-builder.types';
 import {
   makeInitialState,
@@ -20,8 +20,7 @@ import {
 } from './analysis-builder.utils';
 import { INDICATOR_MAP } from './analysis-builder.data';
 
-/** Derived from AnalysisMacroEvent.marker_mode — the non-nullable variant. */
-export type MacroMarkerMode = NonNullable<AnalysisMacroEvent['marker_mode']>;
+export type MacroMarkerMode = MarkerMode;
 
 export function useAnalisisState(analysisId?: string) {
   const initial = makeInitialState();
@@ -155,6 +154,13 @@ export function useAnalisisState(analysisId?: string) {
   const [macroEventsLoading, setMacroEventsLoading] = useState(false);
   const [macroEventsSearch, setMacroEventsSearch] = useState('');
 
+  const addMacroEvent = useCallback((event: MacroEvent) => {
+    setMacroEvents(prev => [event, ...prev.filter(item => item.id !== event.id)]
+      .sort((a, b) => b.start_date.localeCompare(a.start_date)));
+    setMacroEventIds(prev => prev.includes(event.id) ? prev : [...prev, event.id]);
+    setMacroEventsSearch('');
+  }, []);
+
   useEffect(() => {
     setMacroEventsLoading(true);
     fetchMacroEvents().then(({ data, error }) => {
@@ -265,6 +271,7 @@ export function useAnalisisState(analysisId?: string) {
     macroEventsLoading,
     macroEventsSearch,
     setMacroEventsSearch,
+    onMacroEventCreated: addMacroEvent,
     // Marker modes
     markerModeByEventId,
     setMarkerModeByEventId,

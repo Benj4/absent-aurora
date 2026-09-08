@@ -1,20 +1,8 @@
 import { supabase } from './supabase';
+import type { Tables, Enums } from './supabase';
 
-export type MacroEventTopic = 'politics' | 'economy' | 'nature' | 'health' | 'social';
-
-export interface MacroEvent {
-  id: string;
-  name: string;
-  description: string | null;
-  start_date: string;
-  end_date: string | null;
-  geo_scope: string | null;
-  geo_region: string | null;
-  topic: MacroEventTopic;
-  source_url: string;
-  created_at: string;
-}
-
+export type MacroEventTopic = Enums<'macro_event_topic'>;
+export type MacroEvent = Tables<'macro_events'>;
 export type MacroEventDraft = Omit<MacroEvent, 'id' | 'created_at'>;
 
 export async function fetchMacroEvents() {

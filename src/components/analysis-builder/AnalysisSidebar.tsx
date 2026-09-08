@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import type { FC, Dispatch, SetStateAction } from 'react';
 import type { AnalisisState, Periodo, ModoAlineacion } from './analysis-builder.types';
 import type { MacroEvent } from '../../lib/macro-events';
 import SidebarSection from './SidebarSection';
 import IndicatorSelector from './IndicatorSelector';
 import PeriodRow from './PeriodRow';
+import MacroEventForm from '../macro-events/MacroEventForm';
 
 interface AnalysisSidebarProps {
   state: AnalisisState;
@@ -21,6 +23,7 @@ interface AnalysisSidebarProps {
   macroEventsLoading: boolean;
   macroEventsSearch: string;
   setMacroEventsSearch: Dispatch<SetStateAction<string>>;
+  onMacroEventCreated: (event: MacroEvent) => void;
   onReset: () => void;
   onSave: () => void;
   isSaving: boolean;
@@ -44,16 +47,21 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
   macroEventsLoading,
   macroEventsSearch,
   setMacroEventsSearch,
+  onMacroEventCreated,
   onReset,
   onSave,
   isSaving,
   saveError,
   isEditMode,
-}) => (
-  <aside
-    aria-label="Panel de configuración del analisis"
-    className="w-72 lg:w-80 shrink-0 flex flex-col border-r border-base-200 bg-base-100 overflow-hidden"
-  >
+}) => {
+  const [isMacroEventFormOpen, setIsMacroEventFormOpen] = useState(false);
+
+  return (
+    <>
+      <aside
+        aria-label="Panel de configuración del analisis"
+        className="w-72 lg:w-80 shrink-0 flex flex-col border-r border-base-200 bg-base-100 overflow-hidden"
+      >
     {/* <div className="sticky top-0 z-10 bg-base-100 border-b border-base-200 px-4 py-3.5 shrink-0">
       <h2 className="text-xs font-bold uppercase tracking-widest text-base-content/40">Constructor de Escenarios</h2>
     </div> */}
@@ -178,6 +186,22 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
 
       <SidebarSection title="Eventos macro" defaultOpen={true} className="flex flex-col flex-1 min-h-80">
         <div className="flex flex-col flex-1 min-h-64">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline btn-primary mb-3 w-full gap-1.5"
+            onClick={() => setIsMacroEventFormOpen(true)}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+            </svg>
+            Agregar evento
+          </button>
           <div>
             <label htmlFor="sb-macro-search" className="label py-0 pb-1 sr-only">
               <span className="label-text text-xs font-medium">Buscar evento</span>
@@ -290,7 +314,35 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         </button>
       }
     </div>
-  </aside>
-);
+      </aside>
+
+      {isMacroEventFormOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Agregar evento macro"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default bg-base-content/45 hover:bg-base-content/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+            onClick={() => setIsMacroEventFormOpen(false)}
+            aria-label="Cerrar formulario"
+          />
+          <div className="relative z-10 w-full max-w-2xl">
+            <MacroEventForm
+              isOpen
+              onClose={() => setIsMacroEventFormOpen(false)}
+              onSaved={event => {
+                onMacroEventCreated(event);
+                setIsMacroEventFormOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 export default AnalysisSidebar;

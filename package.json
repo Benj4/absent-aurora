@@ -2,14 +2,17 @@
   "name": "absent-aurora",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.26.1",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "check": "astro check",
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json",
     "generate:types": "tsx scripts/generate-types.ts"
   },
@@ -40,6 +43,7 @@
     "daisyui": "^5.5.19",
     "dotenv": "^17.2.3",
     "postcss": "^8.5.6",
+    "supabase": "^2.117.0",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.19.2",
     "vitest": "^4.0.16"

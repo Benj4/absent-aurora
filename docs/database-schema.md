@@ -152,17 +152,17 @@ Stores selected macro events and marker customization.
 
 ## Operational Instructions
 
-- Source of truth for DDL and policies: `database/schema.sql`.
-- Migration process: apply schema changes manually in Supabase SQL editor.
-- Version control: commit every schema change as SQL files in `database/`.
-- **After every modification to `database/schema.sql`, regenerate TypeScript types by running:**
+- Versioned DDL and policies: `supabase/migrations/`, captured from the linked project with `pnpm exec supabase db pull`.
+- Migration process: create SQL with `pnpm exec supabase migration new <name>`, validate locally or on a dedicated test database, and review `pnpm exec supabase db push --dry-run` before an authorized deployment.
+- Version control: commit migrations and `supabase/config.toml`; exclude credentials and `supabase/.temp/`.
+- Type generation uses the official CLI to introspect the linked database; `db pull` does not refresh application types automatically.
+- **After applying database schema changes, regenerate TypeScript types by running:**
   ```bash
   pnpm generate:types
   ```
-  This keeps `src/lib/supabase.ts` in sync with the live schema. Do not skip this step.
+  This updates the generated `Database` type used by `createClient<Database>` in `src/lib/supabase.ts`. For a running local database, use `pnpm generate:types --local`. Run `pnpm check` and `pnpm build` after generation. The wrapper preserves the last generated file if the CLI fails.
 - If enabling RLS, validate with real user sessions and role-scoped tests.
 
 ---
 
-**Last Updated**: 2026-04-30  
-**Schema Version**: 1.0.1
+**Last Updated**: 2026-09-08

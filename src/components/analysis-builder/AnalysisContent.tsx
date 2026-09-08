@@ -8,7 +8,7 @@ import { fmt, getDefaultMacroEventColor } from './analysis-builder.utils';
 import AnalysisChart from './AnalysisChart';
 import SourceConflictResolver from './SourceConflictResolver';
 import { supabase } from '../../lib/supabase';
-import type { Analysis } from '../../types/database';
+import type { Analysis } from '../../lib/supabase';
 
 interface TableRow {
   date: string;

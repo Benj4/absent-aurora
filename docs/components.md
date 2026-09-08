@@ -1,160 +1,90 @@
-# Component & File Map
+# Domain and Component Map
 
-## Source Tree
+This document maps product domains to their routes, UI entry points, and supporting modules. It intentionally avoids duplicating the complete `src/` tree, because file-by-file inventories become stale quickly.
 
-```
-src/
-├── assets/              # Static images and assets
-│   ├── astro.svg
-│   └── background.svg
-├── components/
-│   ├── AnalysisBuilder.tsx
-│   ├── AnalysisViewer.tsx
-│   ├── ApprovedSeriesSelector.tsx
-│   ├── AuthSessionBootstrap.tsx
-│   ├── Breadcrumbs.tsx
-│   ├── Dashboard.astro
-│   ├── IndicatorCard.tsx
-│   ├── IndicatorChart.tsx
-│   ├── IndicatorPostsClient.tsx
-│   ├── IndicatorPostsLoader.tsx
-│   ├── Navbar.tsx
-│   ├── PostCard.tsx
-│   ├── PostDetail.tsx
-│   ├── PostListClient.tsx
-│   ├── PostListFilters.tsx
-│   ├── SeriesForm.tsx
-│   ├── Welcome.astro
-│   ├── analysis-builder/
-│   │   ├── analysis-builder.data.ts
-│   │   ├── analysis-builder.types.ts
-│   │   ├── analysis-builder.utils.ts
-│   │   ├── AnalysisChart.tsx
-│   │   ├── AnalysisContent.tsx
-│   │   ├── AnalysisSidebar.tsx
-│   │   ├── IndicatorSelector.tsx
-│   │   ├── KPICard.tsx
-│   │   ├── PeriodRow.tsx
-│   │   ├── SidebarSection.tsx
-│   │   ├── SourceConflictResolver.tsx
-│   │   └── use-analisis-state.ts
-│   ├── macro-events/
-│   │   ├── MacroEventForm.tsx
-│   │   └── MacroEventsPage.tsx
-│   └── user/
-│       ├── UserEdit.tsx
-│       ├── UserPosts.tsx
-│       └── UserReviews.tsx
-├── data/
-│   ├── indicators.json       # 2119-line indicator catalog
-│   ├── names.json
-│   └── real__indicators.json
-├── layouts/
-│   └── Layout.astro
-├── lib/
-│   ├── analysis.ts
-│   ├── auth-session.ts
-│   ├── frequency.ts
-│   ├── macro-events.ts
-│   ├── paths.ts
-│   ├── series-form-draft.ts
-│   ├── supabase.ts           # Singleton Supabase client — SINGLE SOURCE
-│   ├── url-title.ts
-│   └── use-auth-session.ts
-├── pages/
-│   ├── index.astro
-│   ├── login.astro
-│   ├── post.astro
-│   ├── postlist.astro
-│   ├── admin/
-│   │   └── macro-events.astro
-│   ├── analisis/
-│   │   ├── [id].astro
-│   │   ├── editar.astro
-│   │   └── nuevo.astro
-│   ├── indicators/[id]/
-│   │   └── data.astro
-│   ├── series/[frequency]/
-│   │   └── [id].astro
-│   └── user/
-│       ├── index.astro
-│       └── reviews.astro
-├── styles/
-│   └── global.css
-└── types/
-    ├── database.d.ts
-    └── jsx.d.ts
+Update this map when a route, domain boundary, important entry point, or ownership rule changes. Ordinary file additions inside an existing domain do not require an update.
+
+## Runtime flow
+
+```text
+Astro route
+  -> layout and page composition
+  -> React or Astro domain component
+  -> reusable logic in src/lib
+  -> singleton Supabase client
+  -> PostgreSQL tables and views
 ```
 
----
+Astro owns routing and build-time page composition. React components own interactive state and client-side Supabase operations. Shared data-access and transformation logic belongs in `src/lib/` rather than page files.
 
-## Component Groups
+## Domain map
 
-### Analysis & Series Creation
-| File | Purpose |
-|------|---------|
-| `src/pages/series/[frequency]/[id].astro` | Create post + add serie data |
-| `src/pages/analisis/[id].astro` | Public read-only analysis viewer page (SSR) |
-| `src/components/SeriesForm.tsx` | Series data entry form |
-| `src/components/AnalysisBuilder.tsx` | Analysis builder shell (create/edit modes) |
-| `src/components/AnalysisViewer.tsx` | Public read-only analysis viewer component |
-| `src/components/analysis-builder/*` | Advanced analysis builder UI |
-| `src/components/ApprovedSeriesSelector.tsx` | Indicator selector |
+| Domain | Routes | UI entry points | Supporting modules |
+|---|---|---|---|
+| Dashboard | `/` | `Dashboard.astro`, `IndicatorCard.tsx` | `data/indicators.json`, `lib/frequency.ts`, `lib/paths.ts` |
+| Authentication and navigation | `/login` | `Welcome.astro`, `Navbar.tsx`, `Breadcrumbs.tsx`, `AuthSessionBootstrap.tsx` | `lib/auth-session.ts`, `lib/use-auth-session.ts`, `lib/supabase.ts` |
+| Posts and validation | `/post`, `/postlist` | `PostDetail.tsx`, `PostCard.tsx`, `PostListClient.tsx`, `PostListFilters.tsx` | `lib/supabase.ts`, generated database types |
+| Indicators and series | `/indicators/[id]/data`, `/series/[frequency]/[id]` | `ApprovedSeriesSelector.tsx`, `IndicatorChart.tsx`, `IndicatorPostsLoader.tsx`, `SeriesForm.tsx` | `lib/frequency.ts`, `lib/series-form-draft.ts`, `lib/url-title.ts` |
+| Analyses | `/analisis`, `/analisis/nuevo`, `/analisis/editar` | `AnalysisBuilder.tsx`, `AnalysisViewer.tsx`, `components/analysis-builder/` | `lib/analysis.ts`, `lib/macro-events.ts` |
+| Macro events | `/admin/macro-events` | `components/macro-events/MacroEventsPage.tsx`, `MacroEventForm.tsx` | `lib/macro-events.ts` |
+| User workspace | `/user`, `/user/reviews`, `/user/analisis` | `components/user/UserPosts.tsx`, `UserReviews.tsx`, `UserAnalyses.tsx`, `UserEdit.tsx` | `lib/auth-session.ts`, `lib/paths.ts`, `lib/supabase.ts` |
+| Shared shell | All routes using the main layout | `layouts/Layout.astro`, `Navbar.tsx` | `styles/global.css`, `lib/paths.ts` |
 
-### Posts & Validation
-| File | Purpose |
-|------|---------|
-| `src/pages/post.astro` | Single post view + validation form |
-| `src/pages/postlist.astro` | All posts list |
-| `src/components/PostCard.tsx` | Post card display |
-| `src/components/PostListClient.tsx` | Post list client component |
-| `src/components/PostDetail.tsx` | Post detail view |
+Paths in the table are relative to `src/` unless they begin with `/`.
 
-### Dashboard & Visualization
-| File | Purpose |
-|------|---------|
-| `src/components/Dashboard.astro` | BentoGrid with SVG sparklines |
-| `src/components/IndicatorCard.tsx` | Single indicator card |
-| `src/components/IndicatorChart.tsx` | Indicator time-series chart |
-| `src/components/IndicatorPostsClient.tsx` | Posts loader client |
+## Important entry points
 
-### User Management
-| File | Purpose |
-|------|---------|
-| `src/components/user/*` | User profile components |
-| `src/pages/user/index.astro` | User posts page |
-| `src/pages/user/reviews.astro` | User reviews page |
+### Application shell
 
-### Analysis Builder (`src/components/analysis-builder/`)
-| File | Purpose |
-|------|---------|
-| `analysis-builder.types.ts` | Shared types and constants |
-| `analysis-builder.utils.ts` | Pure utility functions (chart series, markers, filtering) |
-| `analysis-builder.data.ts` | Indicator map and static data |
-| `use-analisis-state.ts` | React hook — state management, data fetching, derived values |
-| `AnalysisChart.tsx` | Highcharts time-series chart wrapper |
-| `AnalysisContent.tsx` | Main editable content canvas |
-| `AnalysisSidebar.tsx` | Configuration sidebar |
-| `IndicatorSelector.tsx` | Indicator multi-select |
-| `KPICard.tsx` | Single KPI metric card |
-| `PeriodRow.tsx` | Period configuration row |
-| `SidebarSection.tsx` | Collapsible sidebar section |
-| `SourceConflictResolver.tsx` | Duplicate source resolution UI |
+- `src/layouts/Layout.astro`: global document shell, styles, and navigation.
+- `src/pages/index.astro`: dashboard route.
+- `src/pages/login.astro`: authentication route.
+- `src/lib/paths.ts`: GitHub Pages base-path helpers. Internal links must use these helpers where required.
 
-### Macro Events
-| File | Purpose |
-|------|---------|
-| `src/pages/admin/macro-events.astro` | Macro events management |
-| `src/components/macro-events/*` | Macro event forms |
+### Supabase and generated types
 
-### Utilities (`src/lib/`)
-| File | Purpose |
-|------|---------|
-| `supabase.ts` | Supabase client singleton |
-| `auth-session.ts` | Auth session helpers |
-| `paths.ts` | URL path helpers |
-| `url-title.ts` | Slug generation |
-| `frequency.ts` | Frequency utilities |
-| `series-form-draft.ts` | Draft persistence |
-| `analysis.ts` | Analysis load/save/update logic |
-| `macro-events.ts` | Macro events helpers |
+- `src/lib/supabase.ts`: singleton application client and database-type re-exports.
+- `src/types/database.types.ts`: generated table interfaces; never edit manually.
+- `scripts/generate-types.ts`: official Supabase CLI type-generation wrapper.
+- `supabase/migrations/`: versioned database schema and policy history.
+- `supabase/config.toml`: local Supabase CLI configuration.
+
+### Analysis builder
+
+`src/components/analysis-builder/` is the most developed domain folder:
+
+- `analysis-builder.types.ts`: UI state and chart types.
+- `analysis-builder.data.ts`: indicator lookup data.
+- `analysis-builder.utils.ts`: pure transformations and chart helpers.
+- `use-analisis-state.ts`: orchestration, loading, and derived state.
+- `AnalysisSidebar.tsx`: editor controls.
+- `AnalysisContent.tsx`: editable analysis canvas.
+- `AnalysisChart.tsx`: Highcharts wrapper.
+- `SourceConflictResolver.tsx`: source conflict handling.
+
+`src/components/AnalysisBuilder.tsx` and `AnalysisViewer.tsx` are the public entry components for editing and reading analyses.
+
+## Dependency direction
+
+Prefer dependencies in this direction:
+
+```text
+pages -> domain components -> shared components and lib -> Supabase client/types
+```
+
+Avoid importing UI component types from `src/lib/`. If a type is shared by data access and UI, place it in a domain-neutral module and import it from both layers.
+
+## Placement guidance for new work
+
+- Keep page front matter focused on route parameters, redirects, and page composition.
+- Add domain UI beside the closest existing domain folder.
+- Create a new domain folder when a feature gains several related components; do not add an unrelated cluster to the root of `src/components/`.
+- Put pure parsing, validation, URL, and data-access logic in `src/lib/`.
+- Put isolated tests in `tests/unit/` and external Supabase/RLS tests in `tests/rls/`.
+- Keep product notes and positioning under `docs/`, never inside `src/components/`.
+
+## Known structural pressure
+
+Several legacy components at `src/components/` combine data access, state, and presentation. When changing them substantially, prefer extracting cohesive logic rather than performing a repository-wide move. The intended long-term direction is domain-oriented grouping, but migrations should remain incremental and reviewable.
+
+**Last reviewed:** 2026-08-27

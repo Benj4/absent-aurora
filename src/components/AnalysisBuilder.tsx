@@ -20,6 +20,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     onToggleIndicator, onAddPeriodo, onUpdatePeriodo, onRemovePeriodo,
     onToggleMacroEvent, onSelectSource, onReset,
     macroEvents, macroEventsLoading, macroEventsSearch, setMacroEventsSearch,
+    onMacroEventCreated,
     markerModeByEventId, setMarkerModeByEventId,
     markerColorByEventId, setMarkerColorByEventId,
     loading,
@@ -61,6 +62,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
         macroEventsLoading={macroEventsLoading}
         macroEventsSearch={macroEventsSearch}
         setMacroEventsSearch={setMacroEventsSearch}
+        onMacroEventCreated={onMacroEventCreated}
         onReset={onReset}
         onSave={handleSave}
         isSaving={isSaving}
@@ -94,5 +96,4 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
 };
 
 export default AnalysisBuilder;
-
 

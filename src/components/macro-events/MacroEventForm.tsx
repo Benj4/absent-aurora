@@ -148,7 +148,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
   if (!isOpen) return null;
 
   return (
-    <div className="overflow-hidden rounded-box border border-base-200 bg-base-100 shadow-sm">
+    <div className="flex max-h-[calc(100svh-2rem)] flex-col overflow-hidden rounded-box border border-base-200 bg-base-100 shadow-xl sm:max-h-[calc(100svh-3rem)]">
       <div className="flex flex-none items-center justify-between gap-4 border-b border-base-200 px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold leading-tight">

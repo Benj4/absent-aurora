@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import IndicatorChart, { type SeriesPoint } from './IndicatorChart';
+import type { Tables } from '../lib/supabase';
 
-interface RawPoint {
-  post_id?: string;
-  data_source?: string;
-  date: string;
-  value: number | string;
-}
+type RawPoint = Pick<Tables<'approved_series_view'>, 'post_id' | 'data_source' | 'date' | 'value'>;
 
 interface ApprovedSeriesSelectorProps {
   series?: RawPoint[];
@@ -31,6 +27,7 @@ function groupByDate(points: RawPoint[]): { date: string; points: SourcePoint[] 
   const grouped = new Map<string, SourcePoint[]>();
 
   points.forEach((point, index) => {
+    if (point.date === null || point.value === null) return;
     const bucket = grouped.get(point.date) ?? [];
     const source = point.data_source ?? 'Sin fuente';
     bucket.push({

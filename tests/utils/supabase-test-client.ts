@@ -73,12 +73,12 @@ export async function createTestUser(
 ): Promise<string> {
   const adminClient = getAdminClient();
 
-  // Check if user already exists
+  // Never reuse an existing account: the suite deletes every user it creates.
   const { data: existingUsers } = await adminClient.auth.admin.listUsers();
   const existingUser = existingUsers?.users.find((u) => u.email === email);
 
   if (existingUser) {
-    return existingUser.id;
+    throw new Error(`Refusing to reuse existing test user ${email}`);
   }
 
   // Create new user
@@ -110,13 +110,21 @@ export async function deleteTestUser(userId: string): Promise<void> {
 }
 
 /**
- * Clean up all test data from tables
+ * Delete posts owned by the users created for the current test run.
+ * Related data points and validations are removed by database cascades.
  */
-export async function cleanupTestData(): Promise<void> {
-  const adminClient = getAdminClient();
+export async function cleanupTestData(testUserIds: string[]): Promise<void> {
+  if (testUserIds.length === 0 || testUserIds.some((id) => !id)) {
+    throw new Error('cleanupTestData requires at least one explicit test user id');
+  }
 
-  // Delete in order to respect foreign key constraints
-  await adminClient.from('serie_data').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await adminClient.from('serie_validations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await adminClient.from('serie_posts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const adminClient = getAdminClient();
+  const { error } = await adminClient
+    .from('serie_posts')
+    .delete()
+    .in('submitted_by', testUserIds);
+
+  if (error) {
+    throw new Error(`Failed to clean test posts: ${error.message}`);
+  }
 }
