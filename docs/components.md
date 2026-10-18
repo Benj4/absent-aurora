@@ -22,7 +22,7 @@ Astro owns routing and build-time page composition. React components own interac
 | Domain | Routes | UI entry points | Supporting modules |
 |---|---|---|---|
 | Dashboard | `/` | `Dashboard.astro`, `IndicatorCard.tsx` | `data/indicators.json`, `lib/frequency.ts`, `lib/paths.ts` |
-| Authentication and navigation | `/login` | `Welcome.astro`, `Navbar.tsx`, `Breadcrumbs.tsx`, `AuthSessionBootstrap.tsx` | `lib/auth-session.ts`, `lib/use-auth-session.ts`, `lib/supabase.ts` |
+| Authentication and navigation | `/login` | `Welcome.astro`, `LoginForm.tsx`, `Navbar.tsx`, `Breadcrumbs.tsx`, `AuthSessionBootstrap.tsx` | `lib/login.ts`, `lib/auth-session.ts`, `lib/use-auth-session.ts`, `lib/supabase.ts` |
 | Posts and validation | `/post`, `/postlist` | `PostDetail.tsx`, `PostCard.tsx`, `PostListClient.tsx`, `PostListFilters.tsx` | `lib/supabase.ts`, generated database types |
 | Indicators and series | `/indicators/[id]/data`, `/series/[frequency]/[id]` | `ApprovedSeriesSelector.tsx`, `IndicatorChart.tsx`, `IndicatorPostsLoader.tsx`, `SeriesForm.tsx` | `lib/frequency.ts`, `lib/series-form-draft.ts`, `lib/url-title.ts` |
 | Analyses | `/analisis`, `/analisis/nuevo`, `/analisis/editar` | `AnalysisBuilder.tsx`, `AnalysisViewer.tsx`, `components/analysis-builder/` | `lib/analysis.ts`, `lib/macro-events.ts` |
@@ -39,6 +39,7 @@ Paths in the table are relative to `src/` unless they begin with `/`.
 - `src/layouts/Layout.astro`: global document shell, styles, and navigation.
 - `src/pages/index.astro`: dashboard route.
 - `src/pages/login.astro`: authentication route.
+- `src/components/LoginForm.tsx`: login-first authentication with signup fallback, recovery email requests, and password updates. Supabase intentionally does not distinguish missing accounts from incorrect passwords; only `invalid_credentials` triggers the signup fallback. Recovery and confirmation redirects respect the deployment base path. Add the deployed `/login` URL (including its `?recovery=1` variant) to Supabase Auth's allowed redirect URLs. `Welcome.astro` preserves the recovery hash marker before the shared client consumes it.
 - `src/lib/paths.ts`: GitHub Pages base-path helpers. Internal links must use these helpers where required.
 
 ### Supabase and generated types

@@ -47,16 +47,22 @@ Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capt
 8. Do not edit generated `src/types/database.types.ts` manually.
 9. Do not hand-edit vendored `.agents/skills/` content unless the task is explicitly about maintaining that skill. Preserve `skills-lock.json` provenance.
 10. Preserve unrelated working-tree changes. The repository may already contain user work.
+11. Run project tasks only through scripts defined in `package.json`, using `pnpm run <script>`. Do not bypass them with direct executable calls or substitute servers such as `python -m http.server`. If a required task has no script, add an appropriate script to `package.json` before running it.
+12. Never leave processes started for a task running after the task ends. Track any servers, watchers, and other long-running processes you start, stop them and their child processes before the final response, and verify that they have exited. Preserve processes that were already running before the task.
 
 ## Safe commands
 
+Use the scripts in `package.json` for development, builds, checks, tests, previews, and generators. Preview a production build with `pnpm run preview` after `pnpm run build`; do not serve the output with an ad hoc HTTP server. Long-running scripts must follow the process cleanup rule above.
+
 ```bash
-pnpm dev
-pnpm build
-pnpm test
-pnpm test:watch
-pnpm test:ui
-pnpm generate:types
+pnpm run dev
+pnpm run build
+pnpm run check
+pnpm run preview
+pnpm run test
+pnpm run test:watch
+pnpm run test:ui
+pnpm run generate:types
 ```
 
 `pnpm test` runs only `tests/unit/**/*.test.ts` and never loads Supabase credentials.

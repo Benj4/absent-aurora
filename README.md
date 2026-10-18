@@ -67,7 +67,7 @@ pnpm generate:types      # generate official TypeScript types from the linked da
 pnpm generate:indicator-map
 ```
 
-There are currently no unit test files, so `pnpm test` succeeds without executing cases. The existing RLS suite is intentionally isolated behind `pnpm test:integration`.
+Unit tests cover the login-first authentication flow with mocked Supabase responses. The RLS suite is intentionally isolated behind `pnpm test:integration`.
 
 ### Supabase integration-test safety
 
