@@ -237,7 +237,7 @@ const PostDetail: FC = () => {
             {isEditor ? (
               <div className="flex items-center gap-2">
                 <select
-                  className="select select-sm select-bordered"
+                  className="select select-sm"
                   value={pendingStatus}
                   onChange={(e) => setPendingStatus(e.target.value as PostStatus)}
                   disabled={isUpdating}
@@ -406,9 +406,9 @@ const PostDetail: FC = () => {
               </>
             ) : currentUser ? (
               <form onSubmit={handleValidationSubmit} className="w-full max-w-2xl space-y-4">
-                <div className="form-control w-full">
+                <div className="flex flex-col gap-1 w-full">
                   <label className="label pb-2">
-                    <span className="label-text font-medium">Decisión de validación <span className="text-error">*</span></span>
+                    <span className="whitespace-normal font-medium">Decisión de validación <span className="text-error">*</span></span>
                   </label>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <label className="flex items-center gap-3 rounded-box border border-success/40 bg-success/10 p-3 cursor-pointer">
@@ -436,12 +436,12 @@ const PostDetail: FC = () => {
                   </div>
                 </div>
 
-                <div className="form-control w-full">
+                <div className="flex flex-col gap-1 w-full">
                   <label className="label pb-2">
-                    <span className="label-text font-medium">Notas (opcional)</span>
+                    <span className="whitespace-normal font-medium">Notas (opcional)</span>
                   </label>
                   <textarea
-                    className="textarea textarea-bordered w-full"
+                    className="textarea w-full"
                     rows={3}
                     placeholder="Agrega comentarios u observaciones sobre estos datos..."
                     value={validationNotes}

@@ -70,7 +70,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
       <SidebarSection title="Contexto">
         <div>
           <label htmlFor="sb-titulo" className="label py-0 pb-1">
-            <span className="label-text text-xs font-medium">Título del análisis</span>
+            <span className="whitespace-normal text-xs font-medium">Título del análisis</span>
           </label>
           <input
             id="sb-titulo"
@@ -85,7 +85,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         </div>
         <div>
           <label htmlFor="sb-descripcion" className="label py-0 pb-1">
-            <span className="label-text text-xs font-medium">Notas / hipótesis</span>
+            <span className="whitespace-normal text-xs font-medium">Notas / hipótesis</span>
           </label>
           <textarea
             id="sb-descripcion"
@@ -102,7 +102,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
       <SidebarSection title="Datos">
         <div>
           <p className="label py-0 pb-1">
-            <span className="label-text text-xs font-medium">
+            <span className="whitespace-normal text-xs font-medium">
               Indicadores <span className="text-base-content/40 font-normal">({state.indicadores.length}/5)</span>
             </span>
           </p>
@@ -110,7 +110,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         </div>
         <div>
           <label htmlFor="sb-region" className="label py-0 pb-1">
-            <span className="label-text text-xs font-medium">País / Región</span>
+            <span className="whitespace-normal text-xs font-medium">País / Región</span>
           </label>
           <input
             id="sb-region"
@@ -151,7 +151,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
       <SidebarSection title="Matemática">
         <div>
           <p className="label py-0 pb-1.5">
-            <span className="label-text text-xs font-medium">Modo de alineación</span>
+            <span className="whitespace-normal text-xs font-medium">Modo de alineación</span>
           </p>
           <div className="join w-full">
             <button
@@ -180,7 +180,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
             checked={state.showBase100Line ?? true}
             onChange={e => onSetShowBase100Line(e.target.checked)}
           />
-          <span className="label-text text-xs font-medium">Mostrar índice base 100</span>
+          <span className="whitespace-normal text-xs font-medium">Mostrar índice base 100</span>
         </label>
       </SidebarSection>
 
@@ -204,7 +204,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
           </button>
           <div>
             <label htmlFor="sb-macro-search" className="label py-0 pb-1 sr-only">
-              <span className="label-text text-xs font-medium">Buscar evento</span>
+              <span className="whitespace-normal text-xs font-medium">Buscar evento</span>
             </label>
             <input
               id="sb-macro-search"

@@ -12,14 +12,15 @@ import { withBase } from "../../lib/paths";
     { label: "Post" },
   ]}
 >
-  <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
+  <section class="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:py-8">
+    <h1 class="text-2xl font-semibold">Publicaciones del usuario</h1>
     <UserPosts client:load />
 
     <noscript>
-      <div class="mt-4 text-gray-600">
+      <div class="mt-4 text-base-content/70">
         Esta página requiere JavaScript para navegar entre las secciones de
         usuario (Publicaciones, Editar, Validaciones).
       </div>
     </noscript>
-  </main>
+  </section>
 </Layout>

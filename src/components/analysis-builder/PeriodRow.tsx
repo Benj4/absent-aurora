@@ -41,7 +41,7 @@ const PeriodRow: FC<{
     <div className="grid grid-cols-2 gap-2">
       <div>
         <label className="label py-0 pb-1">
-          <span className="label-text text-xs">Inicio</span>
+          <span className="whitespace-normal text-xs">Inicio</span>
         </label>
         <input
           type="date"
@@ -53,7 +53,7 @@ const PeriodRow: FC<{
       </div>
       <div>
         <label className="label py-0 pb-1">
-          <span className="label-text text-xs">Fin</span>
+          <span className="whitespace-normal text-xs">Fin</span>
         </label>
         <input
           type="date"

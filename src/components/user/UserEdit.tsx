@@ -38,18 +38,18 @@ export default function UserEdit({ userId }: Props) {
   }, [userId]);
 
   if (loading) return <p>Cargando publicaciones para editar…</p>;
-  if (error) return <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error: {error}</div>;
-  if (!posts || posts.length === 0) return <p className="text-gray-600">No hay publicaciones para editar.</p>;
+  if (error) return <div role="alert" className="alert alert-error">Error: {error}</div>;
+  if (!posts || posts.length === 0) return <p className="text-base-content/70">No hay publicaciones para editar.</p>;
 
   return (
     <div className="space-y-4">
-      <p className="text-gray-600">Haz click en "Editar" para ir a la página de edición de la publicación.</p>
+      <p className="text-base-content/70">Haz click en "Editar" para ir a la página de edición de la publicación.</p>
       <div className="grid gap-4">
         {posts.map((post) => (
           <div key={post.id} className="flex items-start gap-4">
             <div className="flex-1"><PostCard post={post} maxDataPoints={0} showLinks={false} /></div>
             <div className="shrink-0">
-              <a className="inline-block px-3 py-2 bg-blue-600 text-white rounded" href={withBase(`/edit/${post.id}`)}>Editar</a>
+              <a className="btn btn-primary btn-sm" href={withBase(`/edit/${post.id}`)}>Editar</a>
             </div>
           </div>
         ))}

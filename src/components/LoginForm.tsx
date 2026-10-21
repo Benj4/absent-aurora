@@ -10,7 +10,7 @@ function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
 
   return (
     <div className="relative">
-      <input {...props} type={visible ? 'text' : 'password'} className="input input-bordered w-full pr-12" />
+      <input {...props} type={visible ? 'text' : 'password'} className="input w-full pr-12" />
       <button type="button" onClick={() => setVisible((current) => !current)}
         aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={visible}
         aria-controls={props.id} title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
@@ -128,7 +128,7 @@ export default function LoginForm() {
   const title = mode === 'login' ? 'Iniciar sesión' : mode === 'recover' ? 'Recuperar contraseña' : 'Crea una nueva contraseña';
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-lg items-center px-4 py-12" aria-labelledby="login-title">
-      <div className="w-full rounded-2xl border border-base-300 bg-base-200 p-6 shadow-sm sm:p-8">
+      <div className="card w-full border border-base-300 bg-base-200 p-6 shadow-sm sm:p-8">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-base-content/60">Absent Aurora</p>
         <h1 id="login-title" className="text-2xl font-bold">{title}</h1>
         <p className="mt-3 text-sm text-base-content/70">
@@ -141,7 +141,7 @@ export default function LoginForm() {
             {mode !== 'update' && <div>
               <label htmlFor="login-email" className="mb-2 block text-sm font-medium">Correo electrónico</label>
               <input id="login-email" name="email" type="email" autoComplete="email" required value={email}
-                onChange={(event) => setEmail(event.target.value)} className="input input-bordered w-full" placeholder="tu@correo.cl" />
+                onChange={(event) => setEmail(event.target.value)} className="input w-full" placeholder="tu@correo.cl" />
             </div>}
             {mode !== 'recover' && <div>
               <label htmlFor="login-password" className="mb-2 block text-sm font-medium">{mode === 'update' ? 'Nueva contraseña' : 'Contraseña'}</label>

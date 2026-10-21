@@ -122,7 +122,7 @@ export default function ApprovedSeriesSelector({ series = [], label = 'Serie' }:
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="table table-sm w-full">
             <thead className="bg-base-200 text-base-content">
               <tr>
                 <th className="text-left px-4 py-2">Fecha</th>

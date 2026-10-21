@@ -75,15 +75,15 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
 
 
       {loading && (
-        <div className="text-sm text-gray-600">Cargando publicaciones...</div>
+        <div className="text-sm text-base-content/70">Cargando publicaciones...</div>
       )}
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">Error: {error}</div>
+        <div role="alert" className="alert alert-error mb-4">Error: {error}</div>
       )}
 
-      {!loading && posts.length === 0 && (
-        <p className="text-gray-500">No se encontraron publicaciones.</p>
+      {!loading && !error && posts.length === 0 && (
+        <p className="text-base-content/70">No se encontraron publicaciones.</p>
       )}
 
       {!loading && posts.length > 0 && (

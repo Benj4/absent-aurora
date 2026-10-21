@@ -366,13 +366,13 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="form-control md:col-span-1">
+          <label className="flex flex-col gap-1 md:col-span-1">
             <div className="label py-0">
-              <span className="label-text font-semibold">Fuente de Datos <span className="text-error">*</span></span>
+              <span className="whitespace-normal font-semibold">Fuente de Datos <span className="text-error">*</span></span>
             </div>
             <input
               type="text"
-              className="input input-bordered w-full"
+              className="input w-full"
               value={dataSource}
               onChange={(e) => setDataSource(e.target.value)}
               placeholder="ej., Banco Central, INE"
@@ -380,25 +380,25 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
             />
           </label>
 
-          <label className="form-control md:col-span-1">
+          <label className="flex flex-col gap-1 md:col-span-1">
             <div className="label py-0">
-              <span className="label-text font-semibold">URL de la Fuente <span className="text-base-content/50">(opcional)</span></span>
+              <span className="whitespace-normal font-semibold">URL de la Fuente <span className="text-base-content/50">(opcional)</span></span>
             </div>
             <input
               type="url"
-              className="input input-bordered w-full"
+              className="input w-full"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               placeholder="https://ejemplo.cl/dataset"
             />
           </label>
 
-          <label className="form-control md:col-span-2">
+          <label className="flex flex-col gap-1 md:col-span-2">
             <div className="label py-0">
-              <span className="label-text font-semibold">Notas <span className="text-base-content/50">(opcional)</span></span>
+              <span className="whitespace-normal font-semibold">Notas <span className="text-base-content/50">(opcional)</span></span>
             </div>
             <textarea
-              className="textarea textarea-bordered w-full"
+              className="textarea w-full"
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -430,7 +430,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
                       {/* [{row.date}] */}
                       {canonicalFreq === 'annual' && (
                         <select
-                          className="select select-sm select-bordered w-full"
+                          className="select select-sm w-full"
                           value={getInputValue(row.date)}
                           onChange={(e) => updateDateRow(index, e.target.value)}
                         >
@@ -444,7 +444,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
                       {(canonicalFreq === 'monthly' || canonicalFreq === 'quarterly') && (
                         <div className="grid grid-cols-2 gap-2">
                           <select
-                            className="select select-sm select-bordered w-full"
+                            className="select select-sm w-full"
                             value={getInputValue(row.date).split('-')[0] ?? ''}
                             onChange={(e) => updateYearMonthRow(index, 'year', e.target.value)}
                           >
@@ -455,7 +455,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
                           </select>
 
                           <select
-                            className="select select-sm select-bordered w-full"
+                            className="select select-sm w-full"
                             value={getInputValue(row.date).split('-')[1] ?? ''}
                             onChange={(e) => updateYearMonthRow(index, 'month', e.target.value)}
                           >
@@ -470,7 +470,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
                       {canonicalFreq === 'daily' && (
                         <input
                           type="date"
-                          className="input input-sm input-bordered w-full"
+                          className="input input-sm w-full"
                           value={getInputValue(row.date)}
                           onChange={(e) => updateDateRow(index, e.target.value)}
                         />
@@ -480,7 +480,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
                       <input
                         type="number"
                         step="any"
-                        className="input input-sm input-bordered w-full"
+                        className="input input-sm w-full"
                         value={row.value}
                         onChange={(e) => updateRow(index, 'value', e.target.value)}
                         placeholder="0.00"

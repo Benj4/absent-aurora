@@ -62,12 +62,12 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap gap-3 items-end mb-6">
-      <label className="form-control">
+      <label className="flex flex-col gap-1">
         <div className="label py-0">
-          <span className="label-text text-xs">Estado</span>
+          <span className="whitespace-normal text-xs">Estado</span>
         </div>
         <select
-          className="select select-sm select-bordered min-w-[160px]"
+          className="select select-sm min-w-[160px]"
           aria-label="Estado"
           value={filters.status}
           onChange={(e) => handleFieldChange('status', e.target.value)}
@@ -80,25 +80,25 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
         </select>
       </label>
 
-      <label className="form-control">
+      <label className="flex flex-col gap-1">
         <div className="label py-0">
-          <span className="label-text text-xs">Buscar</span>
+          <span className="whitespace-normal text-xs">Buscar</span>
         </div>
         <input
           type="text"
-          className="input input-sm input-bordered min-w-[220px]"
+          className="input input-sm min-w-[220px]"
           value={filters.q}
           onChange={(e) => handleFieldChange('q', e.target.value)}
           placeholder="Indicador o fuente"
         />
       </label>
 
-      <label className="form-control">
+      <label className="flex flex-col gap-1">
         <div className="label py-0">
-          <span className="label-text text-xs">Ordenar</span>
+          <span className="whitespace-normal text-xs">Ordenar</span>
         </div>
         <select
-          className="select select-sm select-bordered min-w-[160px]"
+          className="select select-sm min-w-[160px]"
           aria-label="Ordenar"
           value={filters.sort}
           onChange={(e) => handleFieldChange('sort', e.target.value)}
@@ -108,25 +108,25 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
         </select>
       </label>
 
-      <label className="form-control">
+      <label className="flex flex-col gap-1">
         <div className="label py-0">
-          <span className="label-text text-xs">Desde</span>
+          <span className="whitespace-normal text-xs">Desde</span>
         </div>
         <input
           type="date"
-          className="input input-sm input-bordered"
+          className="input input-sm"
           value={filters.from}
           onChange={(e) => handleFieldChange('from', e.target.value)}
         />
       </label>
 
-      <label className="form-control">
+      <label className="flex flex-col gap-1">
         <div className="label py-0">
-          <span className="label-text text-xs">Hasta</span>
+          <span className="whitespace-normal text-xs">Hasta</span>
         </div>
         <input
           type="date"
-          className="input input-sm input-bordered"
+          className="input input-sm"
           value={filters.to}
           onChange={(e) => handleFieldChange('to', e.target.value)}
         />

@@ -70,40 +70,40 @@ const IndicatorCard: FC<{ ind: Indicator }> = ({ ind }) => {
   
   return (
     <article
-      className="relative overflow-hidden transform-gpu will-change-transform border border-[rgba(0,0,0,0.06)] p-4 rounded-xl bg-linear-to-b from-[rgba(255,255,255,0.9)] to-(--astro-card-bg,#fff) shadow-[0_12px_30px_rgba(2,6,23,0.08),0_6px_12px_rgba(2,6,23,0.04)] hover:-translate-y-1 hover:scale-[1.01] transition-transform duration-200 ease-out hover:shadow-[0_18px_40px_rgba(2,6,23,0.12),0_8px_16px_rgba(2,6,23,0.06)] hover:ring-1 hover:ring-[rgba(70,95,255,0.08)]"
+      className="card border border-base-300 bg-base-100 p-4 shadow-sm transition-shadow hover:shadow-md"
       data-bento={ind.style?.bento || '1x1'}
       aria-labelledby={`lbl-${ind.id}`}>
       <div className="flex justify-between items-center gap-2">
         <div>
           <div id={`lbl-${ind.id}`} className="font-semibold">{ind.label}</div>
-          <div className="text-sm text-[#666]">{ind.unit?.symbol ?? ind.unit?.type ?? 'TBD'} · {ind.preferredChart?.type ?? 'chart'}</div>
+          <div className="text-sm text-base-content/70">{ind.unit?.symbol ?? ind.unit?.type ?? 'Sin unidad'} · {ind.preferredChart?.type ?? 'gráfico'}</div>
         </div>
-        <div className="text-sm text-[#666]">{ind.nativeFrequency ?? ''}</div>
+        <div className="text-sm text-base-content/70">{ind.nativeFrequency ?? ''}</div>
       </div>
 
       {Array.isArray(ind.dimensions) && ind.dimensions.length > 0 ? (
-        <div className="text-sm text-[#444] mt-1">Dimensions: {ind.dimensions.map(d => d.label ?? d.id).join(', ')}</div>
+        <div className="text-sm text-base-content/80 mt-1">Dimensiones: {ind.dimensions.map(d => d.label ?? d.id).join(', ')}</div>
       ) : null}
 
       {series.length ? (
-        <svg className="w-full h-12 block mt-2" viewBox="0 0 160 48" preserveAspectRatio="none" role="img" aria-label={`Sparkline for ${ind.label}`}>
-          <path d={path} fill="none" stroke="var(--astro-accent, #2b6cb0)" strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round" />
+        <svg className="w-full h-12 block mt-2" viewBox="0 0 160 48" preserveAspectRatio="none" role="img" aria-label={`Tendencia de ${ind.label}`}>
+          <path d={path} fill="none" className="text-primary" stroke="currentColor" strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round" />
         </svg>
       ) : (
-        <div className="text-[#888] mt-2">Sin informacion</div>
+        <div className="text-base-content/60 mt-2">Sin información</div>
       )}
 
-      {ind.unit?.notes ? <div className="text-sm text-[#666] mt-2">{ind.unit.notes}</div> : null}
+      {ind.unit?.notes ? <div className="text-sm text-base-content/70 mt-2">{ind.unit.notes}</div> : null}
 
-      <div className="flex gap-3 mt-2">
-        <a href={withBase(`/edit/${ind.id}`)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
+      <div className="flex flex-wrap gap-3 mt-2">
+        <a href={withBase(`/edit/${ind.id}`)} className="link link-primary text-sm">Editar</a>
         <a
           href={withBase(`/series/${normalizeFrequency(ind.nativeFrequency ?? '')}/${ind.id}`)}
-          className="text-green-600 hover:text-green-800 text-sm"
+          className="link link-primary text-sm"
         >
-          + Add Series
+          + Añadir serie
         </a>
-        <a href={withBase(`/indicators/${ind.id}/data`)} className="text-purple-600 hover:text-purple-800 text-sm">View Data</a>
+        <a href={withBase(`/indicators/${ind.id}/data`)} className="link link-primary text-sm">Ver datos</a>
       </div>
     </article>
   );

@@ -195,9 +195,9 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
             <div className="space-y-4">
               <div className="rounded-box border border-base-200 bg-base-200/20 p-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="form-control sm:col-span-2">
+                  <div className="flex flex-col gap-1 sm:col-span-2">
                     <label htmlFor="ev-name" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">
+                      <span className="whitespace-normal font-medium">
                         Nombre<span aria-hidden="true" className="ml-0.5 text-error">*</span>
                       </span>
                     </label>
@@ -214,16 +214,16 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       aria-required="true"
                       aria-describedby={errors.name ? 'err-name' : undefined}
                       aria-invalid={Boolean(errors.name)}
-                      className={`input input-bordered w-full${errors.name ? ' input-error' : ''}`}
+                      className={`input w-full${errors.name ? ' input-error' : ''}`}
                     />
                     {errors.name && (
                       <p id="err-name" role="alert" className="mt-1.5 text-xs text-error">{errors.name}</p>
                     )}
                   </div>
 
-                  <div className="form-control">
+                  <div className="flex flex-col gap-1">
                     <label htmlFor="ev-topic" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">
+                      <span className="whitespace-normal font-medium">
                         Tema<span aria-hidden="true" className="ml-0.5 text-error">*</span>
                       </span>
                     </label>
@@ -235,7 +235,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       aria-required="true"
                       aria-describedby={errors.topic ? 'err-topic' : undefined}
                       aria-invalid={Boolean(errors.topic)}
-                      className={`select select-bordered w-full${errors.topic ? ' select-error' : ''}`}
+                      className={`select w-full${errors.topic ? ' select-error' : ''}`}
                     >
                       <option value="" disabled>Seleccionar tema…</option>
                       {TOPICS.map(t => (
@@ -247,9 +247,9 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                     )}
                   </div>
 
-                  <div className="form-control">
+                  <div className="flex flex-col gap-1">
                     <label htmlFor="ev-url" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">
+                      <span className="whitespace-normal font-medium">
                         URL de la fuente<span aria-hidden="true" className="ml-0.5 text-error">*</span>
                       </span>
                     </label>
@@ -266,16 +266,16 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       aria-required="true"
                       aria-describedby={errors.source_url ? 'err-url' : undefined}
                       aria-invalid={Boolean(errors.source_url)}
-                      className={`input input-bordered w-full${errors.source_url ? ' input-error' : ''}`}
+                      className={`input w-full${errors.source_url ? ' input-error' : ''}`}
                     />
                     {errors.source_url && (
                       <p id="err-url" role="alert" className="mt-1.5 text-xs text-error">{errors.source_url}</p>
                     )}
                   </div>
 
-                  <div className="form-control sm:col-span-2">
+                  <div className="flex flex-col gap-1 sm:col-span-2">
                     <label htmlFor="ev-desc" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">Descripción</span>
+                      <span className="whitespace-normal font-medium">Descripción</span>
                     </label>
                     <textarea
                       id="ev-desc"
@@ -284,7 +284,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       onChange={e => field('description', e.target.value)}
                       placeholder="Contexto adicional sobre el evento…"
                       rows={4}
-                      className="textarea textarea-bordered w-full resize-none"
+                      className="textarea w-full resize-none"
                     />
                   </div>
                 </div>
@@ -309,9 +309,9 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                 </label>
 
                 <div className={`grid grid-cols-1 gap-4${isPeriod ? ' sm:grid-cols-2' : ''}`}>
-                  <div className="form-control">
+                  <div className="flex flex-col gap-1">
                     <label htmlFor="ev-start" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">
+                      <span className="whitespace-normal font-medium">
                         {isPeriod ? 'Inicio' : 'Fecha'}
                         <span aria-hidden="true" className="ml-0.5 text-error">*</span>
                       </span>
@@ -325,7 +325,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       aria-required="true"
                       aria-describedby={errors.start_date ? 'err-start' : undefined}
                       aria-invalid={Boolean(errors.start_date)}
-                      className={`input input-bordered w-full${errors.start_date ? ' input-error' : ''}`}
+                      className={`input w-full${errors.start_date ? ' input-error' : ''}`}
                     />
                     {errors.start_date && (
                       <p id="err-start" role="alert" className="mt-1.5 text-xs text-error">{errors.start_date}</p>
@@ -333,9 +333,9 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                   </div>
 
                   {isPeriod && (
-                    <div className="form-control">
+                    <div className="flex flex-col gap-1">
                       <label htmlFor="ev-end" className="label justify-start pb-1.5">
-                        <span className="label-text font-medium">
+                        <span className="whitespace-normal font-medium">
                           Fin<span aria-hidden="true" className="ml-0.5 text-error">*</span>
                         </span>
                       </label>
@@ -349,7 +349,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                         aria-required="true"
                         aria-describedby={errors.end_date ? 'err-end' : undefined}
                         aria-invalid={Boolean(errors.end_date)}
-                        className={`input input-bordered w-full${errors.end_date ? ' input-error' : ''}`}
+                        className={`input w-full${errors.end_date ? ' input-error' : ''}`}
                       />
                       {errors.end_date && (
                         <p id="err-end" role="alert" className="mt-1.5 text-xs text-error">{errors.end_date}</p>
@@ -361,9 +361,9 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
 
               <div className="rounded-box border border-base-200 bg-base-200/20 p-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="form-control">
+                  <div className="flex flex-col gap-1">
                     <label htmlFor="ev-geo-scope" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">Alcance</span>
+                      <span className="whitespace-normal font-medium">Alcance</span>
                     </label>
                     <input
                       id="ev-geo-scope"
@@ -373,13 +373,13 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       onChange={e => field('geo_scope', e.target.value)}
                       placeholder="Global, Nacional…"
                       autoComplete="off"
-                      className="input input-bordered w-full"
+                      className="input w-full"
                     />
                   </div>
 
-                  <div className="form-control">
+                  <div className="flex flex-col gap-1">
                     <label htmlFor="ev-geo-region" className="label justify-start pb-1.5">
-                      <span className="label-text font-medium">Región</span>
+                      <span className="whitespace-normal font-medium">Región</span>
                     </label>
                     <input
                       id="ev-geo-region"
@@ -389,7 +389,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                       onChange={e => field('geo_region', e.target.value)}
                       placeholder="US, LATAM, EU…"
                       autoComplete="off"
-                      className="input input-bordered w-full"
+                      className="input w-full"
                     />
                   </div>
                 </div>

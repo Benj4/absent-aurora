@@ -39,7 +39,7 @@ const IndicatorSelector: FC<{ selected: string[]; onToggle: (id: string) => void
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Abrir selector de indicadores"
-        className="w-full min-h-10 rounded-btn border border-base-300 bg-base-100 px-3 py-1.5 text-left text-sm flex flex-wrap gap-1 items-center hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors cursor-pointer"
+        className="w-full min-h-10 rounded-field border border-base-300 bg-base-100 px-3 py-1.5 text-left text-sm flex flex-wrap gap-1 items-center hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors cursor-pointer"
         onClick={() => setOpen(v => !v)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(v => !v); } }}
       >

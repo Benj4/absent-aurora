@@ -55,12 +55,12 @@ const UserAnalyses = () => {
     );
   }
   if (!analyses || analyses.length === 0) {
-    return <p className="text-gray-600">No tienes análisis registrados.</p>;
+    return <p className="text-base-content/70">No tienes análisis registrados.</p>;
   }
 
   return (
     <div className="space-y-6">
-      <p className="text-gray-600">Total: <strong>{analyses.length}</strong></p>
+      <p className="text-base-content/70">Total: <strong>{analyses.length}</strong></p>
       <div className="grid gap-4">
         {analyses.map(a => (
           <a key={a.id} href={withBase(`/analisis?id=${a.id}`)} className="block card border border-base-300 bg-base-100 shadow-sm hover:shadow ring-1 ring-inset ring-base-200/10 transition">

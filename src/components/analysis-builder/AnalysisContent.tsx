@@ -132,7 +132,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
             <div className="flex flex-col gap-2 items-end">
               <div className="flex items-center gap-2 mt-2">
                 <select
-                  className="select select-sm select-bordered"
+                  className="select select-sm"
                   value={state.status}
                   onChange={e => onSetStatus(e.target.value as Analysis['status'])}
                   aria-label="Cambiar estado del análisis"
@@ -264,7 +264,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
                         <select
                           id={`event-line-mode-${event.id}`}
                           name={`event-line-mode-${event.id}`}
-                          className="select select-bordered select-xs w-full min-w-32"
+                          className="select select-xs w-full min-w-32"
                           value={markerMode}
                           onChange={e => setMarkerModeByEventId(prev => ({
                             ...prev,
