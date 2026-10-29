@@ -11,6 +11,14 @@ export interface SaveAnalysisError {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+export async function deleteDraftAnalysis(id: string): Promise<SaveAnalysisResult | SaveAnalysisError> {
+  if (!UUID_RE.test(id)) return { error: 'ID de análisis no válido.' };
+  const { data, error } = await supabase.from('analysis').delete()
+    .eq('id', id).eq('status', 'draft').select('id').maybeSingle();
+  if (error || !data) return { error: 'No se pudo eliminar el borrador. Comprueba su estado y tus permisos.' };
+  return { id: data.id };
+}
+
 /**
  * Loads a full AnalisisState from Supabase by analysis id.
  * Fetches all 5 tables in parallel and reassembles the state shape.

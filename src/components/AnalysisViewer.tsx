@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
-import { loadAnalysis } from '../lib/analysis';
+import { deleteDraftAnalysis, loadAnalysis } from '../lib/analysis';
 import { fetchMacroEvents } from '../lib/macro-events';
 import type { MacroEvent } from '../lib/macro-events';
 import { withBase } from '../lib/paths';
@@ -42,6 +42,9 @@ const AnalysisViewer: FC = () => {
   const [state, setState] = useState<AnalisisState | null>(null);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [rawData, setRawData] = useState<RawPoint[]>([]);
   const [macroEvents, setMacroEvents] = useState<MacroEvent[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
@@ -71,13 +74,30 @@ const AnalysisViewer: FC = () => {
       }
 
       const user = sessionRes.data?.session?.user;
-      if (user) setCurrentUserId(user.id);
+      if (user) {
+        setCurrentUserId(user.id);
+        const role = user.app_metadata?.role;
+        setIsAdmin(typeof role === 'string' && role.split(',').some(value => value.trim() === 'admin'));
+      }
 
       setLoadState('ready');
     });
 
     return () => { cancelled = true; };
   }, [analysisId]);
+
+  async function handleDelete() {
+    if (!window.confirm('¿Eliminar este borrador? Esta acción no se puede deshacer.')) return;
+    setDeleting(true);
+    setDeleteError('');
+    const result = await deleteDraftAnalysis(analysisId);
+    if ('error' in result) {
+      setDeleteError(result.error);
+      setDeleting(false);
+      return;
+    }
+    window.location.href = withBase(`/user/analisis?userId=${currentUserId}`);
+  }
 
   useEffect(() => {
     if (!state) return;
@@ -228,6 +248,7 @@ const AnalysisViewer: FC = () => {
             )}
           </div>
 
+          <div className="flex flex-wrap gap-2">
           {isAuthor && (
             <a
               href={withBase(`/analisis/editar?id=${analysisId}`)}
@@ -236,7 +257,14 @@ const AnalysisViewer: FC = () => {
               Editar
             </a>
           )}
+          {state.status === 'draft' && (isAuthor || isAdmin) && (
+            <button type="button" className="btn btn-sm btn-error btn-outline" disabled={deleting} onClick={handleDelete}>
+              {deleting ? 'Eliminando…' : 'Eliminar borrador'}
+            </button>
+          )}
+          </div>
         </div>
+        {deleteError && <p className="mt-2 text-sm text-error" role="alert">{deleteError}</p>}
 
         {state.periodos.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">

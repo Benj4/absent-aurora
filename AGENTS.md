@@ -49,6 +49,7 @@ Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capt
 10. Preserve unrelated working-tree changes. The repository may already contain user work.
 11. Run project tasks only through scripts defined in `package.json`, using `pnpm run <script>`. Do not bypass them with direct executable calls or substitute servers such as `python -m http.server`. If a required task has no script, add an appropriate script to `package.json` before running it.
 12. Never leave processes started for a task running after the task ends. Track any servers, watchers, and other long-running processes you start, stop them and their child processes before the final response, and verify that they have exited. Preserve processes that were already running before the task.
+13. Whenever application behavior requires a role check, use the authenticated user's roles from the current session (`user.app_metadata.role`). Reuse `src/lib/use-auth-session.ts` and the normalization in `src/lib/auth-session.ts`; check exact role membership. Do not query `user_roles` or another database table to determine the current user's roles. Treat a missing session or missing roles as having no privileged role. Enforce protected operations in database policies as well, reading roles from the validated JWT's `app_metadata.role` via `auth.jwt()`; UI checks alone do not authorize an operation. Role changes take effect after the session token is refreshed.
 
 ## Safe commands
 

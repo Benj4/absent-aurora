@@ -87,6 +87,10 @@ These tables store the `AnalysisState` from the analysis form.
 ### analysis
 Root analysis record.
 
+Only the creator or an administrator may delete an analysis, and only while it is a draft. PostgreSQL checks the administrator role in the authenticated JWT's `app_metadata.role`; role changes take effect when the token is refreshed. Dependent analysis configuration rows are removed by cascading foreign keys. Browser roles cannot modify `user_roles` or truncate analyses.
+
+The `on_user_role_change` trigger synchronizes role assignments with Auth metadata. Inserting or updating a `user_roles` row sets `app_metadata.role`; deleting it removes only the `role` key, preserving other metadata. Already issued JWTs retain their claims until refreshed or expired.
+
 Maps:
 - `titulo` -> `title`
 - `descripcion` -> `description`
