@@ -44,9 +44,12 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
       .eq('analysis_id', id),
   ]);
 
-  if (rootRes.error) return { error: rootRes.error.message };
+  for (const result of [rootRes, indicatorsRes, periodsRes, selectionsRes, eventsRes]) {
+    if (result.error) return { error: 'No se pudo cargar el análisis.' };
+  }
 
   const root = rootRes.data;
+  if (!root) return { error: 'No se pudo cargar el análisis.' };
 
   const indicadores = (indicatorsRes.data ?? []).map(r => r.indicator_id as string);
 

@@ -101,7 +101,7 @@ Stores selected indicators for an analysis, preserving UI order.
 Stores configured periods (`name`, start/end dates, color, order).
 
 ### analysis_source_selections
-Stores selected post source per `(indicator, date)` point.
+Stores the post used for every displayed `(indicator, date)` point, including points with only one available source. Saved analyses load only these references, so later catalog additions do not add or replace points. Older analyses may contain only explicit conflict choices and cannot reconstruct missing original references from this table.
 
 ### analysis_macro_events
 Stores selected macro events and marker customization.

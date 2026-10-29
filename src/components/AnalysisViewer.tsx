@@ -14,6 +14,7 @@ import {
   filterByPeriod,
   fmt,
   getDefaultMacroEventColor,
+  filterSavedPoints,
 } from './analysis-builder/analysis-builder.utils';
 import { INDICATOR_MAP } from './analysis-builder/analysis-builder.data';
 import type { AnalisisState, ModoAlineacion, RawPoint } from './analysis-builder/analysis-builder.types';
@@ -111,7 +112,11 @@ const AnalysisViewer: FC = () => {
       .order('date', { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (!error && data) setRawData(data as RawPoint[]);
+        if (!error && data) setRawData(filterSavedPoints(data as RawPoint[], state.sourceSelections ?? {}));
+        if (error) {
+          setErrorMsg('No se pudieron cargar las series del análisis.');
+          setLoadState('error');
+        }
         setDataLoading(false);
       });
 

@@ -4,6 +4,7 @@ import { useAnalisisState } from './analysis-builder/use-analisis-state';
 import AnalysisSidebar from './analysis-builder/AnalysisSidebar';
 import AnalysisContent from './analysis-builder/AnalysisContent';
 import { saveAnalysis, updateAnalysis } from '../lib/analysis';
+import { captureSourceSelections } from './analysis-builder/analysis-builder.utils';
 
 interface AnalysisBuilderProps {
   mode: 'new' | 'edit';
@@ -23,7 +24,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     onMacroEventCreated,
     markerModeByEventId, setMarkerModeByEventId,
     markerColorByEventId, setMarkerColorByEventId,
-    loading,
+    loading, dataError, isDraftReady, rawData,
     sourceConflicts, chartSeries, selectedMacroEvents, chartMarkers,
     hasData, isConfigured, displayTitle, periodsSummary, tableRows,
   } = useAnalisisState(analysisId);
@@ -34,16 +35,29 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleSave = useCallback(async () => {
+    if (!isDraftReady || loading || dataError) {
+      setSaveError(dataError ?? 'Espera a que termine la carga de los datos.');
+      return;
+    }
     setIsSaving(true);
     setSaveError(null);
+    let selections;
+    try {
+      selections = captureSourceSelections(rawData, state);
+    } catch {
+      setSaveError('No se pudo identificar la fuente de todos los datos.');
+      setIsSaving(false);
+      return;
+    }
+    const savedState = { ...state, sourceSelections: selections };
     const result = isEditMode
-      ? await updateAnalysis(analysisId!, state)
-      : await saveAnalysis(state);
+      ? await updateAnalysis(analysisId!, savedState)
+      : await saveAnalysis(savedState);
     setIsSaving(false);
     if ('error' in result) {
       setSaveError(result.error);
     }
-  }, [state, isEditMode, analysisId]);
+  }, [state, isEditMode, analysisId, isDraftReady, loading, dataError, rawData]);
   return (
     <div className="flex bg-base-200/20" style={{ height: 'calc(100svh - 7rem)', overflow: 'hidden' }}>
       <AnalysisSidebar
@@ -96,4 +110,3 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
 };
 
 export default AnalysisBuilder;
-

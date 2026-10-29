@@ -17,6 +17,7 @@ import {
   buildBase100OverlaySeries,
   buildMacroEventMarkers,
   getDefaultMacroEventColor,
+  getSourceKey,
 } from './analysis-builder.utils';
 import { INDICATOR_MAP } from './analysis-builder.data';
 
@@ -37,6 +38,8 @@ export function useAnalisisState(analysisId?: string) {
   const [markerModeByEventId, setMarkerModeByEventId] = useState<Record<string, MacroMarkerMode>>(initial.markerModeByEventId ?? {});
   const [markerColorByEventId, setMarkerColorByEventId] = useState<Record<string, string>>(initial.markerColorByEventId ?? {});
   const [showBase100Line, setShowBase100Line] = useState<boolean>(initial.showBase100Line ?? true);
+  const [savedScope, setSavedScope] = useState<AnalisisState | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const state: AnalisisState = {
     titulo, descripcion, status, region, modoAlineacion,
@@ -67,7 +70,8 @@ export function useAnalisisState(analysisId?: string) {
     // Edit mode: load from Supabase, skip localStorage entirely
     if (analysisId) {
       loadAnalysis(analysisId).then(result => {
-        if (!('error' in result)) loadState(result);
+        if ('error' in result) setLoadError(result.error);
+        else { loadState(result); setSavedScope(result); }
         setIsDraftReady(true);
       });
       return;
@@ -189,11 +193,15 @@ export function useAnalisisState(analysisId?: string) {
   // ── Data fetch ─────────────────────────────────────────────────────────────
 
   const [loading, setLoading] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+  const queryKey = JSON.stringify([indicadores, periodos.map(p => [p.fechaInicio, p.fechaFin])]);
+  const [loadedQueryKey, setLoadedQueryKey] = useState('');
 
   useEffect(() => {
     const active = periodos.filter(p => p.fechaInicio && p.fechaFin);
     if (indicadores.length === 0 || active.length === 0) {
       setRawData([]);
+      setLoadedQueryKey(queryKey);
       return;
     }
 
@@ -203,6 +211,7 @@ export function useAnalisisState(analysisId?: string) {
 
     let cancelled = false;
     setLoading(true);
+    setDataError(null);
 
     supabase
       .from('approved_series_view')
@@ -213,13 +222,24 @@ export function useAnalisisState(analysisId?: string) {
       .order('date', { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (!error && data) setRawData(data as RawPoint[]);
+        if (error) {
+          setRawData([]);
+          setDataError('No se pudieron cargar las series del análisis.');
+        } else if (data) {
+          const points = data as RawPoint[];
+          setRawData(savedScope ? points.filter(point => {
+            const inSavedScope = savedScope.indicadores.includes(point.indicator_id)
+              && savedScope.periodos.some(p => point.date >= p.fechaInicio && point.date <= p.fechaFin);
+            return !inSavedScope || savedScope.sourceSelections?.[getSourceKey(point.indicator_id, point.date)] === point.post_id;
+          }) : points);
+        }
+        setLoadedQueryKey(queryKey);
         setLoading(false);
       });
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(indicadores), JSON.stringify(periodos.map(p => ({ i: p.fechaInicio, f: p.fechaFin })))]);
+  }, [JSON.stringify(indicadores), JSON.stringify(periodos.map(p => ({ i: p.fechaInicio, f: p.fechaFin }))), savedScope]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
 
@@ -278,7 +298,10 @@ export function useAnalisisState(analysisId?: string) {
     markerColorByEventId,
     setMarkerColorByEventId,
     // Data
-    loading,
+    loading: loading || loadedQueryKey !== queryKey,
+    dataError: loadError ?? dataError,
+    isDraftReady,
+    rawData,
     // Derived
     sourceConflicts,
     chartSeries,

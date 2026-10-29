@@ -242,6 +242,25 @@ export function resolveSources(data: RawPoint[], selections: SourceSelection): R
   return Array.from(filtered.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
+// Capture exactly the points displayed in the configured periods, including
+// points for which the catalog currently offers only one source.
+export function captureSourceSelections(data: RawPoint[], state: AnalisisState): SourceSelection {
+  const selections: SourceSelection = {};
+  for (const period of state.periodos) {
+    for (const indicator of state.indicadores) {
+      for (const point of filterByPeriod(data, indicator, period, state.sourceSelections)) {
+        if (!point.post_id) throw new Error('No se pudo identificar la fuente de todos los datos.');
+        selections[getSourceKey(indicator, point.date)] = point.post_id;
+      }
+    }
+  }
+  return selections;
+}
+
+export function filterSavedPoints(data: RawPoint[], selections: SourceSelection): RawPoint[] {
+  return data.filter(point => point.post_id != null && selections[getSourceKey(point.indicator_id, point.date)] === point.post_id);
+}
+
 export function filterByPeriod(data: RawPoint[], indicId: string, periodo: Periodo, selections: SourceSelection = {}): RawPoint[] {
   if (!periodo.fechaInicio || !periodo.fechaFin) return [];
   const resolved = resolveSources(data, selections);
@@ -431,4 +450,3 @@ export function buildMacroEventMarkers(
 
   return markers.sort((a, b) => a.value - b.value);
 }
-
