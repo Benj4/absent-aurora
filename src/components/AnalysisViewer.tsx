@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
 import { deleteDraftAnalysis, loadAnalysis } from '../lib/analysis';
+import { loadSavedPoints } from '../lib/analysis-sources';
 import { fetchMacroEvents } from '../lib/macro-events';
 import type { MacroEvent } from '../lib/macro-events';
 import { withBase } from '../lib/paths';
@@ -14,7 +15,6 @@ import {
   filterByPeriod,
   fmt,
   getDefaultMacroEventColor,
-  filterSavedPoints,
 } from './analysis-builder/analysis-builder.utils';
 import { INDICATOR_MAP } from './analysis-builder/analysis-builder.data';
 import type { AnalisisState, ModoAlineacion, RawPoint } from './analysis-builder/analysis-builder.types';
@@ -29,6 +29,7 @@ interface TableRow {
   value: number;
   postId: string;
   sourceName: string;
+  status?: string;
 }
 
 const AnalysisViewer: FC = () => {
@@ -48,6 +49,8 @@ const AnalysisViewer: FC = () => {
   const [rawData, setRawData] = useState<RawPoint[]>([]);
   const [macroEvents, setMacroEvents] = useState<MacroEvent[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [dataError, setDataError] = useState('');
+  const [eventError, setEventError] = useState('');
   const [selectedMode, setSelectedMode] = useState<ModoAlineacion>('calendario');
 
   // Phase 1: parallel fetch — analysis state, creator metadata, auth session
@@ -108,38 +111,29 @@ const AnalysisViewer: FC = () => {
   useEffect(() => {
     if (!state) return;
 
-    // Fetch all macro events so we can resolve the selected ones
-    fetchMacroEvents().then(({ data, error }) => {
-      if (!error && data) setMacroEvents(data as MacroEvent[]);
-    });
-
-    const activePeriods = state.periodos.filter(p => p.fechaInicio && p.fechaFin);
-    if (state.indicadores.length === 0 || activePeriods.length === 0) return;
-
-    const allDates = activePeriods.flatMap(p => [p.fechaInicio, p.fechaFin]).sort();
-    const minDate = allDates[0];
-    const maxDate = allDates[allDates.length - 1];
-
     let cancelled = false;
-    setDataLoading(true);
-
-    supabase
-      .from('approved_series_view')
-      .select('indicator_id, date, value, data_source, post_id')
-      .in('indicator_id', state.indicadores)
-      .gte('date', minDate)
-      .lte('date', maxDate)
-      .order('date', { ascending: true })
-      .then(({ data, error }) => {
+    if (state.macroEventIds.length) {
+      fetchMacroEvents().then(({ data, error }) => {
         if (cancelled) return;
-        if (!error && data) setRawData(filterSavedPoints(data as RawPoint[], state.sourceSelections ?? {}));
-        if (error) {
-          setErrorMsg('No se pudieron cargar las series del análisis.');
-          setLoadState('error');
+        if (error || !data) setEventError('No se pudieron cargar los eventos originales. Su estado es desconocido.');
+        else {
+          setMacroEvents(data);
+          if (state.macroEventIds.some(id => !data.some(event => event.id === id)))
+            setEventError('No se pudieron recuperar algunos eventos originales. Su estado es desconocido.');
         }
-        setDataLoading(false);
+      }).catch(() => {
+        if (!cancelled) setEventError('No se pudieron cargar los eventos originales. Su estado es desconocido.');
       });
-
+    }
+    setDataLoading(true);
+    loadSavedPoints(state.sourceSelections ?? {}).then(({ data, error }) => {
+      if (cancelled) return;
+      setRawData(data);
+      setDataError(error ?? '');
+      setDataLoading(false);
+    }).catch(() => {
+      if (!cancelled) { setDataError('No se pudieron cargar las fuentes originales. Su estado es desconocido.'); setDataLoading(false); }
+    });
     return () => { cancelled = true; };
   }, [state]);
 
@@ -187,6 +181,7 @@ const AnalysisViewer: FC = () => {
           value: d.value,
           postId: d.post_id ?? '',
           sourceName: d.data_source ?? 'Fuente',
+          status: d.status,
         })),
       ),
     );
@@ -320,6 +315,9 @@ const AnalysisViewer: FC = () => {
           </div>
         </div>
 
+        {dataError && <p role="alert" className="alert alert-error mb-4">{dataError}</p>}
+        {eventError && <p role="alert" className="alert alert-error mb-4">{eventError}</p>}
+        {rawData.some(point => point.status !== 'approved') && <p className="text-sm text-warning mb-3">Los rombos identifican datos cuya fuente ya no está aprobada.</p>}
         {dataLoading ? (
           <div className="skeleton rounded-xl" style={{ height: 360 }} />
         ) : !isConfigured ? (
@@ -331,7 +329,7 @@ const AnalysisViewer: FC = () => {
         ) : !hasData ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-base-content/30">
             <p className="text-sm text-center">
-              No se encontraron datos aprobados para esta combinación de indicadores y fechas.
+              No se encontraron datos originales para esta combinación de indicadores y fechas.
             </p>
           </div>
         ) : (
@@ -451,12 +449,12 @@ const AnalysisViewer: FC = () => {
               <table className="table table-sm table-zebra w-full">
                 <thead className="sticky top-0 bg-base-200 z-10">
                   <tr>
-                    <th></th>
                     <th>Período</th>
                     <th>Fecha</th>
                     <th>Indicador</th>
                     <th style={{ fontVariantNumeric: 'tabular-nums' }}>Valor</th>
                     <th>Fuente</th>
+                    <th>Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -501,6 +499,7 @@ const AnalysisViewer: FC = () => {
                           <span className="text-xs text-base-content/40">—</span>
                         )}
                       </td>
+                      <td>{row.status && row.status !== 'approved' ? <span className="badge badge-warning">Sin aprobación ({row.status === 'disabled' ? 'deshabilitada' : row.status === 'rejected' ? 'rechazada' : 'pendiente'})</span> : 'Aprobada'}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import type { Analysis } from '../../lib/supabase';
 import { fetchMacroEvents } from '../../lib/macro-events';
 import { loadAnalysis } from '../../lib/analysis';
+import { loadSavedPoints } from '../../lib/analysis-sources';
 import type { MacroEvent } from '../../lib/macro-events';
 
 import type { RawPoint, AnalisisState, Periodo, ModoAlineacion, MarkerMode } from './analysis-builder.types';
@@ -17,7 +18,6 @@ import {
   buildBase100OverlaySeries,
   buildMacroEventMarkers,
   getDefaultMacroEventColor,
-  getSourceKey,
 } from './analysis-builder.utils';
 import { INDICATOR_MAP } from './analysis-builder.data';
 
@@ -213,25 +213,26 @@ export function useAnalisisState(analysisId?: string) {
     setLoading(true);
     setDataError(null);
 
-    supabase
+    const catalog = supabase
       .from('approved_series_view')
       .select('indicator_id, date, value, data_source, post_id')
       .in('indicator_id', indicadores)
       .gte('date', minDate)
       .lte('date', maxDate)
-      .order('date', { ascending: true })
-      .then(({ data, error }) => {
+      .order('date', { ascending: true });
+    Promise.all([catalog, loadSavedPoints(savedScope?.sourceSelections ?? {})])
+      .then(([{ data, error }, saved]) => {
         if (cancelled) return;
-        if (error) {
+        if (error || saved.error) {
           setRawData([]);
-          setDataError('No se pudieron cargar las series del análisis.');
+          setDataError(saved.error ?? 'No se pudieron cargar las series del análisis.');
         } else if (data) {
           const points = data as RawPoint[];
-          setRawData(savedScope ? points.filter(point => {
+          setRawData(savedScope ? [...saved.data, ...points.filter(point => {
             const inSavedScope = savedScope.indicadores.includes(point.indicator_id)
               && savedScope.periodos.some(p => point.date >= p.fechaInicio && point.date <= p.fechaFin);
-            return !inSavedScope || savedScope.sourceSelections?.[getSourceKey(point.indicator_id, point.date)] === point.post_id;
-          }) : points);
+            return !inSavedScope;
+          })] : points);
         }
         setLoadedQueryKey(queryKey);
         setLoading(false);

@@ -47,6 +47,7 @@ interface RawPoint {
   value: number;
   data_source?: string;
   post_id?: string;
+  status?: string;
 }
 
 interface SourceSelection {
@@ -59,6 +60,7 @@ interface HCSeriesData {
   dashStyle: 'Solid' | 'ShortDash' | 'Dot' | 'DashDot';
   data: [number, number][];
   isReference?: boolean;
+  isInvalid?: boolean;
   yAxis?: number;
 }
 

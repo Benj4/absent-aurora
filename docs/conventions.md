@@ -80,6 +80,7 @@ const { data: { user } } = await supabase.auth.getUser();
 
 ## Testing Rules
 
+- **Test creation**: Create or generate tests of any kind only when the user explicitly requests them. Existing tests may still be run under the applicable safety rules.
 - **Unit tests**: Keep isolated tests under `tests/unit/`; `pnpm test` must not contact external services.
 - **Integration tests**: Keep Supabase and RLS tests under `tests/rls/` and run them explicitly with `pnpm test:integration`.
 - **Test project only**: Integration tests require a local or dedicated Supabase test project and the safety variables documented in `.env.test.example`.

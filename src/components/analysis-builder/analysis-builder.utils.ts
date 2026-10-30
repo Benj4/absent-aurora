@@ -312,6 +312,15 @@ export function buildChartSeries(rawData: RawPoint[], state: AnalisisState): HCS
         dashStyle: DASH_STYLES[indicIdx % DASH_STYLES.length],
         data,
       });
+      const invalid = pts.map((point, index) => ({ point, index })).filter(({ point }) => point.status != null && point.status !== 'approved');
+      if (invalid.length) series.push({
+        name: `Datos sin aprobación – ${INDICATOR_MAP.get(indicId) ?? indicId} – ${periodo.nombre}`,
+        color: periodo.color,
+        dashStyle: 'Solid',
+        isInvalid: true,
+        data: invalid.map(({ point, index }) => [state.modoAlineacion === 'calendario' ? new Date(point.date).getTime() : index, point.value]),
+      });
+
     });
   });
 

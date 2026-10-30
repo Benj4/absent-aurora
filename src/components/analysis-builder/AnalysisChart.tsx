@@ -96,10 +96,12 @@ const AnalysisChart: FC<{ series: HCSeriesData[]; mode: ModoAlineacion; markers?
         dashStyle: s.dashStyle,
         data: s.data,
         yAxis: s.yAxis ?? 0,
-        marker: s.isReference
+        marker: s.isInvalid
+          ? { enabled: true, radius: 6, symbol: 'diamond' as const, lineWidth: 2, lineColor: '#dc2626' }
+          : s.isReference
           ? { enabled: false }
           : { enabled: s.data.length <= 30, radius: 3, symbol: 'circle' as const },
-        lineWidth: s.isReference ? 1 : 2,
+        lineWidth: s.isInvalid ? 0 : s.isReference ? 1 : 2,
         opacity: s.isReference ? 0.6 : 1,
       })),
       credits: { enabled: false },
