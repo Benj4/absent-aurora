@@ -33,6 +33,7 @@ PUBLIC_SUPABASE_URL=...
 PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
+For a local Supabase environment, install and start Docker, then run `pnpm run supabase:start`. Use the local API URL and anonymous key shown by `pnpm run supabase:status` in `.env.local`; this file takes precedence over `.env` and is ignored by Git. Run `pnpm run supabase:stop` when finished. The first start downloads the container images and applies the migrations.
 ## Useful routes
 
 | Route | Purpose |
