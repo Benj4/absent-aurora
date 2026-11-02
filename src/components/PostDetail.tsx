@@ -54,6 +54,7 @@ const PostDetail: FC = () => {
   const [pendingStatus, setPendingStatus] = useState<PostStatus>('pending');
   const [isUpdating, setIsUpdating] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [statusReason, setStatusReason] = useState('');
   const [validations, setValidations] = useState<Validation[]>([]);
   const [existingValidation, setExistingValidation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -65,10 +66,8 @@ const PostDetail: FC = () => {
 
   const postId = new URLSearchParams(window.location.search).get('id');
 
-  const userRoles = currentUser?.app_metadata?.role || [];
-
-  const isEditor = userRoles.includes('editor');
-  // const isEditor = true;
+  const userRoles = currentUser?.app_metadata?.role;
+  const isEditor = Array.isArray(userRoles) && (userRoles.includes('editor') || userRoles.includes('admin'));
 
   const loadData = async () => {
     setLoading(true);
@@ -145,23 +144,27 @@ const PostDetail: FC = () => {
 
   const handleStatusUpdate = async () => {
     if (!isEditor || !post || pendingStatus === postStatus) return;
+    if ((pendingStatus === 'rejected' || pendingStatus === 'disabled' || (postStatus === 'approved' && pendingStatus !== 'approved')) && !statusReason.trim()) {
+      setStatusMessage('Indica el motivo del cambio de estado.');
+      return;
+    }
 
     setIsUpdating(true);
     setStatusMessage('Actualizando estado...');
 
-    const { error } = await supabase
-      .from('serie_posts')
-      .update({ status: pendingStatus })
-      .eq('id', post.id);
+    const { error } = await supabase.rpc('change_record_status', {
+      p_type: 'series', p_id: post.id, p_status: pendingStatus, p_reason: statusReason,
+    });
 
     setIsUpdating(false);
 
     if (error) {
-      setStatusMessage(`Error al actualizar estado: ${error.message}`);
+      setStatusMessage('No se pudo actualizar el estado. Comprueba tus permisos y el estado actual de la publicación.');
       return;
     }
 
     setPostStatus(pendingStatus);
+    setStatusReason('');
     setPost((prev) => (prev ? { ...prev, status: pendingStatus } : prev));
     setStatusMessage('Estado actualizado correctamente.');
   };
@@ -247,6 +250,9 @@ const PostDetail: FC = () => {
                   <option value="rejected">Rechazado</option>
                   <option value="disabled">Deshabilitado</option>
                 </select>
+                {(pendingStatus === 'rejected' || pendingStatus === 'disabled' || (postStatus === 'approved' && pendingStatus !== 'approved')) && (
+                  <input className="input input-sm" aria-label="Motivo del cambio" placeholder="Motivo obligatorio" value={statusReason} onChange={e => setStatusReason(e.target.value)} />
+                )}
                 <button
                   type="button"
                   className="btn btn-sm btn-primary"

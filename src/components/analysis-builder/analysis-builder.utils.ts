@@ -377,7 +377,7 @@ export function getDefaultMacroEventColor(eventId: string, fallbackIndex = 0): s
 }
 
 export function buildMacroEventMarkers(
-  macroEvents: Array<{ id: string; name: string; start_date: string; end_date: string | null }> ,
+  macroEvents: Array<{ id: string; name: string; start_date: string; end_date: string | null; status?: string }> ,
   state: AnalisisState,
   markerModeByEventId: Record<string, 'none' | 'start' | 'end' | 'both'> = {},
   markerColorByEventId: Record<string, string> = {},
@@ -395,7 +395,7 @@ export function buildMacroEventMarkers(
       if (markerMode === 'start' || markerMode === 'both') {
         markers.push({
           id: `${event.id}:start`,
-          label: `${event.name} · inicio`,
+          label: `${event.name}${event.status === 'invalid' ? ' ⚠ invalidado' : ''} · inicio`,
           value: new Date(event.start_date).getTime(),
           color: eventColor,
         });
@@ -408,7 +408,7 @@ export function buildMacroEventMarkers(
       ) {
         markers.push({
           id: `${event.id}:end`,
-          label: `${event.name} · fin`,
+          label: `${event.name}${event.status === 'invalid' ? ' ⚠ invalidado' : ''} · fin`,
           value: new Date(event.end_date).getTime(),
           color: eventColor,
         });
@@ -433,7 +433,7 @@ export function buildMacroEventMarkers(
       ) {
         markers.push({
           id: `${periodo.id}:${event.id}:start`,
-          label: `${event.name} · ${periodo.nombre}`,
+          label: `${event.name}${event.status === 'invalid' ? ' ⚠ invalidado' : ''} · ${periodo.nombre}`,
           value: monthDiff(periodo.fechaInicio, event.start_date),
           color: eventColor || periodo.color || markerColor(periodoIndex),
         });
@@ -449,7 +449,7 @@ export function buildMacroEventMarkers(
       ) {
         markers.push({
           id: `${periodo.id}:${event.id}:end`,
-          label: `${event.name} · ${periodo.nombre} fin`,
+          label: `${event.name}${event.status === 'invalid' ? ' ⚠ invalidado' : ''} · ${periodo.nombre} fin`,
           value: monthDiff(periodo.fechaInicio, event.end_date),
           color: eventColor || periodo.color || markerColor(periodoIndex),
         });

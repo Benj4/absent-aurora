@@ -308,36 +308,17 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         throw new Error('Por favor, ingresa valores numéricos válidos.');
       }
 
-      const { data: postData, error: postError } = await supabase
-        .from('serie_posts')
-        .insert({
-          indicator_id: indicator.id,
-          data_source: dataSource,
-          url: trimmedUrl || null,
-          frequency: indicator.nativeFrequency,
-          status: 'pending',
-          notes: notes.trim() || null,
-        })
-        .select()
-        .single();
+      const { data: postData, error: postError } = await supabase.rpc('create_series_with_points', {
+        p_indicator_id: indicator.id, p_source: dataSource, p_url: trimmedUrl || '',
+        p_frequency: indicator.nativeFrequency, p_notes: notes.trim(), p_points: validData,
+      });
 
       if (postError) throw postError;
-
-      const dataPoints = validData.map(item => ({
-        post_id: postData.id,
-        date: item.date,
-        value: item.value,
-      }));
-
-      console.log('dataPoints :>> ', dataPoints);
-
-      const { error: dataError } = await supabase.from('serie_data').insert(dataPoints);
-      if (dataError) throw dataError;
 
       clearSeriesFormDraft(draftStorageKey);
       setStatus('success');
       setStatusMessage(`✓ ¡Datos enviados exitosamente! ${validData.length} puntos de datos agregados.`);
-      setSavedPostId(postData.id);
+      setSavedPostId(postData);
       setDataSource('');
       setSourceUrl('');
       setNotes('');

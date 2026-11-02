@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MacroEvent, MacroEventDraft, MacroEventTopic } from '../../lib/macro-events';
-import { createMacroEvent, updateMacroEvent } from '../../lib/macro-events';
+import { createMacroEvent } from '../../lib/macro-events';
 
 const TOPICS: { value: MacroEventTopic; label: string }[] = [
   { value: 'politics', label: 'Política' },
@@ -132,9 +132,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
     setSubmitting(true);
     setSubmitError(null);
 
-    const { data, error } = isEdit
-      ? await updateMacroEvent(event!.id, draft)
-      : await createMacroEvent(draft);
+    const { data, error } = await createMacroEvent(draft);
 
     setSubmitting(false);
 
@@ -152,7 +150,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
       <div className="flex flex-none items-center justify-between gap-4 border-b border-base-200 px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold leading-tight">
-            {isEdit ? 'Editar evento' : 'Nuevo evento'}
+            {isEdit ? 'Crear corrección del evento' : 'Nuevo evento'}
           </h2>
         </div>
         <button
@@ -176,6 +174,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
         {/* Scrollable body + sticky footer, all inside the form */}
         <form onSubmit={handleSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+            {isEdit && <p className="alert alert-info mb-4 text-sm">La corrección crea un evento nuevo y conserva el original.</p>}
             {submitError && (
               <div role="alert" aria-live="polite" className="alert alert-error mb-4 text-sm py-2.5">
                 <svg
@@ -417,7 +416,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                   <span className="loading loading-spinner loading-xs" aria-hidden="true" />
                   Guardando…
                 </>
-              ) : isEdit ? 'Guardar cambios' : 'Crear evento'}
+              ) : isEdit ? 'Crear corrección' : 'Crear evento'}
             </button>
           </div>
         </form>

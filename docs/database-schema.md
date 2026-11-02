@@ -107,8 +107,13 @@ Stores configured periods (`name`, start/end dates, color, order).
 ### analysis_source_selections
 Stores the post used for every displayed `(indicator, date)` point, including points with only one available source. Saved analyses load only these references, so later catalog additions do not add or replace points. Older analyses may contain only explicit conflict choices and cannot reconstruct missing original references from this table. The reader loads recorded posts regardless of their current status and flags points from posts that are no longer approved. Missing references and retrieval failures are reported as unknown, not as confirmed invalidation.
 
+The analysis reader and user analysis list check the current status of recorded source posts and events. Transitions recorded after the status history migration contain a reason when invalidating use, an actor and a timestamp. Earlier transitions have no recorded history and are displayed as unavailable rather than inferred.
+
 ### analysis_macro_events
-Stores selected macro events and marker customization. Macro events currently have no validity status. Deleting an event cascades to these selections, so the original event cannot be reconstructed after deletion; preserving deleted events requires a database change.
+Stores selected macro events and marker customization. Events are valid or invalid; referenced events cannot be deleted. Invalid events remain visible in saved analyses and cannot be newly selected.
+
+### status_change_history
+Append-only history of series and event status transitions. The transactional `change_record_status` function checks the JWT role, requires a reason for invalidation and records the old and new state, actor and time. Administrators and editors can change status; only administrators can delete series or events, and references prevent deletion. Series and their observations are created atomically by `create_series_with_points`; browser clients cannot edit existing content or append observations later. Existing history is not backfilled.
 
 ---
 
@@ -138,8 +143,8 @@ Stores selected macro events and marker customization. Macro events currently ha
 3. Use duplicate detector data for moderation and data quality workflows.
 
 ### Write path
-1. Create a new post with `pending` status.
-2. Add all related data points for that post.
+1. Create a new post with `pending` status and all related data points atomically.
+2. Corrections create a new post.
 3. Reviewers append validation events.
 4. Update post status according to review outcome.
 

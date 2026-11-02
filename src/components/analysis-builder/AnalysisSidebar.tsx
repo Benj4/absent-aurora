@@ -234,9 +234,9 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
               >
                 {macroEvents
                   .filter(ev =>
-                    macroEventsSearch.trim() === '' ||
+                    (ev.status === 'valid' || state.macroEventIds.includes(ev.id)) && (macroEventsSearch.trim() === '' ||
                     ev.name.toLowerCase().includes(macroEventsSearch.toLowerCase()) ||
-                    (ev.description ?? '').toLowerCase().includes(macroEventsSearch.toLowerCase())
+                    (ev.description ?? '').toLowerCase().includes(macroEventsSearch.toLowerCase()))
                   )
                   .map(ev => {
                     const checked = state.macroEventIds.includes(ev.id);

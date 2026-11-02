@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MacroEvent, MacroEventTopic } from '../../lib/macro-events';
 import { deleteMacroEvent, fetchMacroEvents } from '../../lib/macro-events';
 import MacroEventForm from './MacroEventForm';
+import { useAuthSession } from '../../lib/use-auth-session';
+import { supabase } from '../../lib/supabase';
 
 const TOPIC: Record<MacroEventTopic, { label: string; cls: string }> = {
   politics: { label: 'Política', cls: 'badge-secondary' },
@@ -29,6 +31,10 @@ function fmtDate(raw: string | null): string {
 }
 
 export default function MacroEventsPage() {
+  const { user } = useAuthSession();
+  const roles = user?.app_metadata?.role;
+  const canChange = Array.isArray(roles) && (roles.includes('editor') || roles.includes('admin'));
+  const canDelete = Array.isArray(roles) && roles.includes('admin');
   const [events, setEvents] = useState<MacroEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -80,17 +86,29 @@ export default function MacroEventsPage() {
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !canDelete) return;
     setDeleting(true);
     const { error } = await deleteMacroEvent(deleteTarget.id);
     setDeleting(false);
     if (error) {
-      setFetchError(error.message);
+      setFetchError('No se pudo eliminar el evento. Comprueba que no esté usado en un análisis y que tengas permisos.');
     } else {
       setEvents(prev => prev.filter(e => e.id !== deleteTarget.id));
     }
     setDeleteTarget(null);
     deleteModalRef.current?.close();
+  }
+
+  async function changeStatus(event: MacroEvent) {
+    if (!canChange) return;
+    const next = event.status === 'valid' ? 'invalid' : 'valid';
+    const reason = next === 'invalid' ? window.prompt('Indica el motivo de la invalidación:') : '';
+    if (reason === null) return;
+    if (next === 'invalid' && !reason.trim()) { setFetchError('El motivo de la invalidación es obligatorio.'); return; }
+    const { error } = await supabase.rpc('change_record_status', { p_type: 'event', p_id: event.id, p_status: next, p_reason: reason });
+    if (error) { setFetchError('No se pudo cambiar el estado del evento.'); return; }
+    setFetchError(null);
+    setEvents(previous => previous.map(item => item.id === event.id ? { ...item, status: next } : item));
   }
 
   return (
@@ -192,6 +210,7 @@ export default function MacroEventsPage() {
                         <tr key={evt.id} className="hover">
                           <td className="min-w-0 max-w-xs">
                             <div className="min-w-0 truncate font-medium">{evt.name}</div>
+                            <span className="badge badge-sm">{evt.status === 'valid' ? 'Válido' : 'Invalidado'}</span>
                             {evt.description && (
                               <div className="mt-0.5 min-w-0 truncate text-xs opacity-50">
                                 {evt.description}
@@ -214,22 +233,23 @@ export default function MacroEventsPage() {
                           </td>
                           <td>
                             <div className="flex items-center justify-end gap-1">
-                              <button
+                              {canChange && <button type="button" className="btn btn-ghost btn-xs" onClick={() => changeStatus(evt)}>{evt.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button>}
+                              {canChange && <button
                                 type="button"
                                 onClick={() => openEdit(evt)}
-                                aria-label={`Editar ${evt.name}`}
+                                aria-label={`Crear corrección de ${evt.name}`}
                                 className="btn btn-ghost btn-xs"
                               >
-                                Editar
-                              </button>
-                              <button
+                                Crear corrección
+                              </button>}
+                              {canDelete && <button
                                 type="button"
                                 onClick={() => promptDelete(evt)}
                                 aria-label={`Eliminar ${evt.name}`}
                                 className="btn btn-ghost btn-xs text-error hover:bg-error/10"
                               >
                                 Eliminar
-                              </button>
+                              </button>}
                             </div>
                           </td>
                         </tr>

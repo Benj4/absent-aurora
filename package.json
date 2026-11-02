@@ -12,6 +12,7 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "supabase:migrate": "supabase migration up --local",
+    "supabase:reset": "supabase db reset --local",
     "supabase:query": "supabase db query --local",
     "astro": "astro",
     "test": "vitest run",

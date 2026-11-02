@@ -4,6 +4,8 @@ import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
 import { deleteDraftAnalysis, loadAnalysis } from '../lib/analysis';
 import { loadSavedPoints } from '../lib/analysis-sources';
+import { loadAnalysisValidity, sourceStatus } from '../lib/analysis-validity';
+import type { AnalysisValidity } from '../lib/analysis-validity';
 import { fetchMacroEvents } from '../lib/macro-events';
 import type { MacroEvent } from '../lib/macro-events';
 import { withBase } from '../lib/paths';
@@ -51,11 +53,17 @@ const AnalysisViewer: FC = () => {
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState('');
   const [eventError, setEventError] = useState('');
+  const [validity, setValidity] = useState<AnalysisValidity | null>(null);
   const [selectedMode, setSelectedMode] = useState<ModoAlineacion>('calendario');
 
   // Phase 1: parallel fetch — analysis state, creator metadata, auth session
   useEffect(() => {
     let cancelled = false;
+    loadAnalysisValidity([analysisId]).then(result => {
+      if (!cancelled) setValidity(result[analysisId]);
+    }).catch(() => {
+      if (!cancelled) setValidity({ sources: [], events: [], history: [], unknown: true });
+    });
 
     Promise.all([
       loadAnalysis(analysisId),
@@ -228,6 +236,29 @@ const AnalysisViewer: FC = () => {
               {state.titulo || 'Análisis sin título'}
             </h1>
 
+            {validity && (validity.sources.length > 0 || validity.events.length > 0) && (
+              <div className="alert alert-warning mt-3 block" role="alert">
+                <div className="flex items-center gap-2 font-semibold">
+                  <span aria-hidden="true">⚠</span>
+                  <span>Este análisis contiene fuentes o eventos invalidados.</span>
+                </div>
+                <p className="mt-1 text-sm">Sus conclusiones pueden basarse en información invalidada.</p>
+                <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
+                  {validity.sources.map(source => (
+                    <li key={source.id}>
+                      <strong>{INDICATOR_MAP.get(source.indicator_id) ?? source.indicator_id}</strong> — {source.data_source} (ID: {source.id})
+                      <br />Estado: {sourceStatus(source.status)}. Motivo: {validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status)?.reason ?? 'no disponible'}. Fecha del cambio: {validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status)?.changed_at ? new Date(validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status)!.changed_at).toLocaleString('es-CL') : 'no disponible'}.
+                    </li>
+                  ))}
+                  {validity.events.map(event => <li key={event.id}><strong>Evento: {event.name}</strong> — Invalidado. Motivo: {validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status)?.reason ?? 'no disponible'}. Fecha del cambio: {validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status)?.changed_at ? new Date(validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status)!.changed_at).toLocaleString('es-CL') : 'no disponible'}.</li>)}
+                </ul>
+                <details className="mt-3"><summary className="cursor-pointer font-medium">Consultar historial de cambios</summary>
+                  {validity.history.length ? <ul className="mt-2 list-disc pl-5 text-sm">{validity.history.map(item => <li key={item.id}>{item.record_type === 'event' ? 'Evento' : 'Serie'} {item.record_id}: {sourceStatus(item.old_status)} → {sourceStatus(item.new_status)}; {new Date(item.changed_at).toLocaleString('es-CL')}; responsable: {item.changed_by}; motivo: {item.reason ?? 'no indicado'}.</li>)}</ul> : <p className="text-sm">No hay cambios registrados.</p>}
+                </details>
+              </div>
+            )}
+            {validity?.unknown && <p className="alert alert-error mt-3" role="alert">No se pudo comprobar la validez de algunas fuentes. Su estado es desconocido.</p>}
+
             {state.region && (
               <p className="mt-2">
                 <span className="inline-flex items-center gap-1 rounded-full bg-base-200 px-2.5 py-0.5 text-xs font-medium text-base-content/60">
@@ -388,6 +419,7 @@ const AnalysisViewer: FC = () => {
                           <p className="text-xs font-medium truncate" title={event.name}>
                             {event.name}
                           </p>
+                          {event.status === 'invalid' && <span className="badge badge-warning badge-xs">⚠ Invalidado</span>}
                         </td>
                         <td>
                           <span className="font-mono text-xs" style={{ fontVariantNumeric: 'tabular-nums' }}>

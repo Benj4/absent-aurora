@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { withBase } from "../../lib/paths";
+import { loadAnalysisValidity } from "../../lib/analysis-validity";
+import type { AnalysisValidity } from "../../lib/analysis-validity";
 
 const UserAnalyses = () => {
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [validity, setValidity] = useState<Record<string, AnalysisValidity>>({});
 
   useEffect(() => {
     const idFromUrl = new URLSearchParams(typeof window !== "undefined" ? window.location.search : '').get('userId');
@@ -32,7 +35,17 @@ const UserAnalyses = () => {
         .order("created_at", { ascending: false });
       if (!mounted) return;
       if (error) setError(error.message);
-      else setAnalyses(data ?? []);
+      else {
+        const items = data ?? [];
+        setAnalyses(items);
+        try {
+          const statuses = await loadAnalysisValidity(items.map(item => item.id));
+          if (mounted) setValidity(statuses);
+        } catch {
+          if (mounted) setValidity(Object.fromEntries(items.map(item => [item.id, { sources: [], events: [], history: [], unknown: true }])));
+        }
+      }
+      if (!mounted) return;
       setLoading(false);
     })();
     return () => { mounted = false };
@@ -67,6 +80,8 @@ const UserAnalyses = () => {
             <div className="card-body py-4 gap-2">
               <div className="font-semibold text-base flex items-center gap-2">
                 {a.title || <span className="italic text-base-content/50">Sin título</span>}
+                {(validity[a.id]?.sources.length > 0 || validity[a.id]?.events.length > 0) && <span className="badge badge-warning"><span aria-hidden="true">⚠</span> Contenido invalidado</span>}
+                {validity[a.id]?.unknown && <span className="badge badge-error badge-outline"><span aria-hidden="true">⚠</span> Validez desconocida</span>}
                 {a.status === 'public' ? (
                   <span className="badge badge-xs badge-success capitalize">Público</span>
                 ) : a.status === 'draft' ? (

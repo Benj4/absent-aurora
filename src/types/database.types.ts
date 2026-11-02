@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       analysis: {
@@ -214,6 +209,7 @@ export type Database = {
           name: string
           source_url: string
           start_date: string
+          status: string
           topic: Database["public"]["Enums"]["macro_event_topic"]
         }
         Insert: {
@@ -226,6 +222,7 @@ export type Database = {
           name: string
           source_url: string
           start_date: string
+          status?: string
           topic: Database["public"]["Enums"]["macro_event_topic"]
         }
         Update: {
@@ -238,6 +235,7 @@ export type Database = {
           name?: string
           source_url?: string
           start_date?: string
+          status?: string
           topic?: Database["public"]["Enums"]["macro_event_topic"]
         }
         Relationships: []
@@ -379,6 +377,39 @@ export type Database = {
           },
         ]
       }
+      status_change_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_status: string
+          old_status: string
+          reason: string | null
+          record_id: string
+          record_type: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_status: string
+          old_status: string
+          reason?: string | null
+          record_id: string
+          record_type: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_status?: string
+          old_status?: string
+          reason?: string | null
+          record_id?: string
+          record_type?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           role: string
@@ -438,7 +469,31 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      change_record_status: {
+        Args: {
+          p_id: string
+          p_reason?: string
+          p_status: string
+          p_type: string
+        }
+        Returns: undefined
+      }
+      create_series_with_points: {
+        Args: {
+          p_frequency: string
+          p_indicator_id: string
+          p_notes: string
+          p_points: Json
+          p_source: string
+          p_url: string
+        }
+        Returns: string
+      }
+      delete_series_or_event: {
+        Args: { p_id: string; p_type: string }
+        Returns: undefined
+      }
+      has_authorized_role: { Args: { allowed: string[] }; Returns: boolean }
     }
     Enums: {
       macro_event_topic: "politics" | "economy" | "nature" | "health" | "social"
@@ -573,3 +628,4 @@ export const Constants = {
     },
   },
 } as const
+
