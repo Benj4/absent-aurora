@@ -54,11 +54,21 @@ const AnalysisViewer: FC = () => {
   const [dataError, setDataError] = useState('');
   const [eventError, setEventError] = useState('');
   const [validity, setValidity] = useState<AnalysisValidity | null>(null);
+  const [versions, setVersions] = useState<{ id: string; title: string }[]>([]);
+  const [previousVersion, setPreviousVersion] = useState<string | null>(null);
+  const [versionError, setVersionError] = useState('');
+  const [creatingVersion, setCreatingVersion] = useState(false);
   const [selectedMode, setSelectedMode] = useState<ModoAlineacion>('calendario');
 
   // Phase 1: parallel fetch — analysis state, creator metadata, auth session
   useEffect(() => {
     let cancelled = false;
+    supabase.from('analysis').select('id, title').eq('previous_version_id', analysisId).then(({ data, error }) => {
+      if (!cancelled) { if (error) setVersionError('No se pudieron cargar las versiones vinculadas.'); else setVersions(data ?? []); }
+    });
+    supabase.from('analysis').select('previous_version_id').eq('id', analysisId).single().then(({ data, error }) => {
+      if (!cancelled) { if (error) setVersionError('No se pudieron cargar las versiones vinculadas.'); else setPreviousVersion(data.previous_version_id); }
+    });
     loadAnalysisValidity([analysisId]).then(result => {
       if (!cancelled) setValidity(result[analysisId]);
     }).catch(() => {
@@ -96,6 +106,14 @@ const AnalysisViewer: FC = () => {
 
     return () => { cancelled = true; };
   }, [analysisId]);
+
+  async function handleCreateVersion() {
+    setCreatingVersion(true);
+    setVersionError('');
+    const { data, error } = await supabase.rpc('create_analysis_version', { p_id: analysisId });
+    if (error || !data) { setVersionError('No se pudo crear la nueva versión.'); setCreatingVersion(false); return; }
+    window.location.href = withBase(`/analisis/editar?id=${data}`);
+  }
 
   async function handleDelete() {
     if (!window.confirm('¿Eliminar este borrador? Esta acción no se puede deshacer.')) return;
@@ -275,7 +293,10 @@ const AnalysisViewer: FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-          {isAuthor && (
+          {isAuthor && state.status === 'public' && (
+            <button type="button" className="btn btn-sm btn-primary" disabled={creatingVersion} onClick={handleCreateVersion}>{creatingVersion ? 'Creando…' : 'Crear nueva versión'}</button>
+          )}
+          {isAuthor && state.status === 'draft' && (
             <a
               href={withBase(`/analisis/editar?id=${analysisId}`)}
               className="btn btn-sm btn-outline shrink-0"
@@ -290,6 +311,11 @@ const AnalysisViewer: FC = () => {
           )}
           </div>
         </div>
+        {(previousVersion || versions.length > 0) && <nav aria-label="Versiones del análisis" className="mt-4 flex flex-wrap gap-3 text-sm">
+          {previousVersion && <a className="link link-primary" href={withBase(`/analisis?id=${previousVersion}`)}>← Versión anterior</a>}
+          {versions.map(version => <a key={version.id} className="link link-primary" href={withBase(`/analisis?id=${version.id}`)}>Versión posterior: {version.title} →</a>)}
+        </nav>}
+        {versionError && <p className="mt-2 text-sm text-error" role="alert">{versionError}</p>}
         {deleteError && <p className="mt-2 text-sm text-error" role="alert">{deleteError}</p>}
 
         {state.periodos.length > 0 && (

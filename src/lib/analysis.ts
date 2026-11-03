@@ -196,7 +196,7 @@ export async function updateAnalysis(
   if (!UUID_RE.test(id)) return { error: 'ID de análisis no válido.' };
 
   // 1. Update root
-  const { error: rootError } = await supabase
+  const { data: root, error: rootError } = await supabase
     .from('analysis')
     .update({
       title: state.titulo,
@@ -206,9 +206,9 @@ export async function updateAnalysis(
       region: state.region || null,
       show_base100: state.showBase100Line ?? true,
     })
-    .eq('id', id);
+    .eq('id', id).eq('status', 'draft').select('id').maybeSingle();
 
-  if (rootError) return { error: rootError.message };
+  if (rootError || !root) return { error: 'Solo se pueden modificar borradores propios.' };
 
   // 2. Replace children — delete all, then re-insert
   const childTables = [

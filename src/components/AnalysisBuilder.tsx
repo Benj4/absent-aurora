@@ -1,9 +1,11 @@
 import type { FC } from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAnalisisState } from './analysis-builder/use-analisis-state';
 import AnalysisSidebar from './analysis-builder/AnalysisSidebar';
 import AnalysisContent from './analysis-builder/AnalysisContent';
 import { saveAnalysis, updateAnalysis } from '../lib/analysis';
+import { loadAnalysisValidity } from '../lib/analysis-validity';
+import { withBase } from '../lib/paths';
 import { captureSourceSelections } from './analysis-builder/analysis-builder.utils';
 
 interface AnalysisBuilderProps {
@@ -31,12 +33,24 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
 
   const isEditMode = Boolean(analysisId);
 
+  const [validityMessage, setValidityMessage] = useState('');
+  useEffect(() => {
+    if (!analysisId) return;
+    loadAnalysisValidity([analysisId]).then(result => {
+      const validity = result[analysisId];
+      setValidityMessage(validity.unknown ? 'No se pudo comprobar la validez de todas las referencias guardadas.' : validity.sources.length || validity.events.length ? 'El análisis guardado contiene fuentes o eventos invalidados. Reemplázalos y guarda los cambios.' : '');
+    }).catch(() => setValidityMessage('No se pudo comprobar la validez de las referencias guardadas.'));
+  }, [analysisId]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleSave = useCallback(async () => {
     if (!isDraftReady || loading || dataError) {
       setSaveError(dataError ?? 'Espera a que termine la carga de los datos.');
+      return;
+    }
+    if (isEditMode && state.status !== 'draft') {
+      setSaveError('Solo se pueden modificar borradores. Crea una nueva versión desde el análisis publicado.');
       return;
     }
     setIsSaving(true);
@@ -56,6 +70,9 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     setIsSaving(false);
     if ('error' in result) {
       setSaveError(result.error);
+    } else if (isEditMode) {
+      const validity = (await loadAnalysisValidity([result.id]))[result.id];
+      setValidityMessage(validity.unknown ? 'No se pudo comprobar la validez de todas las referencias guardadas.' : validity.sources.length || validity.events.length ? 'El análisis guardado contiene fuentes o eventos invalidados. Reemplázalos y guarda los cambios.' : '');
     }
   }, [state, isEditMode, analysisId, isDraftReady, loading, dataError, rawData]);
   return (
@@ -84,6 +101,8 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
         isEditMode={isEditMode}
       />
 
+      <div className="flex-1 min-w-0 flex flex-col">
+        {analysisId && <div className="px-5 pt-2 text-sm"><a className="link link-primary" href={withBase(`/analisis?id=${analysisId}`)}>Ver análisis y versiones vinculadas</a>{validityMessage && <p className="text-warning" role="alert">{validityMessage}</p>}</div>}
       <AnalysisContent
         analysisId={analysisId}
         state={state}
@@ -105,6 +124,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
         markerColorByEventId={markerColorByEventId}
         setMarkerColorByEventId={setMarkerColorByEventId}
       />
+      </div>
     </div>
   );
 };

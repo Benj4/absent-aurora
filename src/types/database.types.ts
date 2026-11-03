@@ -16,6 +16,7 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          previous_version_id: string | null
           region: string | null
           show_base100: boolean
           status: string
@@ -28,6 +29,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          previous_version_id?: string | null
           region?: string | null
           show_base100?: boolean
           status?: string
@@ -40,13 +42,22 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          previous_version_id?: string | null
           region?: string | null
           show_base100?: boolean
           status?: string
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "analysis_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "analysis"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       analysis_indicators: {
         Row: {
@@ -478,6 +489,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_analysis_version: { Args: { p_id: string }; Returns: string }
       create_series_with_points: {
         Args: {
           p_frequency: string

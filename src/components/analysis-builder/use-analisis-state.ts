@@ -231,7 +231,8 @@ export function useAnalisisState(analysisId?: string) {
           setRawData(savedScope ? [...saved.data, ...points.filter(point => {
             const inSavedScope = savedScope.indicadores.includes(point.indicator_id)
               && savedScope.periodos.some(p => point.date >= p.fechaInicio && point.date <= p.fechaFin);
-            return !inSavedScope;
+            const savedPost = savedScope.sourceSelections?.[`${point.indicator_id}:${point.date}`];
+            return (!inSavedScope || Boolean(savedPost)) && point.post_id !== savedPost;
           })] : points);
         }
         setLoadedQueryKey(queryKey);

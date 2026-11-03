@@ -98,6 +98,10 @@ Maps:
 - `region` -> `region`
 - `showBase100Line` -> `show_base100`
 
+Published analyses can be copied by their author with `create_analysis_version`. The transaction creates a draft with a new ID, copies its configuration and recorded references, and links it to the immediate predecessor through `previous_version_id`. Each version retains its own references and validity is checked against their current status.
+
+Published configuration and version links are immutable. RLS permits authors to change configuration rows only while their analysis is a draft; published analyses may still change visibility without changing their content.
+
 ### analysis_indicators
 Stores selected indicators for an analysis, preserving UI order.
 
