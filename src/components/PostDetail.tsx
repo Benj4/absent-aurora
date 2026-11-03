@@ -110,17 +110,22 @@ const PostDetail: FC = () => {
       if (!valsError && valsData) setValidations(valsData);
     }
 
-    if (currentUser && postData.status === 'pending') {
-      const { data: existVal } = await supabase
+    if (currentUser) {
+      const { data: existVal, error: existingError } = await supabase
         .from('serie_validations')
         .select('id, validation_status, validation_notes')
         .eq('post_id', postId!)
         .eq('validated_by', currentUser.id)
-        .single();
+        .maybeSingle();
+      if (existingError) {
+        setPageError('No se pudo consultar tu validación.');
+        setLoading(false);
+        return;
+      }
       const userValidation = existVal ?? null;
       setExistingValidation(userValidation);
 
-      if (userValidation) {
+      if (userValidation && postData.status === 'pending') {
         const { data: valsData, error: valsError } = await supabase
           .from('serie_validations')
           .select('id, validation_status, validation_notes, validated_at')
@@ -359,7 +364,7 @@ const PostDetail: FC = () => {
         )}
 
         {/* Revisión entre pares */}
-        {post.status === 'pending' && (
+        {(
           <>
             <div className="divider my-1">Revisiones</div>
 
@@ -389,8 +394,8 @@ const PostDetail: FC = () => {
                   </div>
                 </div>
 
-                {/* Si ya validó, mostramos todas las validaciones cargadas (post pending + user existingValidation) */}
-                {validations.length > 0 && (
+                {/* Pending reviews become visible after the current user votes. */}
+                {post.status === 'pending' && validations.length > 0 && (
                   <div className="space-y-2">
                     {validations.map((val) => (
                       <div key={val.id} className="card bg-base-100 border border-base-200 p-3">
@@ -410,6 +415,8 @@ const PostDetail: FC = () => {
                   </div>
                 )}
               </>
+            ) : currentUser && currentUser.id === post.submitted_by ? (
+              <p className="alert">No puedes validar tu propia publicación.</p>
             ) : currentUser ? (
               <form onSubmit={handleValidationSubmit} className="w-full max-w-2xl space-y-4">
                 <div className="flex flex-col gap-1 w-full">

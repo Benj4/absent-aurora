@@ -109,12 +109,10 @@ function emitState(): void {
 }
 
 function setState(next: Partial<AuthSessionState>): void {
-  const normalizedUser = next.user ? normalizeUser(next.user) : null;
-
   state = {
     ...state,
     ...next,
-    user: normalizedUser ?? next.user ?? state.user,
+    user: next.user === undefined ? state.user : normalizeUser(next.user),
   };
   emitState();
 }

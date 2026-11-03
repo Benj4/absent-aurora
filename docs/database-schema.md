@@ -6,7 +6,7 @@ This guide describes the data model and how to work with it safely in the app.
 
 Core rules:
 - Data submissions are immutable
-- Validation history is append-only
+- Validation history is append-only for browser roles; reviewers cannot validate their own submissions.
 - Posts move through controlled status transitions
 
 ---
@@ -40,7 +40,7 @@ Key fields:
 - `value`: numeric value
 
 Format rules:
-- Annual series use `YYYY`
+- Annual series use `YYYY` at the input boundary and are stored as a SQL date on January 1.
 - Monthly and quarterly series use `YYYY-MM-DD`
 
 Relationship:
@@ -98,9 +98,11 @@ Maps:
 - `region` -> `region`
 - `showBase100Line` -> `show_base100`
 
-Published analyses can be copied by their author with `create_analysis_version`. The transaction creates a draft with a new ID, copies its configuration and recorded references, and links it to the immediate predecessor through `previous_version_id`. Each version retains its own references and validity is checked against their current status.
+Public and hidden analyses can be copied by their author with `create_analysis_version`. The transaction creates a draft with a new ID, copies its configuration and recorded references, and links it to the immediate predecessor through `previous_version_id`. Each version retains its own references and validity is checked against their current status. Copying a hidden analysis does not make the original public.
 
 Published configuration and version links are immutable. RLS permits authors to change configuration rows only while their analysis is a draft; published analyses may still change visibility without changing their content.
+
+The analysis visibility migration restricts draft and hidden roots and their configuration to their author; public analyses are readable by everyone. This applies after the migration is deployed. Administrators do not gain read access to another author's private analysis through this policy.
 
 ### analysis_indicators
 Stores selected indicators for an analysis, preserving UI order.
@@ -111,7 +113,17 @@ Stores configured periods (`name`, start/end dates, color, order).
 ### analysis_source_selections
 Stores the post used for every displayed `(indicator, date)` point, including points with only one available source. Saved analyses load only these references, so later catalog additions do not add or replace points. Older analyses may contain only explicit conflict choices and cannot reconstruct missing original references from this table. The reader loads recorded posts regardless of their current status and flags points from posts that are no longer approved. Missing references and retrieval failures are reported as unknown, not as confirmed invalidation.
 
+An explicit source selection must not fall back to another post if unavailable. Saving is blocked when an active selected reference or event cannot be recovered. `data_source` is immutable text on a series, not an independent source record with its own lifecycle. Only approved series and valid events are usable; all other defined states invalidate their use independently of analysis visibility.
+
+Sources have no independent status by domain definition. Validity is evaluated per referenced series; invalidating a series does not affect other series with the same source name. Source-related warnings identify the source of the affected series, not a separate source lifecycle.
+
+`reference_capture_version` records capture provenance independently of visibility and validity: `0` means reference completeness is unverified; `1` identifies the full-reference capture workflow used by new `save_analysis` calls. Existing rows default to `0`, since their completeness cannot be established retrospectively. Versions inherit the flag, and a trigger prevents changing it. Saving an existing draft does not upgrade its provenance. This is workflow metadata, not proof that an arbitrary API caller submitted every point. Unverified references are shown explicitly in the reader, editor and user list; missing historical points are never reconstructed from today's catalog.
+
 The analysis reader and user analysis list check the current status of recorded source posts and events. Transitions recorded after the status history migration contain a reason when invalidating use, an actor and a timestamp. Earlier transitions have no recorded history and are displayed as unavailable rather than inferred.
+
+### macro_events
+
+Any authenticated user, including an account without an application role, can create a macro event with initial status `valid`. Public reading is allowed. Existing content is immutable; a correction creates a new event. Only editors and administrators may invalidate or restore events, and only administrators may delete unreferenced events through the protected RPCs.
 
 ### analysis_macro_events
 Stores selected macro events and marker customization. Events are valid or invalid; referenced events cannot be deleted. Invalid events remain visible in saved analyses and cannot be newly selected.
@@ -124,15 +136,14 @@ Append-only history of series and event status transitions. The transactional `c
 ## Status and Integrity Rules
 
 ### Status transitions
-- `pending` -> `approved`
-- `pending` -> `rejected`
-- Any status -> `disabled`
+- `pending`, `approved`, and `rejected` may transition among one another or to `disabled`.
 - `disabled` is terminal
+- A reason is required when entering `rejected` or `disabled`, or when leaving `approved`.
 
 ### Immutability
 - Do not edit existing post metadata or data points.
 - If a submission is wrong, create a new post.
-- Validation events are append-only.
+- Browser clients cannot update, delete, or truncate validation events. An authenticated user may validate another user's series in any status, once per series.
 
 ### Cascading behavior
 - Removing a post also removes its data points and validations.

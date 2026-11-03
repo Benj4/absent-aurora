@@ -9,6 +9,7 @@ import type { AnalysisValidity } from '../lib/analysis-validity';
 import { fetchMacroEvents } from '../lib/macro-events';
 import type { MacroEvent } from '../lib/macro-events';
 import { withBase } from '../lib/paths';
+import { useAuthSession } from '../lib/use-auth-session';
 import AnalysisChart from './analysis-builder/AnalysisChart';
 import {
   buildChartSeries,
@@ -44,8 +45,9 @@ const AnalysisViewer: FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [state, setState] = useState<AnalisisState | null>(null);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuthSession();
+  const currentUserId = user?.id ?? null;
+  const isAdmin = Array.isArray(user?.app_metadata?.role) && user.app_metadata.role.includes('admin');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [rawData, setRawData] = useState<RawPoint[]>([]);
@@ -58,9 +60,11 @@ const AnalysisViewer: FC = () => {
   const [previousVersion, setPreviousVersion] = useState<string | null>(null);
   const [versionError, setVersionError] = useState('');
   const [creatingVersion, setCreatingVersion] = useState(false);
+  const [changingVisibility, setChangingVisibility] = useState(false);
+  const [visibilityError, setVisibilityError] = useState('');
   const [selectedMode, setSelectedMode] = useState<ModoAlineacion>('calendario');
 
-  // Phase 1: parallel fetch — analysis state, creator metadata, auth session
+  // Phase 1: parallel fetch — analysis state and creator metadata
   useEffect(() => {
     let cancelled = false;
     supabase.from('analysis').select('id, title').eq('previous_version_id', analysisId).then(({ data, error }) => {
@@ -78,8 +82,7 @@ const AnalysisViewer: FC = () => {
     Promise.all([
       loadAnalysis(analysisId),
       supabase.from('analysis').select('created_by').eq('id', analysisId).single(),
-      supabase.auth.getSession(),
-    ]).then(([analysisResult, creatorRes, sessionRes]) => {
+    ]).then(([analysisResult, creatorRes]) => {
       if (cancelled) return;
 
       if ('error' in analysisResult) {
@@ -92,13 +95,6 @@ const AnalysisViewer: FC = () => {
 
       if (!creatorRes.error && creatorRes.data) {
         setCreatedBy(creatorRes.data.created_by as string);
-      }
-
-      const user = sessionRes.data?.session?.user;
-      if (user) {
-        setCurrentUserId(user.id);
-        const role = user.app_metadata?.role;
-        setIsAdmin(typeof role === 'string' && role.split(',').some(value => value.trim() === 'admin'));
       }
 
       setLoadState('ready');
@@ -126,6 +122,18 @@ const AnalysisViewer: FC = () => {
       return;
     }
     window.location.href = withBase(`/user/analisis?userId=${currentUserId}`);
+  }
+
+  async function handleVisibilityChange() {
+    if (!state || (state.status !== 'public' && state.status !== 'hidden')) return;
+    const status = state.status === 'public' ? 'hidden' : 'public';
+    setChangingVisibility(true);
+    setVisibilityError('');
+    const { data, error } = await supabase.from('analysis').update({ status })
+      .eq('id', analysisId).select('id').maybeSingle();
+    if (error || !data) setVisibilityError('No se pudo cambiar la visibilidad del análisis.');
+    else setState(current => current ? { ...current, status } : current);
+    setChangingVisibility(false);
   }
 
   useEffect(() => {
@@ -275,6 +283,7 @@ const AnalysisViewer: FC = () => {
                 </details>
               </div>
             )}
+            {validity?.referencesUnverified && <p className="alert alert-warning mt-3" role="alert"><span aria-hidden="true">⚠</span> No se puede confirmar que este análisis conserve todas sus referencias originales. Solo se muestran los registros guardados; no se han reconstruido datos con el catálogo actual.</p>}
             {validity?.unknown && <p className="alert alert-error mt-3" role="alert">No se pudo comprobar la validez de algunas fuentes. Su estado es desconocido.</p>}
 
             {state.region && (
@@ -293,7 +302,12 @@ const AnalysisViewer: FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-          {isAuthor && state.status === 'public' && (
+          {isAuthor && (state.status === 'public' || state.status === 'hidden') && (
+            <button type="button" className="btn btn-sm btn-outline" disabled={changingVisibility} onClick={handleVisibilityChange}>
+              {changingVisibility ? 'Guardando…' : state.status === 'public' ? 'Ocultar análisis' : 'Hacer público'}
+            </button>
+          )}
+          {isAuthor && (state.status === 'public' || state.status === 'hidden') && (
             <button type="button" className="btn btn-sm btn-primary" disabled={creatingVersion} onClick={handleCreateVersion}>{creatingVersion ? 'Creando…' : 'Crear nueva versión'}</button>
           )}
           {isAuthor && state.status === 'draft' && (
@@ -316,6 +330,7 @@ const AnalysisViewer: FC = () => {
           {versions.map(version => <a key={version.id} className="link link-primary" href={withBase(`/analisis?id=${version.id}`)}>Versión posterior: {version.title} →</a>)}
         </nav>}
         {versionError && <p className="mt-2 text-sm text-error" role="alert">{versionError}</p>}
+        {visibilityError && <p className="mt-2 text-sm text-error" role="alert">{visibilityError}</p>}
         {deleteError && <p className="mt-2 text-sm text-error" role="alert">{deleteError}</p>}
 
         {state.periodos.length > 0 && (

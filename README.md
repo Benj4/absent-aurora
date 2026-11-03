@@ -12,8 +12,8 @@ Absent Aurora is a time-series data platform for submitting, reviewing, and visu
 
 ## Stack
 
-- Node.js 24.12.0 and pnpm 10.26.1, pinned with Volta.
-- Astro 6, React 19, TypeScript, Tailwind CSS 4, and DaisyUI.
+- Node.js and pnpm versions are specified in `package.json`.
+- Astro, React, TypeScript, Tailwind CSS, and DaisyUI versions are specified in `package.json`.
 - Supabase Auth and PostgreSQL.
 - Vitest for unit and Supabase integration tests.
 - GitHub Pages deployment from the `staging` branch.
@@ -33,7 +33,7 @@ PUBLIC_SUPABASE_URL=...
 PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-For a local Supabase environment, install and start Docker, then run `pnpm run supabase:start`. Use the local API URL and anonymous key shown by `pnpm run supabase:status` in `.env.local`; this file takes precedence over `.env` and is ignored by Git. Run `pnpm run supabase:stop` when finished. The first start downloads the container images and applies the migrations.
+For a local Supabase environment, install and start Docker, then run `pnpm run supabase:start`. Use the local API URL and anonymous key shown by `pnpm run supabase:status` in `.env.local`; this file takes precedence over `.env` and is ignored by Git. Run `pnpm run supabase:stop` when finished. The first start downloads the container images and applies the migrations. Automatic seeding is disabled; no seed file is provided.
 ## Useful routes
 
 | Route | Purpose |

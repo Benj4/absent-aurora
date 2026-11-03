@@ -234,7 +234,7 @@ export default function MacroEventsPage() {
                           <td>
                             <div className="flex items-center justify-end gap-1">
                               {canChange && <button type="button" className="btn btn-ghost btn-xs" onClick={() => changeStatus(evt)}>{evt.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button>}
-                              {canChange && <button
+                              {user && <button
                                 type="button"
                                 onClick={() => openEdit(evt)}
                                 aria-label={`Crear corrección de ${evt.name}`}

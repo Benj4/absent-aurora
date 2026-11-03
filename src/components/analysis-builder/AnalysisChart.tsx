@@ -19,8 +19,6 @@ const AnalysisChart: FC<{ series: HCSeriesData[]; mode: ModoAlineacion; markers?
     }
 
     const hasOverlay = series.some(s => s.yAxis === 1);
-    const maxLen = Math.max(...series.map(s => s.data.length));
-    const indexCategories = Array.from({ length: maxLen }, (_, i) => `M${i}`);
     const plotLines = markers.map(marker => ({
       value: marker.value,
       color: marker.color,
@@ -60,9 +58,12 @@ const AnalysisChart: FC<{ series: HCSeriesData[]; mode: ModoAlineacion; markers?
           plotLines,
         }
         : {
-          categories: indexCategories,
+          type: 'linear',
+          allowDecimals: false,
+          min: 0,
+          labels: { format: 'M{value}' },
           crosshair: true,
-          title: { text: 'Posición relativa (meses)', style: { fontSize: '11px' } },
+          title: { text: 'Meses desde el inicio del período', style: { fontSize: '11px' } },
           plotLines,
         },
       yAxis: hasOverlay

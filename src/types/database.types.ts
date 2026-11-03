@@ -17,6 +17,7 @@ export type Database = {
           description: string | null
           id: string
           previous_version_id: string | null
+          reference_capture_version: number
           region: string | null
           show_base100: boolean
           status: string
@@ -30,6 +31,7 @@ export type Database = {
           description?: string | null
           id?: string
           previous_version_id?: string | null
+          reference_capture_version?: number
           region?: string | null
           show_base100?: boolean
           status?: string
@@ -43,6 +45,7 @@ export type Database = {
           description?: string | null
           id?: string
           previous_version_id?: string | null
+          reference_capture_version?: number
           region?: string | null
           show_base100?: boolean
           status?: string
@@ -506,6 +509,7 @@ export type Database = {
         Returns: undefined
       }
       has_authorized_role: { Args: { allowed: string[] }; Returns: boolean }
+      save_analysis: { Args: { p_config: Json; p_id: string }; Returns: string }
     }
     Enums: {
       macro_event_topic: "politics" | "economy" | "nature" | "health" | "social"

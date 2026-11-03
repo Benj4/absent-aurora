@@ -98,185 +98,39 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
   };
 }
 
-/**
- * Persists a full AnalisisState to Supabase across 5 tables:
- *   analysis → analysis_indicators → analysis_periods
- *   → analysis_source_selections → analysis_macro_events
- *
- * Inserts are sequential so a failure at any step returns the error
- * and the orphaned parent rows cascade-delete on cleanup.
- */
-export async function saveAnalysis(
-  state: AnalisisState,
-): Promise<SaveAnalysisResult | SaveAnalysisError> {
-  // 1. Root record
-  const { data: root, error: rootError } = await supabase
-    .from('analysis')
-    .insert({
-      title: state.titulo,
-      description: state.descripcion || null,
-      status: state.status,
-      alignment_mode: state.modoAlineacion,
-      region: state.region || null,
+/** Save the complete configuration in a single database transaction. */
+async function persistAnalysis(id: string | null, state: AnalisisState): Promise<SaveAnalysisResult | SaveAnalysisError> {
+  if (id && !UUID_RE.test(id)) return { error: 'ID de análisis no válido.' };
+  const selections = Object.entries(state.sourceSelections ?? {}).map(([key, post_id]) => {
+    const separator = key.indexOf(':');
+    return { indicator_id: key.slice(0, separator), date: key.slice(separator + 1), post_id };
+  });
+  const { data, error } = await supabase.rpc('save_analysis', {
+    p_id: id as string,
+    p_config: {
+      title: state.titulo, description: state.descripcion, status: state.status,
+      alignment_mode: state.modoAlineacion, region: state.region,
       show_base100: state.showBase100Line ?? true,
-    })
-    .select('id')
-    .single();
-
-  if (rootError) return { error: rootError.message };
-  const analysisId: string = root.id;
-
-  // 2. Indicators
-  if (state.indicadores.length > 0) {
-    const { error } = await supabase.from('analysis_indicators').insert(
-      state.indicadores.map((indicator_id, i) => ({
-        analysis_id: analysisId,
-        indicator_id,
-        sort_order: i,
+      indicators: state.indicadores.map((indicator_id, sort_order) => ({ indicator_id, sort_order })),
+      periods: state.periodos.map((period, sort_order) => ({
+        id: period.id, name: period.nombre, start_date: period.fechaInicio,
+        end_date: period.fechaFin, color: period.color, sort_order,
       })),
-    );
-    if (error) return { error: error.message };
-  }
-
-  // 3. Periods
-  if (state.periodos.length > 0) {
-    const { error } = await supabase.from('analysis_periods').insert(
-      state.periodos.map((p, i) => ({
-        id: p.id,
-        analysis_id: analysisId,
-        name: p.nombre,
-        start_date: p.fechaInicio,
-        end_date: p.fechaFin,
-        color: p.color,
-        sort_order: i,
-      })),
-    );
-    if (error) return { error: error.message };
-  }
-
-  // 4. Source selections  —  key format: "INDICATOR_ID:YYYY-MM-DD"
-  const selectionEntries = Object.entries(state.sourceSelections ?? {});
-  if (selectionEntries.length > 0) {
-    const { error } = await supabase.from('analysis_source_selections').insert(
-      selectionEntries.map(([key, post_id]) => {
-        const colonIndex = key.indexOf(':');
-        const indicator_id = key.slice(0, colonIndex);
-        const date = key.slice(colonIndex + 1);
-        return { analysis_id: analysisId, indicator_id, date, post_id };
-      }),
-    );
-    if (error) return { error: error.message };
-  }
-
-  // 5. Macro events  —  merge ids + mode map + color map into one row per event
-  if (state.macroEventIds.length > 0) {
-    const { error } = await supabase.from('analysis_macro_events').insert(
-      state.macroEventIds.map(macro_event_id => ({
-        analysis_id: analysisId,
-        macro_event_id,
-        marker_mode: state.markerModeByEventId?.[macro_event_id] ?? null,
+      selections,
+      events: state.macroEventIds.map(macro_event_id => ({
+        macro_event_id, marker_mode: state.markerModeByEventId?.[macro_event_id] ?? null,
         marker_color: state.markerColorByEventId?.[macro_event_id] ?? null,
       })),
-    );
-    if (error) return { error: error.message };
-  }
-
-  return { id: analysisId };
+    },
+  });
+  if (error || !data) return { error: 'No se pudo guardar el análisis. Comprueba los datos y tus permisos.' };
+  return { id: data };
 }
 
-/**
- * Updates an existing analysis in-place.
- * UPDATEs the root row and replaces all child rows
- * (DELETE + re-INSERT) so the caller doesn't need to diff anything.
- */
-export async function updateAnalysis(
-  id: string,
-  state: AnalisisState,
-): Promise<SaveAnalysisResult | SaveAnalysisError> {
-  if (!UUID_RE.test(id)) return { error: 'ID de análisis no válido.' };
+export function saveAnalysis(state: AnalisisState): Promise<SaveAnalysisResult | SaveAnalysisError> {
+  return persistAnalysis(null, state);
+}
 
-  // 1. Update root
-  const { data: root, error: rootError } = await supabase
-    .from('analysis')
-    .update({
-      title: state.titulo,
-      description: state.descripcion || null,
-      status: state.status,
-      alignment_mode: state.modoAlineacion,
-      region: state.region || null,
-      show_base100: state.showBase100Line ?? true,
-    })
-    .eq('id', id).eq('status', 'draft').select('id').maybeSingle();
-
-  if (rootError || !root) return { error: 'Solo se pueden modificar borradores propios.' };
-
-  // 2. Replace children — delete all, then re-insert
-  const childTables = [
-    'analysis_indicators',
-    'analysis_periods',
-    'analysis_source_selections',
-    'analysis_macro_events',
-  ] as const;
-
-  for (const table of childTables) {
-    const { error } = await supabase.from(table).delete().eq('analysis_id', id);
-    if (error) return { error: error.message };
-  }
-
-  // 3. Re-insert indicators
-  if (state.indicadores.length > 0) {
-    const { error } = await supabase.from('analysis_indicators').insert(
-      state.indicadores.map((indicator_id, i) => ({
-        analysis_id: id,
-        indicator_id,
-        sort_order: i,
-      })),
-    );
-    if (error) return { error: error.message };
-  }
-
-  // 4. Re-insert periods
-  if (state.periodos.length > 0) {
-    const { error } = await supabase.from('analysis_periods').insert(
-      state.periodos.map((p, i) => ({
-        id: p.id,
-        analysis_id: id,
-        name: p.nombre,
-        start_date: p.fechaInicio,
-        end_date: p.fechaFin,
-        color: p.color,
-        sort_order: i,
-      })),
-    );
-    if (error) return { error: error.message };
-  }
-
-  // 5. Re-insert source selections
-  const selectionEntries = Object.entries(state.sourceSelections ?? {});
-  if (selectionEntries.length > 0) {
-    const { error } = await supabase.from('analysis_source_selections').insert(
-      selectionEntries.map(([key, post_id]) => {
-        const colonIndex = key.indexOf(':');
-        const indicator_id = key.slice(0, colonIndex);
-        const date = key.slice(colonIndex + 1);
-        return { analysis_id: id, indicator_id, date, post_id };
-      }),
-    );
-    if (error) return { error: error.message };
-  }
-
-  // 6. Re-insert macro events
-  if (state.macroEventIds.length > 0) {
-    const { error } = await supabase.from('analysis_macro_events').insert(
-      state.macroEventIds.map(macro_event_id => ({
-        analysis_id: id,
-        macro_event_id,
-        marker_mode: state.markerModeByEventId?.[macro_event_id] ?? null,
-        marker_color: state.markerColorByEventId?.[macro_event_id] ?? null,
-      })),
-    );
-    if (error) return { error: error.message };
-  }
-
-  return { id };
+export function updateAnalysis(id: string, state: AnalisisState): Promise<SaveAnalysisResult | SaveAnalysisError> {
+  return persistAnalysis(id, state);
 }

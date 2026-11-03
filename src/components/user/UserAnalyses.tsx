@@ -81,6 +81,7 @@ const UserAnalyses = () => {
               <div className="font-semibold text-base flex items-center gap-2">
                 {a.title || <span className="italic text-base-content/50">Sin título</span>}
                 {(validity[a.id]?.sources.length > 0 || validity[a.id]?.events.length > 0) && <span className="badge badge-warning"><span aria-hidden="true">⚠</span> Contenido invalidado</span>}
+                {validity[a.id]?.referencesUnverified && <span className="badge badge-warning badge-outline"><span aria-hidden="true">⚠</span> Referencias sin verificar</span>}
                 {validity[a.id]?.unknown && <span className="badge badge-error badge-outline"><span aria-hidden="true">⚠</span> Validez desconocida</span>}
                 {a.status === 'public' ? (
                   <span className="badge badge-xs badge-success capitalize">Público</span>

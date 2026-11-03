@@ -7,16 +7,27 @@ export interface AnalysisValidity {
   events: Pick<Tables<'macro_events'>, 'id' | 'name' | 'status'>[];
   history: Tables<'status_change_history'>[];
   unknown: boolean;
+  referencesUnverified?: boolean;
 }
 
 /** Check recorded sources independently of the observations used by the chart. */
 export async function loadAnalysisValidity(ids: string[]): Promise<Record<string, AnalysisValidity>> {
   const result: Record<string, AnalysisValidity> = Object.fromEntries(ids.map(id => [id, { sources: [], events: [], history: [], unknown: false }]));
   if (!ids.length) return result;
-  const [sourceResult, eventResult] = await Promise.all([
+  const [sourceResult, eventResult, provenanceResult] = await Promise.all([
     supabase.from('analysis_source_selections').select('analysis_id, post_id').in('analysis_id', ids),
     supabase.from('analysis_macro_events').select('analysis_id, macro_event_id').in('analysis_id', ids),
+    supabase.from('analysis').select('id, reference_capture_version').in('id', ids),
   ]);
+  const provenance = provenanceResult.error ? [] : provenanceResult.data ?? [];
+  for (const id of ids) {
+    const root = provenance.find(analysis => analysis.id === id);
+    if (!root) result[id].unknown = true;
+    else if (root.reference_capture_version !== 1) {
+      result[id].referencesUnverified = true;
+      result[id].unknown = true;
+    }
+  }
   const selections = sourceResult.data;
   const eventSelections = eventResult.data;
   if (sourceResult.error || !selections || eventResult.error || !eventSelections) {
@@ -30,11 +41,11 @@ export async function loadAnalysisValidity(ids: string[]): Promise<Record<string
     eventIds.length ? supabase.from('macro_events').select('id, name, status').in('id', eventIds) : Promise.resolve({ data: [], error: null }),
     postIds.length || eventIds.length ? supabase.from('status_change_history').select('*').in('record_id', [...postIds, ...eventIds]).order('changed_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
   ]);
-  const posts = postsResult.data;
-  const events = eventsResult.data;
-  if (postsResult.error || !posts || eventsResult.error || !events) {
+  // Preserve confirmed problems even if another resource fails to load.
+  const posts = postsResult.error ? [] : postsResult.data ?? [];
+  const events = eventsResult.error ? [] : eventsResult.data ?? [];
+  if (postsResult.error || !postsResult.data || eventsResult.error || !eventsResult.data) {
     ids.forEach(id => { result[id].unknown = true; });
-    return result;
   }
   const byId = new Map(posts.map(post => [post.id, post]));
   for (const selection of selections) {

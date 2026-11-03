@@ -6,8 +6,8 @@ import type { AnalisisState, HCSeriesData, HCEventMarker, SourceConflict } from 
 import type { MacroMarkerMode } from './use-analisis-state';
 import { fmt, getDefaultMacroEventColor } from './analysis-builder.utils';
 import AnalysisChart from './AnalysisChart';
+import { sourceStatus } from '../../lib/analysis-validity';
 import SourceConflictResolver from './SourceConflictResolver';
-import { supabase } from '../../lib/supabase';
 import type { Analysis } from '../../lib/supabase';
 
 interface TableRow {
@@ -18,6 +18,7 @@ interface TableRow {
   value: number;
   postId: string;
   sourceName: string;
+  status: string;
 }
 
 interface AnalysisContentProps {
@@ -43,7 +44,6 @@ interface AnalysisContentProps {
 }
 
 const AnalysisContent: FC<AnalysisContentProps> = ({
-  analysisId,
   state,
   loading,
   sourceConflicts,
@@ -81,41 +81,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
     };
   }, []);
 
-  const [statusLoading, setStatusLoading] = useState(false);
-  const [statusError, setStatusError] = useState<string | null>(null);
-  // Track last saved status to enable button only if changed
-  const [lastSavedStatus, setLastSavedStatus] = useState(state.status);
-
-  // Keep lastSavedStatus in sync with state.status if analysisId or state.status changes (e.g. on load)
-  useEffect(() => {
-    setLastSavedStatus(state.status);
-  }, [analysisId]);
-
-  // Opciones válidas de status
   const statusOptions: Analysis['status'][] = ['draft', 'public', 'hidden' ];
-
-  // Actualiza el status en la base de datos
-  const handleStatusChange = async () => {
-    setStatusLoading(true);
-    setStatusError(null);
-    try {
-      if (!analysisId) {
-        setStatusError('ID de análisis no disponible.');
-        setStatusLoading(false);
-        return;
-      }
-      const { error } = await supabase.from('analysis').update({ status: state.status }).eq('id', analysisId);
-      if (error) {
-        setStatusError(error.message);
-      } else {
-        setLastSavedStatus(state.status);
-      }
-    } catch (err: any) {
-      setStatusError(err.message || 'Error desconocido');
-    } finally {
-      setStatusLoading(false);
-    }
-  };
 
   return (
     <main aria-label="Lienzo de resultados del análisis" className="flex-1 overflow-y-auto overscroll-contain min-w-0">
@@ -136,26 +102,17 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
                   value={state.status}
                   onChange={e => onSetStatus(e.target.value as Analysis['status'])}
                   aria-label="Cambiar estado del análisis"
-                  disabled={statusLoading}
                 >
                   {statusOptions.map(opt => (
                     <option key={opt} value={opt}>{
                       opt === 'draft' ? 'Borrador' :
-                      opt === 'public' ? 'Publico' :
+                      opt === 'public' ? 'Público' :
                       opt === 'hidden' ? 'Oculto' : opt
                     }</option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-primary"
-                  onClick={handleStatusChange}
-                  disabled={statusLoading || state.status === lastSavedStatus}
-                >
-                  {statusLoading ? 'Guardando...' : 'Confirmar'}
-                </button>
               </div>
-              {statusError && <span className="text-error text-xs mt-1">{statusError}</span>}
+              <span className="text-xs">El estado se aplicará al guardar el análisis.</span>
             </div>
           </div>
         {state.periodos.length > 0 && (
@@ -248,6 +205,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
                       </td>
                       <td className="max-w-xs">
                         <p className="text-xs font-medium truncate" title={event.name}>{event.name}</p>
+                        {event.status === 'invalid' && <span className="badge badge-warning badge-xs">⚠ Invalidado</span>}
                       </td>
                       <td><span className="font-mono text-xs" style={{ fontVariantNumeric: 'tabular-nums' }}>{event.start_date}</span></td>
                       <td>
@@ -311,6 +269,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
                     <th>Indicador</th>
                     <th style={{ fontVariantNumeric: 'tabular-nums' }}>Valor</th>
                     <th>Fuente</th>
+                    <th>Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -340,6 +299,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
                           <span className="text-xs text-base-content/40">—</span>
                         )}
                       </td>
+                      <td>{row.status === 'approved' ? 'Aprobada' : <span className="badge badge-warning">⚠ {sourceStatus(row.status)}</span>}</td>
                     </tr>
                   ))}
                 </tbody>

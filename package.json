@@ -20,7 +20,8 @@
     "test:ui": "vitest --ui",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json",
-    "generate:types": "tsx scripts/generate-types.ts"
+    "generate:types": "tsx scripts/generate-types.ts",
+    "demo:users": "tsx scripts/demo-users.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -38,7 +39,7 @@
   },
   "volta": {
     "node": "24.12.0",
-    "pnpm": "10.26.1"
+    "pnpm": "12.16.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

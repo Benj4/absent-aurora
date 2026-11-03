@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MacroEvent, MacroEventDraft, MacroEventTopic } from '../../lib/macro-events';
 import { createMacroEvent } from '../../lib/macro-events';
+import { useAuthSession } from '../../lib/use-auth-session';
 
 const TOPICS: { value: MacroEventTopic; label: string }[] = [
   { value: 'politics', label: 'Política' },
@@ -66,6 +67,7 @@ function validate(form: FormState, isPeriod: boolean): FormErrors {
 }
 
 export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Props) {
+  const { user } = useAuthSession();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [isPeriod, setIsPeriod] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -112,6 +114,10 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!user) {
+      setSubmitError('Inicia sesión para crear un evento.');
+      return;
+    }
     const errs = validate(form, isPeriod);
     if (Object.keys(errs).length) {
       setErrors(errs);
@@ -137,7 +143,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
     setSubmitting(false);
 
     if (error) {
-      setSubmitError(error.message);
+      setSubmitError('No se pudo crear el evento. Comprueba tu sesión e inténtalo de nuevo.');
     } else {
       onSaved(data as MacroEvent);
     }

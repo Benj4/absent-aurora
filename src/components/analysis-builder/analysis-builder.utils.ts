@@ -224,19 +224,10 @@ export function resolveSources(data: RawPoint[], selections: SourceSelection): R
 
   data.forEach(point => {
     const dateKey = getSourceKey(point.indicator_id, point.date);
-    if (filtered.has(dateKey)) {
-      const existing = filtered.get(dateKey)!;
-      const selection = selections[dateKey];
-      if (selection) {
-        const pointId = point.post_id ?? `source:${point.data_source}`;
-        const existingId = existing.post_id ?? `source:${existing.data_source}`;
-        if (selection === pointId || selection === point.data_source) {
-          filtered.set(dateKey, point);
-        }
-      }
-    } else {
-      filtered.set(dateKey, point);
-    }
+    const selection = selections[dateKey];
+    // An explicit reference must never fall back to another source.
+    if (selection && selection !== point.post_id && selection !== point.data_source) return;
+    if (!filtered.has(dateKey)) filtered.set(dateKey, point);
   });
 
   return Array.from(filtered.values()).sort((a, b) => a.date.localeCompare(b.date));
@@ -252,6 +243,16 @@ export function captureSourceSelections(data: RawPoint[], state: AnalisisState):
         if (!point.post_id) throw new Error('No se pudo identificar la fuente de todos los datos.');
         selections[getSourceKey(indicator, point.date)] = point.post_id;
       }
+    }
+  }
+  for (const key of Object.keys(state.sourceSelections ?? {})) {
+    const separator = key.indexOf(':');
+    const indicator = key.slice(0, separator);
+    const date = key.slice(separator + 1);
+    if (state.indicadores.includes(indicator)
+      && state.periodos.some(period => date >= period.fechaInicio && date <= period.fechaFin)
+      && !selections[key]) {
+      throw new Error('No se pudo recuperar una fuente seleccionada.');
     }
   }
   return selections;
@@ -302,7 +303,7 @@ export function buildChartSeries(rawData: RawPoint[], state: AnalisisState): HCS
       const data: [number, number][] =
         state.modoAlineacion === 'calendario'
           ? pts.map(d => [new Date(d.date).getTime(), d.value])
-          : pts.map((_, i) => [i, _.value]);
+          : pts.map(d => [monthDiff(periodo.fechaInicio, d.date), d.value]);
 
       if (data.length === 0) return;
 
@@ -312,13 +313,13 @@ export function buildChartSeries(rawData: RawPoint[], state: AnalisisState): HCS
         dashStyle: DASH_STYLES[indicIdx % DASH_STYLES.length],
         data,
       });
-      const invalid = pts.map((point, index) => ({ point, index })).filter(({ point }) => point.status != null && point.status !== 'approved');
+      const invalid = pts.filter(point => point.status != null && point.status !== 'approved');
       if (invalid.length) series.push({
         name: `Datos sin aprobación – ${INDICATOR_MAP.get(indicId) ?? indicId} – ${periodo.nombre}`,
         color: periodo.color,
         dashStyle: 'Solid',
         isInvalid: true,
-        data: invalid.map(({ point, index }) => [state.modoAlineacion === 'calendario' ? new Date(point.date).getTime() : index, point.value]),
+        data: invalid.map(point => [state.modoAlineacion === 'calendario' ? new Date(point.date).getTime() : monthDiff(periodo.fechaInicio, point.date), point.value]),
       });
 
     });
@@ -339,7 +340,7 @@ export function buildBase100OverlaySeries(rawData: RawPoint[], state: AnalisisSt
       const data: [number, number][] =
         state.modoAlineacion === 'calendario'
           ? pts.map(d => [new Date(d.date).getTime(), d.value])
-          : pts.map((d, i) => [i, d.value]);
+          : pts.map(d => [monthDiff(periodo.fechaInicio, d.date), d.value]);
 
       if (data.length === 0) return;
 
@@ -357,6 +358,7 @@ export function buildBase100OverlaySeries(rawData: RawPoint[], state: AnalisisSt
   return series;
 }
 
+// Calendar month offsets preserve missing observations and mixed frequencies.
 function monthDiff(startDate: string, targetDate: string): number {
   const start = new Date(startDate);
   const target = new Date(targetDate);

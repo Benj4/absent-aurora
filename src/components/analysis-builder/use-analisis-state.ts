@@ -155,7 +155,8 @@ export function useAnalisisState(analysisId?: string) {
   // ── Macro events ───────────────────────────────────────────────────────────
 
   const [macroEvents, setMacroEvents] = useState<MacroEvent[]>([]);
-  const [macroEventsLoading, setMacroEventsLoading] = useState(false);
+  const [macroEventsLoading, setMacroEventsLoading] = useState(true);
+  const [macroEventsError, setMacroEventsError] = useState<string | null>(null);
   const [macroEventsSearch, setMacroEventsSearch] = useState('');
 
   const addMacroEvent = useCallback((event: MacroEvent) => {
@@ -168,7 +169,11 @@ export function useAnalisisState(analysisId?: string) {
   useEffect(() => {
     setMacroEventsLoading(true);
     fetchMacroEvents().then(({ data, error }) => {
-      if (!error && data) setMacroEvents(data as MacroEvent[]);
+      if (error || !data) setMacroEventsError('No se pudieron cargar los eventos. Recarga la página antes de guardar.');
+      else { setMacroEvents(data); setMacroEventsError(null); }
+      setMacroEventsLoading(false);
+    }).catch(() => {
+      setMacroEventsError('No se pudieron cargar los eventos. Recarga la página antes de guardar.');
       setMacroEventsLoading(false);
     });
   }, []);
@@ -200,6 +205,8 @@ export function useAnalisisState(analysisId?: string) {
   useEffect(() => {
     const active = periodos.filter(p => p.fechaInicio && p.fechaFin);
     if (indicadores.length === 0 || active.length === 0) {
+      setLoading(false);
+      setDataError(null);
       setRawData([]);
       setLoadedQueryKey(queryKey);
       return;
@@ -267,6 +274,7 @@ export function useAnalisisState(analysisId?: string) {
         value: d.value,
         postId: d.post_id ?? '',
         sourceName: d.data_source ?? 'Fuente',
+        status: d.status ?? 'approved',
       }))
     )
   );
@@ -300,8 +308,8 @@ export function useAnalisisState(analysisId?: string) {
     markerColorByEventId,
     setMarkerColorByEventId,
     // Data
-    loading: loading || loadedQueryKey !== queryKey,
-    dataError: loadError ?? dataError,
+    loading: loading || macroEventsLoading || loadedQueryKey !== queryKey,
+    dataError: loadError ?? dataError ?? macroEventsError ?? (!macroEventsLoading && macroEventIds.some(id => !macroEvents.some(event => event.id === id)) ? 'No se pudieron recuperar algunos eventos originales. Su validez es desconocida.' : null),
     isDraftReady,
     rawData,
     // Derived

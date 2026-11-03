@@ -24,7 +24,7 @@ Astro owns routing and build-time page composition. React components own interac
 | Dashboard | `/` | `Dashboard.astro`, `IndicatorCard.tsx` | `data/indicators.json`, `lib/frequency.ts`, `lib/paths.ts` |
 | Authentication and navigation | `/login` | `Welcome.astro`, `LoginForm.tsx`, `Navbar.tsx`, `Breadcrumbs.tsx`, `AuthSessionBootstrap.tsx` | `lib/login.ts`, `lib/auth-session.ts`, `lib/use-auth-session.ts`, `lib/supabase.ts` |
 | Posts and validation | `/post`, `/postlist` | `PostDetail.tsx`, `PostCard.tsx`, `PostListClient.tsx`, `PostListFilters.tsx` | `lib/supabase.ts`, generated database types |
-| Indicators and series | `/indicators/[id]/data`, `/series/[frequency]/[id]` | `ApprovedSeriesSelector.tsx`, `IndicatorChart.tsx`, `IndicatorPostsLoader.tsx`, `SeriesForm.tsx` | `lib/frequency.ts`, `lib/series-form-draft.ts`, `lib/url-title.ts` |
+| Indicators and series | `/indicators/[id]/data`, `/series/[frequency]/[id]` | `ApprovedSeriesLoader.tsx`, `ApprovedSeriesSelector.tsx`, `IndicatorChart.tsx`, `IndicatorPostsLoader.tsx`, `SeriesForm.tsx` | `lib/frequency.ts`, `lib/series-form-draft.ts`, `lib/url-title.ts` |
 | Analyses | `/analisis`, `/analisis/nuevo`, `/analisis/editar` | `AnalysisBuilder.tsx`, `AnalysisViewer.tsx`, `components/analysis-builder/` | `lib/analysis.ts`, `lib/macro-events.ts` |
 | Macro events | `/admin/macro-events` | `components/macro-events/MacroEventsPage.tsx`, `MacroEventForm.tsx` | `lib/macro-events.ts` |
 | User workspace | `/user`, `/user/reviews`, `/user/analisis` | `components/user/UserPosts.tsx`, `UserReviews.tsx`, `UserAnalyses.tsx`, `UserEdit.tsx` | `lib/auth-session.ts`, `lib/paths.ts`, `lib/supabase.ts` |
