@@ -98,7 +98,7 @@ Maps:
 - `region` -> `region`
 - `showBase100Line` -> `show_base100`
 
-Public and hidden analyses can be copied by their author with `create_analysis_version`. The transaction creates a draft with a new ID, copies its configuration and recorded references, and links it to the immediate predecessor through `previous_version_id`. Each version retains its own references and validity is checked against their current status. Copying a hidden analysis does not make the original public.
+Authenticated users can copy any public analysis with `create_analysis_version`; authors can also copy their own hidden analyses. The transaction creates a draft attributed to the caller with a new ID, copies its configuration and recorded references, and links it to the immediate predecessor through `previous_version_id`. Each version retains its own references and validity is checked against their current status. Copying a hidden analysis does not make the original public. If the predecessor becomes inaccessible, the viewer reports that it is unavailable without exposing its contents.
 
 Published configuration and version links are immutable. RLS permits authors to change configuration rows only while their analysis is a draft; published analyses may still change visibility without changing their content.
 

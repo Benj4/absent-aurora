@@ -1,33 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MacroEvent, MacroEventTopic } from '../../lib/macro-events';
-import { deleteMacroEvent, fetchMacroEvents } from '../../lib/macro-events';
-import MacroEventForm from './MacroEventForm';
+import { changeMacroEventStatus, deleteMacroEvent, fetchMacroEvents } from '../../lib/macro-events';
 import { useAuthSession } from '../../lib/use-auth-session';
-import { supabase } from '../../lib/supabase';
+import MacroEventForm from './MacroEventForm';
 
-const TOPIC: Record<MacroEventTopic, { label: string; cls: string }> = {
-  politics: { label: 'Política', cls: 'badge-secondary' },
-  economy: { label: 'Economía', cls: 'badge-primary' },
-  nature: { label: 'Naturaleza', cls: 'badge-success' },
-  health: { label: 'Salud', cls: 'badge-error' },
-  social: { label: 'Social', cls: 'badge-warning' },
+const TOPIC: Record<MacroEventTopic, string> = {
+  politics: 'Política', economy: 'Economía', nature: 'Naturaleza', health: 'Salud', social: 'Social',
 };
-
-const dateFormatter = new Intl.DateTimeFormat('es-ES', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
 
 function fmtDate(raw: string | null): string {
   if (!raw) return '—';
-  try {
-    const [y, m, d] = raw.split('-').map(Number);
-    return dateFormatter.format(new Date(Date.UTC(y, m - 1, d)));
-  } catch {
-    return raw;
-  }
+  const [year, month, day] = raw.split('-').map(Number);
+  return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 export default function MacroEventsPage() {
@@ -37,272 +22,127 @@ export default function MacroEventsPage() {
   const canDelete = Array.isArray(roles) && roles.includes('admin');
   const [events, setEvents] = useState<MacroEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'valid' | 'invalid'>('all');
   const [panelOpen, setPanelOpen] = useState(false);
-  const [editing, setEditing] = useState<MacroEvent | null>(null);
+  const [correction, setCorrection] = useState<MacroEvent | null>(null);
+  const [statusTarget, setStatusTarget] = useState<MacroEvent | null>(null);
+  const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MacroEvent | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const deleteModalRef = useRef<HTMLDialogElement>(null);
+  const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
+  const statusDialog = useRef<HTMLDialogElement>(null);
+  const deleteDialog = useRef<HTMLDialogElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await fetchMacroEvents();
-    setLoading(false);
-    if (error) setFetchError(error.message);
-    else setEvents(data ?? []);
+    setFetchError(false);
+    try {
+      const { data, error } = await fetchMacroEvents();
+      if (error) setFetchError(true);
+      else setEvents(data ?? []);
+    } catch {
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+  useEffect(() => { void load(); }, [load]);
 
-  useEffect(() => { load(); }, [load]);
-
-  function openNew() {
-    setEditing(null);
-    setPanelOpen(true);
+  function openStatus(event: MacroEvent) {
+    setActionError(null);
+    setReason('');
+    setReasonError(false);
+    setStatusTarget(event);
+    statusDialog.current?.showModal();
   }
 
-  function openEdit(evt: MacroEvent) {
-    setEditing(evt);
-    setPanelOpen(true);
-  }
-
-  function closePanel() {
-    setPanelOpen(false);
-    setEditing(null);
-  }
-
-  function handleSaved(saved: MacroEvent) {
-    setEvents(prev => {
-      const idx = prev.findIndex(e => e.id === saved.id);
-      const next = idx >= 0
-        ? prev.map(e => (e.id === saved.id ? saved : e))
-        : [saved, ...prev];
-      return next.sort((a, b) => b.start_date.localeCompare(a.start_date));
-    });
-    closePanel();
-  }
-
-  function promptDelete(evt: MacroEvent) {
-    setDeleteTarget(evt);
-    deleteModalRef.current?.showModal();
+  async function confirmStatus() {
+    if (!statusTarget || !canChange || pendingRef.current) return;
+    const next = statusTarget.status === 'valid' ? 'invalid' : 'valid';
+    if (next === 'invalid' && !reason.trim()) { setReasonError(true); return; }
+    pendingRef.current = true;
+    setPending(true);
+    try {
+      const { error } = await changeMacroEventStatus(statusTarget.id, next, reason.trim());
+      if (error) throw error;
+      statusDialog.current?.close();
+      setStatusTarget(null);
+      await load();
+    } catch {
+      setActionError('No se pudo cambiar el estado del evento. Inténtalo de nuevo.');
+      statusDialog.current?.close();
+      setStatusTarget(null);
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
+    }
   }
 
   async function confirmDelete() {
-    if (!deleteTarget || !canDelete) return;
-    setDeleting(true);
-    const { error } = await deleteMacroEvent(deleteTarget.id);
-    setDeleting(false);
-    if (error) {
-      setFetchError('No se pudo eliminar el evento. Comprueba que no esté usado en un análisis y que tengas permisos.');
-    } else {
-      setEvents(prev => prev.filter(e => e.id !== deleteTarget.id));
+    if (!deleteTarget || !canDelete || pendingRef.current) return;
+    pendingRef.current = true;
+    setPending(true);
+    try {
+      const { error } = await deleteMacroEvent(deleteTarget.id);
+      if (error) throw error;
+      deleteDialog.current?.close();
+      setDeleteTarget(null);
+      await load();
+    } catch {
+      setActionError('No se pudo eliminar el evento. Los eventos usados en un análisis no se pueden eliminar; comprueba también tus permisos.');
+      deleteDialog.current?.close();
+      setDeleteTarget(null);
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
     }
-    setDeleteTarget(null);
-    deleteModalRef.current?.close();
   }
 
-  async function changeStatus(event: MacroEvent) {
-    if (!canChange) return;
-    const next = event.status === 'valid' ? 'invalid' : 'valid';
-    const reason = next === 'invalid' ? window.prompt('Indica el motivo de la invalidación:') : '';
-    if (reason === null) return;
-    if (next === 'invalid' && !reason.trim()) { setFetchError('El motivo de la invalidación es obligatorio.'); return; }
-    const { error } = await supabase.rpc('change_record_status', { p_type: 'event', p_id: event.id, p_status: next, p_reason: reason });
-    if (error) { setFetchError('No se pudo cambiar el estado del evento.'); return; }
-    setFetchError(null);
-    setEvents(previous => previous.map(item => item.id === event.id ? { ...item, status: next } : item));
-  }
-
+  const visible = filter === 'all' ? events : events.filter(event => event.status === filter);
   return (
-    <>
-      <div className="space-y-4">
-
-        {/* <div className="flex flex-col gap-3 rounded-box border border-base-200 bg-base-100 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5"> */}
-          <button
-            type="button"
-            onClick={openNew}
-            className="btn btn-primary btn-sm self-start gap-1.5 sm:self-auto"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-            </svg>
-            Nuevo evento
-          </button>
-        {/* </div> */}
-
-        {panelOpen && (
-          <MacroEventForm
-            isOpen={panelOpen}
-            event={editing}
-            onClose={closePanel}
-            onSaved={handleSaved}
-          />
-        )}
-
-        {/* Fetch error */}
-        {fetchError && (
-          <div role="alert" aria-live="polite" className="alert alert-error text-sm shadow-sm">
-            <span>{fetchError}</span>
-          </div>
-        )}
-
-        {/* Table card */}
-        <div className="overflow-hidden rounded-box border border-base-200 bg-base-100 shadow-sm">
-          {loading ? (
-            <div className="flex items-center justify-center py-24">
-              <span
-                className="loading loading-spinner loading-md text-primary"
-                aria-label="Cargando eventos…"
-              />
-            </div>
-          ) : events.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 px-8 py-24 text-center">
-              <div className="rounded-full bg-base-200 p-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="h-8 w-8 opacity-40"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Sin eventos registrados</p>
-                <p className="mt-1 text-xs opacity-50">
-                  Añade el primero para contextualizar tus series temporales.
-                </p>
-              </div>
-              <button type="button" onClick={openNew} className="btn btn-primary btn-sm mt-1">
-                Crear primer evento
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="table table-zebra">
-                  <thead>
-                    <tr className="text-xs uppercase tracking-wide opacity-60">
-                      <th>Nombre</th>
-                      <th>Tema</th>
-                      <th>Inicio</th>
-                      <th>Fin</th>
-                      <th>Geografía</th>
-                      <th className="text-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events.map(evt => {
-                      const t = TOPIC[evt.topic] ?? { label: evt.topic, cls: 'badge-neutral' };
-                      const geo = [evt.geo_scope, evt.geo_region].filter(Boolean).join(' · ');
-                      return (
-                        <tr key={evt.id} className="hover">
-                          <td className="min-w-0 max-w-xs">
-                            <div className="min-w-0 truncate font-medium">{evt.name}</div>
-                            <span className="badge badge-sm">{evt.status === 'valid' ? 'Válido' : 'Invalidado'}</span>
-                            {evt.description && (
-                              <div className="mt-0.5 min-w-0 truncate text-xs opacity-50">
-                                {evt.description}
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            <span className={`badge badge-sm font-normal ${t.cls}`}>
-                              {t.label}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap text-sm tabular-nums">
-                            {fmtDate(evt.start_date)}
-                          </td>
-                          <td className="whitespace-nowrap text-sm tabular-nums opacity-60">
-                            {fmtDate(evt.end_date)}
-                          </td>
-                          <td className="text-sm">
-                            {geo ? geo : <span className="opacity-30">—</span>}
-                          </td>
-                          <td>
-                            <div className="flex items-center justify-end gap-1">
-                              {canChange && <button type="button" className="btn btn-ghost btn-xs" onClick={() => changeStatus(evt)}>{evt.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button>}
-                              {user && <button
-                                type="button"
-                                onClick={() => openEdit(evt)}
-                                aria-label={`Crear corrección de ${evt.name}`}
-                                className="btn btn-ghost btn-xs"
-                              >
-                                Crear corrección
-                              </button>}
-                              {canDelete && <button
-                                type="button"
-                                onClick={() => promptDelete(evt)}
-                                aria-label={`Eliminar ${evt.name}`}
-                                className="btn btn-ghost btn-xs text-error hover:bg-error/10"
-                              >
-                                Eliminar
-                              </button>}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div className="border-t border-base-200 px-4 py-2.5 text-right text-xs opacity-40">
-                {events.length} {events.length === 1 ? 'evento' : 'eventos'}
-              </div>
-            </>
-          )}
+    <div className="space-y-4">
+      {user && <button type="button" className="btn btn-primary btn-sm" onClick={() => { setCorrection(null); setPanelOpen(true); }}>Nuevo evento</button>}
+      {user && panelOpen && <MacroEventForm isOpen event={correction} onClose={() => { setPanelOpen(false); setCorrection(null); }} onSaved={() => { setPanelOpen(false); setCorrection(null); void load(); }} />}
+      {actionError && <div role="alert" className="alert alert-error text-sm">{actionError}</div>}
+      <label className="flex flex-wrap items-center gap-2 text-sm">
+        Estado
+        <select className="select select-sm" value={filter} onChange={event => setFilter(event.target.value as typeof filter)}>
+          <option value="all">Todos</option><option value="valid">Válidos</option><option value="invalid">Invalidados</option>
+        </select>
+      </label>
+      {loading ? <p role="status">Cargando eventos…</p> : fetchError ? (
+        <div role="alert" className="alert alert-error"><span>No se pudieron cargar los eventos.</span><button className="btn btn-sm" onClick={() => void load()}>Reintentar</button></div>
+      ) : events.length === 0 ? <p>No hay eventos registrados.</p> : visible.length === 0 ? <p>No hay eventos que coincidan con el filtro.</p> : (
+        <div className="space-y-3">
+          {visible.map(event => (
+            <article key={event.id} className="rounded-box border border-base-200 bg-base-100 p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold break-words">{event.name}</h2><span className="badge badge-sm">{event.status === 'valid' ? 'Válido' : 'Invalidado'}</span><span className="badge badge-sm badge-outline">{TOPIC[event.topic] ?? event.topic}</span></div>
+              <p className="mt-2 text-sm">Inicio: {fmtDate(event.start_date)} · Fin: {fmtDate(event.end_date)}</p>
+              <p className="text-sm">Geografía: {[event.geo_scope, event.geo_region].filter(Boolean).join(' · ') || '—'}</p>
+              <details className="mt-2 text-sm"><summary className="cursor-pointer">Ver detalles</summary><p className="mt-2 whitespace-pre-wrap break-words">{event.description || 'Sin descripción.'}</p><p className="mt-2 break-all"><a className="link link-primary" href={event.source_url} target="_blank" rel="noopener noreferrer">Fuente del evento</a></p></details>
+              {(user || canChange || canDelete) && <div className="mt-3 flex flex-wrap gap-2">
+                {user && <button className="btn btn-ghost btn-sm" onClick={() => { setCorrection(event); setPanelOpen(true); }}>Crear corrección</button>}
+                {canChange && <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => openStatus(event)}>{event.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button>}
+                {canDelete && <button className="btn btn-ghost btn-sm text-error" disabled={pending} onClick={() => { setActionError(null); setDeleteTarget(event); deleteDialog.current?.showModal(); }}>Eliminar</button>}
+              </div>}
+            </article>
+          ))}
         </div>
-      </div>
-
-      {/* Delete confirmation modal */}
-      <dialog ref={deleteModalRef} className="modal">
-        <div className="modal-box max-w-sm">
-          <h3 className="text-base font-semibold">¿Eliminar evento?</h3>
-          <p className="py-4 text-sm opacity-70">
-            Se eliminarán permanentemente los datos de{' '}
-            <strong className="text-base-content">"{deleteTarget?.name}"</strong>.
-            Esta acción no se puede deshacer.
-          </p>
-          <div className="modal-action gap-2">
-            <form method="dialog">
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancelar
-              </button>
-            </form>
-            <button
-              type="button"
-              onClick={confirmDelete}
-              disabled={deleting}
-              className="btn btn-error btn-sm min-w-25"
-            >
-              {deleting ? (
-                <>
-                  <span className="loading loading-spinner loading-xs" aria-hidden="true" />
-                  Eliminando…
-                </>
-              ) : 'Eliminar'}
-            </button>
-          </div>
+      )}
+      <dialog ref={statusDialog} className="modal" aria-labelledby="status-title" onCancel={event => { if (pendingRef.current) event.preventDefault(); }} onClose={() => setStatusTarget(null)}>
+        <div className="modal-box">
+          <h2 id="status-title" className="font-semibold">{statusTarget?.status === 'valid' ? '¿Invalidar evento?' : '¿Restablecer evento?'}</h2>
+          <p className="py-3">{statusTarget?.name}</p>
+          {statusTarget?.status === 'valid' && <label className="flex flex-col gap-2 text-sm">Motivo de invalidación<textarea className="textarea w-full" value={reason} onChange={event => { setReason(event.target.value); setReasonError(false); }} aria-invalid={reasonError} aria-describedby={reasonError ? 'reason-error' : undefined} required />{reasonError && <span id="reason-error" role="alert" className="text-error">El motivo es obligatorio.</span>}</label>}
+          <div className="modal-action"><button className="btn btn-ghost" disabled={pending} onClick={() => statusDialog.current?.close()}>Cancelar</button><button className="btn btn-primary" disabled={pending} onClick={() => void confirmStatus()}>{pending ? 'Guardando…' : 'Confirmar'}</button></div>
         </div>
-        <form method="dialog" className="modal-backdrop">
-          <button onClick={() => setDeleteTarget(null)}>close</button>
-        </form>
       </dialog>
-    </>
+      <dialog ref={deleteDialog} className="modal" aria-labelledby="delete-title" onCancel={event => { if (pendingRef.current) event.preventDefault(); }} onClose={() => setDeleteTarget(null)}>
+        <div className="modal-box"><h2 id="delete-title" className="font-semibold">¿Eliminar evento?</h2><p className="py-4">Se eliminará permanentemente «{deleteTarget?.name}». Esta acción no se puede deshacer.</p><div className="modal-action"><button className="btn btn-ghost" disabled={pending} onClick={() => deleteDialog.current?.close()}>Cancelar</button><button className="btn btn-error" disabled={pending} onClick={() => void confirmDelete()}>{pending ? 'Eliminando…' : 'Eliminar'}</button></div></div>
+      </dialog>
+    </div>
   );
 }

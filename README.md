@@ -50,7 +50,8 @@ For a local Supabase environment, install and start Docker, then run `pnpm run s
 | `/user` | Current user's posts |
 | `/user/reviews` | Current user's reviews |
 | `/user/analisis` | Current user's analyses |
-| `/admin/macro-events` | Macro-event administration |
+| `/eventos` | Public macro-event catalog and role-based management |
+| `/admin/macro-events` | Redirect to the macro-event catalog |
 
 When the site is built for GitHub Pages, routes include the repository base path configured by Astro.
 

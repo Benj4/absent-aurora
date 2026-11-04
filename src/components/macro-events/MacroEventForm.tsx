@@ -74,7 +74,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
-  const isEdit = Boolean(event);
+  const isCorrection = Boolean(event);
 
   useEffect(() => {
     if (isOpen) {
@@ -156,7 +156,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
       <div className="flex flex-none items-center justify-between gap-4 border-b border-base-200 px-4 py-3 sm:px-5">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold leading-tight">
-            {isEdit ? 'Crear corrección del evento' : 'Nuevo evento'}
+            {isCorrection ? 'Crear corrección del evento' : 'Nuevo evento'}
           </h2>
         </div>
         <button
@@ -180,7 +180,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
         {/* Scrollable body + sticky footer, all inside the form */}
         <form onSubmit={handleSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-            {isEdit && <p className="alert alert-info mb-4 text-sm">La corrección crea un evento nuevo y conserva el original.</p>}
+            {isCorrection && <p className="alert alert-info mb-4 text-sm">La corrección crea un evento nuevo y conserva el original.</p>}
             {submitError && (
               <div role="alert" aria-live="polite" className="alert alert-error mb-4 text-sm py-2.5">
                 <svg
@@ -422,7 +422,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                   <span className="loading loading-spinner loading-xs" aria-hidden="true" />
                   Guardando…
                 </>
-              ) : isEdit ? 'Crear corrección' : 'Crear evento'}
+              ) : isCorrection ? 'Crear corrección' : 'Crear evento'}
             </button>
           </div>
         </form>

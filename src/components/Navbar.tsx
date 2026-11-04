@@ -28,8 +28,17 @@ const Navbar = () => {
 
   return (
     <div className="navbar bg-base-100 border-b border-base-200 px-4">
-      {/* Brand */}
+      {/* Brand and mobile navigation */}
       <div className="navbar-start">
+        <details className="dropdown md:hidden">
+          <summary className="btn btn-ghost btn-sm" aria-label="Abrir navegación">☰</summary>
+          <ul className="dropdown-content menu z-50 w-52 rounded-box border border-base-200 bg-base-100 p-2 shadow-lg">
+            <li><a href={withBase('/')}>Inicio</a></li>
+            <li><a href={withBase('/postlist')}>Publicaciones</a></li>
+            <li><a href={withBase('/eventos')}>Eventos</a></li>
+            <li><a href={withBase('/analisis/nuevo')}>Crear análisis</a></li>
+          </ul>
+        </details>
         <a href={withBase('/')} className="text-lg font-bold tracking-tight">
           Absent Aurora
         </a>
@@ -54,6 +63,7 @@ const Navbar = () => {
               Publicaciones
             </a>
           </li>
+          <li><a href={withBase('/eventos')} className={isActive('/eventos') ? 'active' : ''}>Eventos</a></li>
           <li>
             <a
               href={withBase('/analisis/nuevo')}

@@ -26,7 +26,7 @@ Astro owns routing and build-time page composition. React components own interac
 | Posts and validation | `/post`, `/postlist` | `PostDetail.tsx`, `PostCard.tsx`, `PostListClient.tsx`, `PostListFilters.tsx` | `lib/supabase.ts`, generated database types |
 | Indicators and series | `/indicators/[id]/data`, `/series/[frequency]/[id]` | `ApprovedSeriesLoader.tsx`, `ApprovedSeriesSelector.tsx`, `IndicatorChart.tsx`, `IndicatorPostsLoader.tsx`, `SeriesForm.tsx` | `lib/frequency.ts`, `lib/series-form-draft.ts`, `lib/url-title.ts` |
 | Analyses | `/analisis`, `/analisis/nuevo`, `/analisis/editar` | `AnalysisBuilder.tsx`, `AnalysisViewer.tsx`, `components/analysis-builder/` | `lib/analysis.ts`, `lib/macro-events.ts` |
-| Macro events | `/admin/macro-events` | `components/macro-events/MacroEventsPage.tsx`, `MacroEventForm.tsx` | `lib/macro-events.ts` |
+| Macro events | `/eventos` (public), `/admin/macro-events` (redirect) | `components/macro-events/MacroEventsPage.tsx`, `MacroEventForm.tsx` | `lib/macro-events.ts` |
 | User workspace | `/user`, `/user/reviews`, `/user/analisis` | `components/user/UserPosts.tsx`, `UserReviews.tsx`, `UserAnalyses.tsx`, `UserEdit.tsx` | `lib/auth-session.ts`, `lib/paths.ts`, `lib/supabase.ts` |
 | Shared shell | All routes using the main layout | `layouts/Layout.astro`, `Navbar.tsx` | `styles/global.css`, `lib/paths.ts` |
 
@@ -40,6 +40,7 @@ Paths in the table are relative to `src/` unless they begin with `/`.
 - `src/pages/index.astro`: dashboard route.
 - `src/pages/login.astro`: authentication route.
 - `src/components/LoginForm.tsx`: login-first authentication with signup fallback, recovery email requests, and password updates. Supabase intentionally does not distinguish missing accounts from incorrect passwords; only `invalid_credentials` triggers the signup fallback. Recovery and confirmation redirects respect the deployment base path. Add the deployed `/login` URL (including its `?recovery=1` variant) to Supabase Auth's allowed redirect URLs. `Welcome.astro` preserves the recovery hash marker before the shared client consumes it.
+- `src/components/Navbar.tsx`: desktop and mobile navigation, including the public events catalog.
 - `src/lib/paths.ts`: GitHub Pages base-path helpers. Internal links must use these helpers where required.
 
 ### Supabase and generated types

@@ -58,6 +58,7 @@ const AnalysisViewer: FC = () => {
   const [validity, setValidity] = useState<AnalysisValidity | null>(null);
   const [versions, setVersions] = useState<{ id: string; title: string }[]>([]);
   const [previousVersion, setPreviousVersion] = useState<string | null>(null);
+  const [previousAvailable, setPreviousAvailable] = useState<boolean | null>(null);
   const [versionError, setVersionError] = useState('');
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [changingVisibility, setChangingVisibility] = useState(false);
@@ -102,6 +103,18 @@ const AnalysisViewer: FC = () => {
 
     return () => { cancelled = true; };
   }, [analysisId]);
+
+  useEffect(() => {
+    if (!previousVersion) return;
+    let cancelled = false;
+    setPreviousAvailable(null);
+    supabase.from('analysis').select('id').eq('id', previousVersion).maybeSingle().then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) setVersionError('No se pudo comprobar el acceso a la versión anterior.');
+      else setPreviousAvailable(Boolean(data));
+    });
+    return () => { cancelled = true; };
+  }, [previousVersion, currentUserId]);
 
   async function handleCreateVersion() {
     setCreatingVersion(true);
@@ -307,7 +320,7 @@ const AnalysisViewer: FC = () => {
               {changingVisibility ? 'Guardando…' : state.status === 'public' ? 'Ocultar análisis' : 'Hacer público'}
             </button>
           )}
-          {isAuthor && (state.status === 'public' || state.status === 'hidden') && (
+          {currentUserId && (state.status === 'public' || (isAuthor && state.status === 'hidden')) && (
             <button type="button" className="btn btn-sm btn-primary" disabled={creatingVersion} onClick={handleCreateVersion}>{creatingVersion ? 'Creando…' : 'Crear nueva versión'}</button>
           )}
           {isAuthor && state.status === 'draft' && (
@@ -326,7 +339,8 @@ const AnalysisViewer: FC = () => {
           </div>
         </div>
         {(previousVersion || versions.length > 0) && <nav aria-label="Versiones del análisis" className="mt-4 flex flex-wrap gap-3 text-sm">
-          {previousVersion && <a className="link link-primary" href={withBase(`/analisis?id=${previousVersion}`)}>← Versión anterior</a>}
+          {previousVersion && previousAvailable === true && <a className="link link-primary" href={withBase(`/analisis?id=${previousVersion}`)}>← Versión anterior</a>}
+          {previousVersion && previousAvailable === false && <span>La versión anterior no está disponible.</span>}
           {versions.map(version => <a key={version.id} className="link link-primary" href={withBase(`/analisis?id=${version.id}`)}>Versión posterior: {version.title} →</a>)}
         </nav>}
         {versionError && <p className="mt-2 text-sm text-error" role="alert">{versionError}</p>}

@@ -19,3 +19,9 @@ export async function createMacroEvent(draft: MacroEventDraft) {
 export async function deleteMacroEvent(id: string) {
   return supabase.rpc('delete_series_or_event', { p_type: 'event', p_id: id });
 }
+
+export async function changeMacroEventStatus(id: string, status: 'valid' | 'invalid', reason: string) {
+  return supabase.rpc('change_record_status', {
+    p_type: 'event', p_id: id, p_status: status, p_reason: reason,
+  });
+}
