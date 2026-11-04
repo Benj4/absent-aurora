@@ -100,6 +100,8 @@ Maps:
 
 Authenticated users can copy any public analysis with `create_analysis_version`; authors can also copy their own hidden analyses. The transaction creates a draft attributed to the caller with a new ID, copies its configuration and recorded references, and links it to the immediate predecessor through `previous_version_id`. Each version retains its own references and validity is checked against their current status. Copying a hidden analysis does not make the original public. If the predecessor becomes inaccessible, the viewer reports that it is unavailable without exposing its contents.
 
+The schema does not record an analysis-level invalidation timestamp. Reference status history records individual changes and cannot establish an authoritative invalidation date for the analysis.
+
 Published configuration and version links are immutable. RLS permits authors to change configuration rows only while their analysis is a draft; published analyses may still change visibility without changing their content.
 
 The analysis visibility migration restricts draft and hidden roots and their configuration to their author; public analyses are readable by everyone. This applies after the migration is deployed. Administrators do not gain read access to another author's private analysis through this policy.

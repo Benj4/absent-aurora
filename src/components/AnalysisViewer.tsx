@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
+import type { Analysis } from '../lib/supabase';
 import { deleteDraftAnalysis, loadAnalysis } from '../lib/analysis';
 import { loadSavedPoints } from '../lib/analysis-sources';
 import { loadAnalysisValidity, sourceStatus } from '../lib/analysis-validity';
@@ -23,6 +24,18 @@ import { INDICATOR_MAP } from './analysis-builder/analysis-builder.data';
 import type { AnalisisState, ModoAlineacion, RawPoint } from './analysis-builder/analysis-builder.types';
 
 type LoadState = 'loading' | 'error' | 'ready';
+type Version = Pick<Analysis, 'id' | 'title' | 'status'>;
+type PreviousVersion = Pick<Version, 'id' | 'title'>;
+
+function publicationStatus(status: string): string {
+  return ({ public: 'Público', hidden: 'Oculto', draft: 'Borrador' } as Record<string, string>)[status] ?? 'Desconocido';
+}
+
+function versionValidity(value?: AnalysisValidity): string {
+  if (!value) return 'Desconocida';
+  if (value.sources.length || value.events.length) return value.unknown ? 'Inválida; comprobación incompleta' : 'Inválida';
+  return value.unknown || value.referencesUnverified ? 'Desconocida' : 'Válida';
+}
 
 interface TableRow {
   date: string;
@@ -33,6 +46,26 @@ interface TableRow {
   postId: string;
   sourceName: string;
   status?: string;
+}
+
+function changeDate(value?: string | null): string {
+  if (!value) return 'No disponible';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'No disponible' : date.toLocaleString('es-CL');
+}
+
+function changeReason(value?: string | null): string {
+  return value?.trim() || 'No disponible';
+}
+
+function historyStatus(value: string): string {
+  const translated = sourceStatus(value);
+  return translated === value ? 'Estado no disponible' : translated;
+}
+
+function sourceName(source: AnalysisValidity['sources'][number]): string {
+  const indicator = INDICATOR_MAP.get(source.indicator_id) || 'Indicador no disponible';
+  return `${indicator} — ${source.data_source?.trim() || 'Fuente no disponible'}`;
 }
 
 const AnalysisViewer: FC = () => {
@@ -56,9 +89,11 @@ const AnalysisViewer: FC = () => {
   const [dataError, setDataError] = useState('');
   const [eventError, setEventError] = useState('');
   const [validity, setValidity] = useState<AnalysisValidity | null>(null);
-  const [versions, setVersions] = useState<{ id: string; title: string }[]>([]);
-  const [previousVersion, setPreviousVersion] = useState<string | null>(null);
-  const [previousAvailable, setPreviousAvailable] = useState<boolean | null>(null);
+  const [versions, setVersions] = useState<Version[]>([]);
+  const [previousVersion, setPreviousVersion] = useState<PreviousVersion | null>(null);
+  const [previousUnavailable, setPreviousUnavailable] = useState(false);
+  const [versionsLoading, setVersionsLoading] = useState(true);
+  const [versionValidities, setVersionValidities] = useState<Record<string, AnalysisValidity>>({});
   const [versionError, setVersionError] = useState('');
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [changingVisibility, setChangingVisibility] = useState(false);
@@ -68,12 +103,6 @@ const AnalysisViewer: FC = () => {
   // Phase 1: parallel fetch — analysis state and creator metadata
   useEffect(() => {
     let cancelled = false;
-    supabase.from('analysis').select('id, title').eq('previous_version_id', analysisId).then(({ data, error }) => {
-      if (!cancelled) { if (error) setVersionError('No se pudieron cargar las versiones vinculadas.'); else setVersions(data ?? []); }
-    });
-    supabase.from('analysis').select('previous_version_id').eq('id', analysisId).single().then(({ data, error }) => {
-      if (!cancelled) { if (error) setVersionError('No se pudieron cargar las versiones vinculadas.'); else setPreviousVersion(data.previous_version_id); }
-    });
     loadAnalysisValidity([analysisId]).then(result => {
       if (!cancelled) setValidity(result[analysisId]);
     }).catch(() => {
@@ -105,16 +134,48 @@ const AnalysisViewer: FC = () => {
   }, [analysisId]);
 
   useEffect(() => {
-    if (!previousVersion) return;
     let cancelled = false;
-    setPreviousAvailable(null);
-    supabase.from('analysis').select('id').eq('id', previousVersion).maybeSingle().then(({ data, error }) => {
+    setVersionsLoading(true);
+    setVersions([]);
+    setPreviousVersion(null);
+    setPreviousUnavailable(false);
+    setVersionValidities({});
+    setVersionError('');
+    async function loadVersions() {
+      const [newer, current] = await Promise.all([
+        supabase.from('analysis').select('id, title, status').eq('previous_version_id', analysisId).order('created_at', { ascending: false }),
+        supabase.from('analysis').select('previous_version_id').eq('id', analysisId).maybeSingle(),
+      ]);
       if (cancelled) return;
-      if (error) setVersionError('No se pudo comprobar el acceso a la versión anterior.');
-      else setPreviousAvailable(Boolean(data));
-    });
+      if (newer.error || current.error || !current.data) setVersionError('No se pudieron cargar todas las versiones vinculadas.');
+      const accessible = newer.error ? [] : newer.data ?? [];
+      setVersions(accessible);
+      let previousId: string | null = null;
+      if (!current.error && current.data?.previous_version_id) {
+        const previous = await supabase.from('analysis').select('id, title').eq('id', current.data.previous_version_id).maybeSingle();
+        if (cancelled) return;
+        if (previous.error) setVersionError('No se pudo cargar la versión anterior.');
+        else if (previous.data) {
+          setPreviousVersion(previous.data);
+          previousId = previous.data.id;
+        }
+        else setPreviousUnavailable(true);
+      }
+      if (cancelled) return;
+      setVersionsLoading(false);
+      const versionIds = [...accessible.map(version => version.id), ...(previousId ? [previousId] : [])];
+      if (versionIds.length) {
+        try {
+          const result = await loadAnalysisValidity(versionIds);
+          if (!cancelled) setVersionValidities(result);
+        } catch {
+          if (!cancelled) setVersionError('No se pudo comprobar la validez de las versiones vinculadas.');
+        }
+      }
+    }
+    void loadVersions();
     return () => { cancelled = true; };
-  }, [previousVersion, currentUserId]);
+  }, [analysisId, currentUserId]);
 
   async function handleCreateVersion() {
     setCreatingVersion(true);
@@ -283,16 +344,28 @@ const AnalysisViewer: FC = () => {
                 </div>
                 <p className="mt-1 text-sm">Sus conclusiones pueden basarse en información invalidada.</p>
                 <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
-                  {validity.sources.map(source => (
-                    <li key={source.id}>
-                      <strong>{INDICATOR_MAP.get(source.indicator_id) ?? source.indicator_id}</strong> — {source.data_source} (ID: {source.id})
-                      <br />Estado: {sourceStatus(source.status)}. Motivo: {validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status)?.reason ?? 'no disponible'}. Fecha del cambio: {validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status)?.changed_at ? new Date(validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status)!.changed_at).toLocaleString('es-CL') : 'no disponible'}.
-                    </li>
-                  ))}
-                  {validity.events.map(event => <li key={event.id}><strong>Evento: {event.name}</strong> — Invalidado. Motivo: {validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status)?.reason ?? 'no disponible'}. Fecha del cambio: {validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status)?.changed_at ? new Date(validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status)!.changed_at).toLocaleString('es-CL') : 'no disponible'}.</li>)}
+                  {validity.sources.map(source => {
+                    const change = validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status);
+                    return <li key={source.id} className="break-words"><strong>Serie: {sourceName(source)}</strong><br />Estado: {historyStatus(source.status)}<br />Motivo: {changeReason(change?.reason)}<br />Fecha del cambio: {changeDate(change?.changed_at)}</li>;
+                  })}
+                  {validity.events.map(event => {
+                    const change = validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status);
+                    return <li key={event.id} className="break-words"><strong>Evento: {event.name?.trim() || 'Nombre no disponible'}</strong><br />Estado: {historyStatus(event.status)}<br />Motivo: {changeReason(change?.reason)}<br />Fecha del cambio: {changeDate(change?.changed_at)}</li>;
+                  })}
                 </ul>
                 <details className="mt-3"><summary className="cursor-pointer font-medium">Consultar historial de cambios</summary>
-                  {validity.history.length ? <ul className="mt-2 list-disc pl-5 text-sm">{validity.history.map(item => <li key={item.id}>{item.record_type === 'event' ? 'Evento' : 'Serie'} {item.record_id}: {sourceStatus(item.old_status)} → {sourceStatus(item.new_status)}; {new Date(item.changed_at).toLocaleString('es-CL')}; responsable: {item.changed_by}; motivo: {item.reason ?? 'no indicado'}.</li>)}</ul> : <p className="text-sm">No hay cambios registrados.</p>}
+                  {validity.history.length ? <ul className="mt-3 space-y-3 text-sm">{validity.history.map(item => {
+                    const event = validity.events.find(entry => item.record_type === 'event' && entry.id === item.record_id);
+                    const source = validity.sources.find(entry => item.record_type === 'series' && entry.id === item.record_id);
+                    const name = event ? event.name?.trim() || 'Nombre no disponible' : source ? sourceName(source) : 'Nombre no disponible';
+                    return <li key={item.id} className="rounded-lg border border-current/20 p-3 break-words">
+                      <p className="font-semibold">{item.record_type === 'event' ? 'Evento' : 'Serie'}: {name}</p>
+                      <p className="mt-1"><span className="font-medium">Cambio de estado:</span> {historyStatus(item.old_status)} → {historyStatus(item.new_status)}</p>
+                      <p className="mt-1"><span className="font-medium">Motivo:</span> {changeReason(item.reason)}</p>
+                      <p><span className="font-medium">Fecha del cambio:</span> {changeDate(item.changed_at)}</p>
+                      <p><span className="font-medium">Responsable:</span> No disponible</p>
+                    </li>;
+                  })}</ul> : <p className="mt-2 text-sm">Historial de cambios no disponible.</p>}
                 </details>
               </div>
             )}
@@ -338,11 +411,27 @@ const AnalysisViewer: FC = () => {
           )}
           </div>
         </div>
-        {(previousVersion || versions.length > 0) && <nav aria-label="Versiones del análisis" className="mt-4 flex flex-wrap gap-3 text-sm">
-          {previousVersion && previousAvailable === true && <a className="link link-primary" href={withBase(`/analisis?id=${previousVersion}`)}>← Versión anterior</a>}
-          {previousVersion && previousAvailable === false && <span>La versión anterior no está disponible.</span>}
-          {versions.map(version => <a key={version.id} className="link link-primary" href={withBase(`/analisis?id=${version.id}`)}>Versión posterior: {version.title} →</a>)}
-        </nav>}
+        <nav aria-label="Versiones del análisis" className="mt-5 space-y-4 text-sm">
+          {versionsLoading && <p role="status">Cargando versiones vinculadas…</p>}
+          {previousVersion && <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="font-semibold">Versión anterior:</span>
+            <a className="link link-primary break-words" href={withBase(`/analisis?id=${previousVersion.id}`)}>{previousVersion.title?.trim() || 'Análisis sin título'}</a>
+            {(versionValidities[previousVersion.id]?.sources.length > 0 || versionValidities[previousVersion.id]?.events.length > 0) && <span className="text-warning" role="img" aria-label="Contiene referencias invalidadas" title="Contiene referencias invalidadas">⚠</span>}
+          </p>}
+          {previousUnavailable && <p>La versión anterior no está disponible.</p>}
+          {versions.length === 1 && <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="font-semibold">Versión nueva:</span>
+            <a className="link link-primary break-words" href={withBase(`/analisis?id=${versions[0].id}`)}>{versions[0].title?.trim() || 'Análisis sin título'}</a>
+            <span className="text-base-content/70"> Estado: {publicationStatus(versions[0].status)} · {versionValidity(versionValidities[versions[0].id])}</span>
+          </p>}
+          {versions.length > 1 && <details>
+            <summary className="cursor-pointer font-semibold">Ver {versions.length} versiones nuevas</summary>
+            <ul className="mt-3 space-y-3">{versions.map(version => <li key={version.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <a className="link link-primary break-words" href={withBase(`/analisis?id=${version.id}`)}>{version.title?.trim() || 'Análisis sin título'}</a>
+              <span className="text-base-content/70"> Estado: {publicationStatus(version.status)} · {versionValidity(versionValidities[version.id])}</span>
+            </li>)}</ul>
+          </details>}
+        </nav>
         {versionError && <p className="mt-2 text-sm text-error" role="alert">{versionError}</p>}
         {visibilityError && <p className="mt-2 text-sm text-error" role="alert">{visibilityError}</p>}
         {deleteError && <p className="mt-2 text-sm text-error" role="alert">{deleteError}</p>}
