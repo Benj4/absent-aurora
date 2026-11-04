@@ -62,7 +62,7 @@ export default function MacroEventsPage() {
   async function confirmStatus() {
     if (!statusTarget || !canChange || pendingRef.current) return;
     const next = statusTarget.status === 'valid' ? 'invalid' : 'valid';
-    if (next === 'invalid' && !reason.trim()) { setReasonError(true); return; }
+    if ((canDelete || next === 'invalid') && !reason.trim()) { setReasonError(true); return; }
     pendingRef.current = true;
     setPending(true);
     try {
@@ -136,7 +136,7 @@ export default function MacroEventsPage() {
         <div className="modal-box">
           <h2 id="status-title" className="font-semibold">{statusTarget?.status === 'valid' ? '¿Invalidar evento?' : '¿Restablecer evento?'}</h2>
           <p className="py-3">{statusTarget?.name}</p>
-          {statusTarget?.status === 'valid' && <label className="flex flex-col gap-2 text-sm">Motivo de invalidación<textarea className="textarea w-full" value={reason} onChange={event => { setReason(event.target.value); setReasonError(false); }} aria-invalid={reasonError} aria-describedby={reasonError ? 'reason-error' : undefined} required />{reasonError && <span id="reason-error" role="alert" className="text-error">El motivo es obligatorio.</span>}</label>}
+          {(canDelete || statusTarget?.status === 'valid') && <label className="flex flex-col gap-2 text-sm">Motivo del cambio<textarea className="textarea w-full" value={reason} onChange={event => { setReason(event.target.value); setReasonError(false); }} aria-invalid={reasonError} aria-describedby={reasonError ? 'reason-error' : undefined} disabled={pending} required />{reasonError && <span id="reason-error" role="alert" className="text-error">El motivo es obligatorio.</span>}</label>}
           <div className="modal-action"><button className="btn btn-ghost" disabled={pending} onClick={() => statusDialog.current?.close()}>Cancelar</button><button className="btn btn-primary" disabled={pending} onClick={() => void confirmStatus()}>{pending ? 'Guardando…' : 'Confirmar'}</button></div>
         </div>
       </dialog>

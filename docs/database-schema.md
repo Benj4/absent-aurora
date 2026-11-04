@@ -119,7 +119,7 @@ Sources have no independent status by domain definition. Validity is evaluated p
 
 `reference_capture_version` records capture provenance independently of visibility and validity: `0` means reference completeness is unverified; `1` identifies the full-reference capture workflow used by new `save_analysis` calls. Existing rows default to `0`, since their completeness cannot be established retrospectively. Versions inherit the flag, and a trigger prevents changing it. Saving an existing draft does not upgrade its provenance. This is workflow metadata, not proof that an arbitrary API caller submitted every point. Unverified references are shown explicitly in the reader, editor and user list; missing historical points are never reconstructed from today's catalog.
 
-The analysis reader and user analysis list check the current status of recorded source posts and events. Transitions recorded after the status history migration contain a reason when invalidating use, an actor and a timestamp. Earlier transitions have no recorded history and are displayed as unavailable rather than inferred.
+The analysis reader and user analysis list check the current status of recorded source posts and events. Restoring a series to `approved` or an event to `valid` removes its invalidity on the next check. Transitions recorded after the status history migration contain a reason when invalidating use, an actor and a timestamp. Earlier transitions have no recorded history and are displayed as unavailable rather than inferred.
 
 ### macro_events
 
@@ -129,7 +129,7 @@ Any authenticated user, including an account without an application role, can cr
 Stores selected macro events and marker customization. Events are valid or invalid; referenced events cannot be deleted. Invalid events remain visible in saved analyses and cannot be newly selected.
 
 ### status_change_history
-Append-only history of series and event status transitions. The transactional `change_record_status` function checks the JWT role, requires a reason for invalidation and records the old and new state, actor and time. Administrators and editors can change status; only administrators can delete series or events, and references prevent deletion. Series and their observations are created atomically by `create_series_with_points`; browser clients cannot edit existing content or append observations later. Existing history is not backfilled.
+Append-only history of series and event status transitions. The transactional `change_record_status` function checks the JWT role, enforces the reason rules below and records the old and new state, actor and time. No-op requests create no history. Administrators and editors can change status; only administrators can delete series or events, and references prevent deletion. Series and their observations are created atomically by `create_series_with_points`; browser clients cannot edit existing content or append observations later. Existing history is not backfilled.
 
 ---
 
@@ -137,8 +137,9 @@ Append-only history of series and event status transitions. The transactional `c
 
 ### Status transitions
 - `pending`, `approved`, and `rejected` may transition among one another or to `disabled`.
-- `disabled` is terminal
-- A reason is required when entering `rejected` or `disabled`, or when leaving `approved`.
+- Administrators can change a series between any defined statuses, including from `disabled`; editors cannot leave `disabled`.
+- Administrators must provide a nonblank reason for every actual series or event status change.
+- Editors must provide a nonblank reason when entering `rejected` or `disabled`, leaving `approved`, or invalidating an event. Editors can restore an event without a reason.
 
 ### Immutability
 - Do not edit existing post metadata or data points.

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
 import type { SeriePost, SerieDataPoint, SerieValidation } from '../lib/supabase';
@@ -53,6 +53,7 @@ const PostDetail: FC = () => {
   const [postStatus, setPostStatus] = useState<PostStatus>('pending');
   const [pendingStatus, setPendingStatus] = useState<PostStatus>('pending');
   const [isUpdating, setIsUpdating] = useState(false);
+  const updatingRef = useRef(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [statusReason, setStatusReason] = useState('');
   const [validations, setValidations] = useState<Validation[]>([]);
@@ -67,7 +68,9 @@ const PostDetail: FC = () => {
   const postId = new URLSearchParams(window.location.search).get('id');
 
   const userRoles = currentUser?.app_metadata?.role;
+  const isAdmin = Array.isArray(userRoles) && userRoles.includes('admin');
   const isEditor = Array.isArray(userRoles) && (userRoles.includes('editor') || userRoles.includes('admin'));
+  const requiresReason = isAdmin || pendingStatus === 'rejected' || pendingStatus === 'disabled' || (postStatus === 'approved' && pendingStatus !== 'approved');
 
   const loadData = async () => {
     setLoading(true);
@@ -148,30 +151,36 @@ const PostDetail: FC = () => {
   }, [currentUser?.id]);
 
   const handleStatusUpdate = async () => {
-    if (!isEditor || !post || pendingStatus === postStatus) return;
-    if ((pendingStatus === 'rejected' || pendingStatus === 'disabled' || (postStatus === 'approved' && pendingStatus !== 'approved')) && !statusReason.trim()) {
+    if (!isEditor || !post || updatingRef.current || pendingStatus === postStatus || (!isAdmin && postStatus === 'disabled')) return;
+    if (requiresReason && !statusReason.trim()) {
       setStatusMessage('Indica el motivo del cambio de estado.');
       return;
     }
 
+    updatingRef.current = true;
     setIsUpdating(true);
     setStatusMessage('Actualizando estado...');
 
-    const { error } = await supabase.rpc('change_record_status', {
-      p_type: 'series', p_id: post.id, p_status: pendingStatus, p_reason: statusReason,
-    });
+    try {
+      const { error } = await supabase.rpc('change_record_status', {
+        p_type: 'series', p_id: post.id, p_status: pendingStatus, p_reason: statusReason,
+      });
 
-    setIsUpdating(false);
+      if (error) {
+        setStatusMessage('No se pudo actualizar el estado. Comprueba tus permisos y el estado actual de la publicación.');
+        return;
+      }
 
-    if (error) {
-      setStatusMessage('No se pudo actualizar el estado. Comprueba tus permisos y el estado actual de la publicación.');
-      return;
+      setPostStatus(pendingStatus);
+      setStatusReason('');
+      setPost((prev) => (prev ? { ...prev, status: pendingStatus } : prev));
+      setStatusMessage('Estado actualizado correctamente.');
+    } catch {
+      setStatusMessage('No se pudo actualizar el estado. Inténtalo de nuevo.');
+    } finally {
+      updatingRef.current = false;
+      setIsUpdating(false);
     }
-
-    setPostStatus(pendingStatus);
-    setStatusReason('');
-    setPost((prev) => (prev ? { ...prev, status: pendingStatus } : prev));
-    setStatusMessage('Estado actualizado correctamente.');
   };
 
   const handleValidationSubmit = async (e: React.FormEvent) => {
@@ -246,23 +255,24 @@ const PostDetail: FC = () => {
               <div className="flex items-center gap-2">
                 <select
                   className="select select-sm"
+                  aria-label="Nuevo estado de la publicación"
                   value={pendingStatus}
                   onChange={(e) => setPendingStatus(e.target.value as PostStatus)}
-                  disabled={isUpdating}
+                  disabled={isUpdating || (!isAdmin && postStatus === 'disabled')}
                 >
                   <option value="pending">Pendiente</option>
                   <option value="approved">Aprobado</option>
                   <option value="rejected">Rechazado</option>
                   <option value="disabled">Deshabilitado</option>
                 </select>
-                {(pendingStatus === 'rejected' || pendingStatus === 'disabled' || (postStatus === 'approved' && pendingStatus !== 'approved')) && (
-                  <input className="input input-sm" aria-label="Motivo del cambio" placeholder="Motivo obligatorio" value={statusReason} onChange={e => setStatusReason(e.target.value)} />
+                {pendingStatus !== postStatus && requiresReason && (
+                  <input className="input input-sm" aria-label="Motivo del cambio" placeholder="Motivo obligatorio" value={statusReason} onChange={e => setStatusReason(e.target.value)} disabled={isUpdating} required />
                 )}
                 <button
                   type="button"
                   className="btn btn-sm btn-primary"
                   onClick={handleStatusUpdate}
-                  disabled={isUpdating || pendingStatus === postStatus}
+                  disabled={isUpdating || pendingStatus === postStatus || (!isAdmin && postStatus === 'disabled')}
                 >
                   {isUpdating ? 'Guardando…' : 'Confirmar cambio'}
                 </button>
