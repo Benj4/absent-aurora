@@ -15,6 +15,21 @@ function fmtDate(raw: string | null): string {
     .format(new Date(Date.UTC(year, month - 1, day)));
 }
 
+function EventDescription({ description }: { description: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const text = description?.trim() || 'Sin descripción.';
+  const limit = 240;
+  const truncated = text.length > limit;
+  const excerpt = truncated ? text.slice(0, limit).replace(/\s+\S*$/, '').trimEnd() || text.slice(0, limit) : text;
+
+  return (
+    <div className="mt-2 text-sm">
+      <p className="whitespace-pre-wrap break-words">{expanded || !truncated ? text : `${excerpt}…`}</p>
+      {truncated && <button type="button" className="link link-primary mt-1" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos' : 'Ver más'}</button>}
+    </div>
+  );
+}
+
 export default function MacroEventsPage() {
   const { user } = useAuthSession();
   const roles = user?.app_metadata?.role;
@@ -119,15 +134,21 @@ export default function MacroEventsPage() {
         <div className="space-y-3">
           {visible.map(event => (
             <article key={event.id} className="rounded-box border border-base-200 bg-base-100 p-4 shadow-sm">
-              <div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold break-words">{event.name}</h2><span className="badge badge-sm">{event.status === 'valid' ? 'Válido' : 'Invalidado'}</span><span className="badge badge-sm badge-outline">{TOPIC[event.topic] ?? event.topic}</span></div>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2"><h2 className="font-semibold break-words">{event.name || 'Sin nombre'}</h2><span className={`badge badge-sm ${event.status === 'valid' ? 'badge-success' : 'badge-error'}`}>{event.status === 'valid' ? 'Válido' : 'Invalidado'}</span><span className="badge badge-sm badge-outline">{TOPIC[event.topic] ?? event.topic ?? 'Sin tema'}</span></div>
+                {user && <details className="dropdown dropdown-end" onKeyDown={e => { if (e.key === 'Escape') { e.currentTarget.open = false; e.currentTarget.querySelector('summary')?.focus(); } }}>
+                  <summary className="btn btn-ghost btn-sm" aria-label={`Acciones para ${event.name || 'el evento'}`}>Acciones</summary>
+                  <ul className="menu dropdown-content z-10 mt-1 w-48 rounded-box bg-base-100 p-2 shadow-lg border border-base-200">
+                    <li><button type="button" onClick={e => { e.currentTarget.closest('details')?.removeAttribute('open'); setCorrection(event); setPanelOpen(true); }}>Crear corrección</button></li>
+                    {canChange && <li><button type="button" disabled={pending} onClick={e => { e.currentTarget.closest('details')?.removeAttribute('open'); openStatus(event); }}>{event.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button></li>}
+                    {canDelete && <li><button type="button" className="text-error" disabled={pending} onClick={e => { e.currentTarget.closest('details')?.removeAttribute('open'); setActionError(null); setDeleteTarget(event); deleteDialog.current?.showModal(); }}>Eliminar</button></li>}
+                  </ul>
+                </details>}
+              </div>
               <p className="mt-2 text-sm">Inicio: {fmtDate(event.start_date)} · Fin: {fmtDate(event.end_date)}</p>
               <p className="text-sm">Geografía: {[event.geo_scope, event.geo_region].filter(Boolean).join(' · ') || '—'}</p>
-              <details className="mt-2 text-sm"><summary className="cursor-pointer">Ver detalles</summary><p className="mt-2 whitespace-pre-wrap break-words">{event.description || 'Sin descripción.'}</p><p className="mt-2 break-all"><a className="link link-primary" href={event.source_url} target="_blank" rel="noopener noreferrer">Fuente del evento</a></p></details>
-              {(user || canChange || canDelete) && <div className="mt-3 flex flex-wrap gap-2">
-                {user && <button className="btn btn-ghost btn-sm" onClick={() => { setCorrection(event); setPanelOpen(true); }}>Crear corrección</button>}
-                {canChange && <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => openStatus(event)}>{event.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button>}
-                {canDelete && <button className="btn btn-ghost btn-sm text-error" disabled={pending} onClick={() => { setActionError(null); setDeleteTarget(event); deleteDialog.current?.showModal(); }}>Eliminar</button>}
-              </div>}
+              <EventDescription description={event.description} />
+              <p className="mt-2 break-all text-sm">{event.source_url ? <a className="link link-primary" href={event.source_url} target="_blank" rel="noopener noreferrer">Fuente del evento</a> : 'Sin fuente disponible.'}</p>
             </article>
           ))}
         </div>
