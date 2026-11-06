@@ -66,6 +66,8 @@ Paths in the table are relative to `src/` unless they begin with `/`.
 
 `src/components/AnalysisBuilder.tsx` and `AnalysisViewer.tsx` are the public entry components for editing and reading analyses.
 
+The [calendar and index-zero separation proposal](analysis-chart-separation.md) audits the current shared renderer and defines a staged component split. It is a plan, not the implemented component map.
+
 ## Dependency direction
 
 Prefer dependencies in this direction:

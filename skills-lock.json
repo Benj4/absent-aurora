@@ -2,9 +2,10 @@
   "version": 1,
   "skills": {
     "daisyui": {
-      "source": "bobmatnyc/claude-mpm-skills",
+      "source": "saadeghi/daisyui",
       "sourceType": "github",
-      "computedHash": "ad61f0850a111a44ef32b7a0188b34b0113013d495ba031bf690018909e96374"
+      "skillPath": "skills/daisyui/SKILL.md",
+      "computedHash": "f70b06883160802b5b04db0504647cc140bd38cf7eb941183a38f44a179b27ca"
     },
     "supabase-postgres-best-practices": {
       "source": "supabase/agent-skills",

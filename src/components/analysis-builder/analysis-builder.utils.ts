@@ -38,7 +38,7 @@ export function makeInitialState(): AnalisisState {
     macroEventIds: [],
     markerModeByEventId: {},
     markerColorByEventId: {},
-    showBase100Line: true,
+    showBase100Line: false,
   };
 }
 
@@ -98,7 +98,7 @@ export function sanitizeState(input: unknown): AnalisisState | null {
         })
       )
       : {},
-    showBase100Line: typeof raw.showBase100Line === 'boolean' ? raw.showBase100Line : true,
+    showBase100Line: typeof raw.showBase100Line === 'boolean' ? raw.showBase100Line : false,
   };
 }
 

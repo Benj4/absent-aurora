@@ -110,7 +110,7 @@ async function persistAnalysis(id: string | null, state: AnalisisState): Promise
     p_config: {
       title: state.titulo, description: state.descripcion, status: state.status,
       alignment_mode: state.modoAlineacion, region: state.region,
-      show_base100: state.showBase100Line ?? true,
+      show_base100: state.showBase100Line ?? false,
       indicators: state.indicadores.map((indicator_id, sort_order) => ({ indicator_id, sort_order })),
       periods: state.periodos.map((period, sort_order) => ({
         id: period.id, name: period.nombre, start_date: period.fechaInicio,

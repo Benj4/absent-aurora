@@ -22,6 +22,8 @@ interface TableRow {
 }
 
 interface AnalysisContentProps {
+  onSetTitulo: (value: string) => void;
+  onSetDescripcion: (value: string) => void;
   analysisId?: string;
   state: AnalisisState;
   loading: boolean;
@@ -45,6 +47,8 @@ interface AnalysisContentProps {
 
 const AnalysisContent: FC<AnalysisContentProps> = ({
   state,
+  onSetTitulo,
+  onSetDescripcion,
   loading,
   sourceConflicts,
   chartSeries,
@@ -84,16 +88,16 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
   const statusOptions: Analysis['status'][] = ['draft', 'public', 'hidden' ];
 
   return (
-    <main aria-label="Lienzo de resultados del análisis" className="flex-1 overflow-y-auto overscroll-contain min-w-0">
-      <div className="max-w-5xl mx-auto p-5 space-y-5">
-        <section className="bg-base-100 rounded-2xl border border-base-200 p-5 lg:p-7">
+    <main aria-label="Lienzo de resultados del análisis" className="flex-1 min-w-0">
+      <div className="mx-auto max-w-7xl space-y-6 p-5 lg:sticky lg:top-6 lg:px-10 lg:py-8">
+        <section className="space-y-4">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl lg:text-3xl font-bold leading-tight tracking-tight" style={{ textWrap: 'balance' } as React.CSSProperties}>{displayTitle}</h1>
-              {(periodsSummary || state.region) && (
-                <p className="mt-1.5 text-base-content/50 text-sm">{periodsSummary} {state.region && <span>· {state.region}</span>}</p>
-              )}
-              {state.descripcion && (<p className="mt-2 text-sm text-base-content/60 max-w-2xl leading-relaxed">{state.descripcion}</p>)}
+              <label htmlFor="analysis-title" className="sr-only">Título del análisis</label>
+              <input id="analysis-title" className="input input-ghost h-12 w-full px-0 text-2xl font-bold lg:text-[28px]" value={state.titulo} onChange={e => onSetTitulo(e.target.value)} placeholder={displayTitle} maxLength={120} />
+              <label htmlFor="analysis-description" className="sr-only">Descripción o notas</label>
+              <textarea id="analysis-description" className="textarea textarea-ghost mt-2 w-full px-0 text-[15px] text-neutral" value={state.descripcion} onChange={e => onSetDescripcion(e.target.value)} placeholder="Descripción, hipótesis o notas del análisis…" maxLength={500} rows={2} />
+              {periodsSummary && <p className="text-xs text-base-content/60">{periodsSummary}</p>}
             </div>
             <div className="flex flex-col gap-2 items-end">
               <div className="flex items-center gap-2 mt-2">
@@ -136,7 +140,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
         />
       )}
 
-      <section aria-label="Gráfico comparativo" className="bg-base-100 rounded-2xl border border-base-200 p-5">
+      <section aria-label="Gráfico comparativo" className="card card-border rounded-xl bg-base-100 p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-base-content/60">Gráfico comparativo</h2>
         </div>
@@ -158,8 +162,25 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
         )}
       </section>
 
+      {tableRows.length > 0 && (
+        <section aria-label="Datos y fuentes">
+          <h2 className="mb-3 text-base font-bold">Datos y fuentes</h2>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from(new Map(tableRows.map(row => [row.indicator + row.postId, row])).values()).map(row => (
+              <a key={row.indicator + row.postId} href={withBase(`/post?id=${encodeURIComponent(row.postId)}`)} className="card card-border flex-row overflow-hidden rounded-xl bg-base-100 transition-shadow hover:shadow-md">
+                <span className="w-1.5 shrink-0" style={{ backgroundColor: row.color }} aria-hidden="true" />
+                <div className="card-body min-w-0 gap-1 p-3">
+                  <h3 className="text-sm font-semibold">{row.indicator}</h3>
+                  <p className="text-xs text-base-content/65">Fuente: {row.sourceName}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
       {selectedMacroEvents.length > 0 && (
-        <section aria-label="Tabla de eventos macro seleccionados" className="bg-base-100 rounded-2xl border border-base-200 p-5">
+        <section aria-label="Tabla de eventos macro seleccionados" className="card card-border rounded-xl bg-base-100 p-5">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
             <h2 className="text-sm font-semibold text-base-content/60">Eventos macro seleccionados</h2>
             <p className="text-xs text-base-content/50">Control individual de líneas por evento</p>
@@ -314,7 +335,7 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
           <svg aria-hidden="true" className="mx-auto mb-3 h-10 w-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          <p className="text-sm font-medium">Comienza configurando el título y seleccionando indicadores en el panel de la izquierda.</p>
+          <p className="text-sm font-medium">Comienza escribiendo el título y seleccionando indicadores en el panel de configuración.</p>
           <p className="text-xs mt-1 opacity-70">Los resultados se actualizarán automáticamente.</p>
         </aside>
       )}

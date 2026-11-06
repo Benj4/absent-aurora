@@ -37,7 +37,7 @@ export function useAnalisisState(analysisId?: string) {
   const [macroEventIds, setMacroEventIds] = useState<string[]>(initial.macroEventIds);
   const [markerModeByEventId, setMarkerModeByEventId] = useState<Record<string, MacroMarkerMode>>(initial.markerModeByEventId ?? {});
   const [markerColorByEventId, setMarkerColorByEventId] = useState<Record<string, string>>(initial.markerColorByEventId ?? {});
-  const [showBase100Line, setShowBase100Line] = useState<boolean>(initial.showBase100Line ?? true);
+  const [showBase100Line, setShowBase100Line] = useState<boolean>(initial.showBase100Line ?? false);
   const [savedScope, setSavedScope] = useState<AnalisisState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -61,7 +61,7 @@ export function useAnalisisState(analysisId?: string) {
     setMacroEventIds(s.macroEventIds);
     setMarkerModeByEventId(s.markerModeByEventId ?? {});
     setMarkerColorByEventId(s.markerColorByEventId ?? {});
-    setShowBase100Line(s.showBase100Line ?? true);
+    setShowBase100Line(s.showBase100Line ?? false);
   }, []);
 
   const [isDraftReady, setIsDraftReady] = useState(false);
@@ -253,7 +253,7 @@ export function useAnalisisState(analysisId?: string) {
   // ── Derived values ─────────────────────────────────────────────────────────
 
   const sourceConflicts = findSourceConflicts(rawData);
-  const base100Overlay = (state.showBase100Line ?? true) ? buildBase100OverlaySeries(rawData, state) : [];
+  const base100Overlay = (state.showBase100Line ?? false) ? buildBase100OverlaySeries(rawData, state) : [];
   const chartSeries = [...buildChartSeries(rawData, state), ...base100Overlay];
   const selectedMacroEvents = macroEvents.filter(ev => state.macroEventIds.includes(ev.id));
   const chartMarkers = buildMacroEventMarkers(selectedMacroEvents, state, markerModeByEventId, markerColorByEventId);

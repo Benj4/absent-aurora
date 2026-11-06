@@ -69,11 +69,9 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     } else window.location.href = withBase(`/analisis?id=${result.id}`);
   }, [state, isEditMode, analysisId, isDraftReady, loading, dataError, rawData]);
   return (
-    <div className="flex bg-base-200/20" style={{ height: 'calc(100svh - 7rem)', overflow: 'hidden' }}>
+    <div data-theme="analysis-editor" className="analysis-editor grid min-h-[calc(100svh-7rem)] bg-base-200 lg:grid-cols-[400px_minmax(0,1fr)]">
       <AnalysisSidebar
         state={state}
-        onSetTitulo={onSetTitulo}
-        onSetDescripcion={onSetDescripcion}
         onSetRegion={onSetRegion}
         onSetModo={onSetModo}
         onSetShowBase100Line={onSetShowBase100Line}
@@ -98,6 +96,8 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
         {dataError && <p className="alert alert-error mx-5 mt-3" role="alert">{dataError}</p>}
         {analysisId && <div className="px-5 pt-2 text-sm"><a className="link link-primary" href={withBase(`/analisis?id=${analysisId}`)}>Ver análisis y versiones vinculadas</a>{validityMessage && <p className="text-warning" role="alert">{validityMessage}</p>}</div>}
       <AnalysisContent
+        onSetTitulo={onSetTitulo}
+        onSetDescripcion={onSetDescripcion}
         analysisId={analysisId}
         state={state}
         loading={loading}

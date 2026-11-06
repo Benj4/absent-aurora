@@ -261,7 +261,7 @@ const AnalysisViewer: FC = () => {
 
   const chartSeries = useMemo(() => {
     if (!chartState) return [];
-    const base100Overlay = (chartState.showBase100Line ?? true)
+    const base100Overlay = (chartState.showBase100Line ?? false)
       ? buildBase100OverlaySeries(rawData, chartState)
       : [];
     return [...buildChartSeries(rawData, chartState), ...base100Overlay];

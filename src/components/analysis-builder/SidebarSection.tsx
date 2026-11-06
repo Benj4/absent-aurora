@@ -1,26 +1,17 @@
 import type { FC, ReactNode } from 'react';
 
-const SidebarSection: FC<{ title: string; defaultOpen?: boolean; children: ReactNode; className?: string }> = ({
-  title,
-  defaultOpen = true,
-  children,
-  className,
+const SidebarSection: FC<{ title: string; step?: number; summary?: string; defaultOpen?: boolean; children: ReactNode; className?: string }> = ({
+  title, step, summary, defaultOpen = true, children, className,
 }) => (
-  <details open={defaultOpen} className={`group border-b border-base-200 last:border-b-0 ${className ?? ''}`}>
-    <summary className="flex cursor-pointer select-none items-center justify-between px-4 py-3 text-xs font-bold uppercase tracking-widest text-base-content/50 hover:bg-base-200/60 transition-colors list-none">
-      {title}
-      <svg
-        aria-hidden="true"
-        className="h-3.5 w-3.5 transition-transform duration-200 group-open:rotate-180 shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2.5}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-      </svg>
+  <details open={defaultOpen} className={`collapse collapse-arrow rounded-none border-t border-base-300 bg-base-100 ${className ?? ''}`}>
+    <summary className="collapse-title flex items-center gap-3 px-6 py-4 pr-12">
+      {step && <span className="badge badge-soft badge-accent h-6 w-6 shrink-0 rounded-full font-bold">{step}</span>}
+      <span className="min-w-0">
+        <span className="block text-[15px] font-bold">{title}</span>
+        {summary && <span className="mt-0.5 block text-[13px] text-neutral">{summary}</span>}
+      </span>
     </summary>
-    <div className="px-4 pb-4 pt-2 space-y-3">{children}</div>
+    <div className="collapse-content space-y-3 px-6">{children}</div>
   </details>
 );
 

@@ -5,9 +5,6 @@ import AnalysisBuilder from '../../components/AnalysisBuilder';
 
 ---
 
-<style is:global>
-  html, body { overflow: hidden; }
-</style>
 
 <Layout
   title="Editar análisis — Absent Aurora"
@@ -16,5 +13,6 @@ import AnalysisBuilder from '../../components/AnalysisBuilder';
     { label: 'Editar análisis' },
   ]}
 >
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" />
   <AnalysisBuilder client:load mode="edit" />
 </Layout>

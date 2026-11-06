@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FC, Dispatch, SetStateAction } from 'react';
 import type { AnalisisState, Periodo, ModoAlineacion } from './analysis-builder.types';
 import type { MacroEvent } from '../../lib/macro-events';
+import { withBase } from '../../lib/paths';
 import SidebarSection from './SidebarSection';
 import IndicatorSelector from './IndicatorSelector';
 import PeriodRow from './PeriodRow';
@@ -9,8 +10,6 @@ import MacroEventForm from '../macro-events/MacroEventForm';
 
 interface AnalysisSidebarProps {
   state: AnalisisState;
-  onSetTitulo: (value: string) => void;
-  onSetDescripcion: (value: string) => void;
   onSetRegion: (value: string) => void;
   onSetModo: (value: ModoAlineacion) => void;
   onSetShowBase100Line: (value: boolean) => void;
@@ -33,8 +32,6 @@ interface AnalysisSidebarProps {
 
 const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
   state,
-  onSetTitulo,
-  onSetDescripcion,
   onSetRegion,
   onSetModo,
   onSetShowBase100Line,
@@ -60,72 +57,19 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
     <>
       <aside
         aria-label="Panel de configuración del analisis"
-        className="w-72 lg:w-80 shrink-0 flex flex-col border-r border-base-200 bg-base-100 overflow-hidden"
+        className="min-w-0 flex flex-col border-b border-base-300 bg-base-100 lg:border-b-0 lg:border-r"
       >
-    {/* <div className="sticky top-0 z-10 bg-base-100 border-b border-base-200 px-4 py-3.5 shrink-0">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-base-content/40">Constructor de Escenarios</h2>
-    </div> */}
-
-    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-      <SidebarSection title="Contexto">
-        <div>
-          <label htmlFor="sb-titulo" className="label py-0 pb-1">
-            <span className="whitespace-normal text-xs font-medium">Título del análisis</span>
-          </label>
-          <input
-            id="sb-titulo"
-            type="text"
-            className="input input-sm w-full"
-            placeholder="Ej. Comparativa inflación 2010-2020…"
-            value={state.titulo}
-            onChange={e => onSetTitulo(e.target.value)}
-            maxLength={120}
-            autoComplete="off"
-          />
-        </div>
-        <div>
-          <label htmlFor="sb-descripcion" className="label py-0 pb-1">
-            <span className="whitespace-normal text-xs font-medium">Notas / hipótesis</span>
-          </label>
-          <textarea
-            id="sb-descripcion"
-            className="textarea textarea-sm w-full resize-none"
-            placeholder="Contexto, hipótesis, fuentes adicionales…"
-            rows={3}
-            value={state.descripcion}
-            onChange={e => onSetDescripcion(e.target.value)}
-            maxLength={500}
-          />
-        </div>
+    <div className="flex items-center gap-3 px-6 py-5">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true" className="shrink-0 text-accent"><rect x="2" y="2" width="24" height="24" rx="6" fill="currentColor" /><path d="M7 19l5-6 4 3 5-8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <h2 className="text-base font-bold">Constructor de gráficos</h2>
+    </div>
+    <div className="flex-1">
+      <SidebarSection title="Datos" step={1} summary={`${state.indicadores.length} series agregadas`}>
+        <IndicatorSelector selected={state.indicadores} onToggle={onToggleIndicator}
+          region={state.region} onSetRegion={onSetRegion} />
       </SidebarSection>
 
-      <SidebarSection title="Datos">
-        <div>
-          <p className="label py-0 pb-1">
-            <span className="whitespace-normal text-xs font-medium">
-              Indicadores <span className="text-base-content/40 font-normal">({state.indicadores.length}/5)</span>
-            </span>
-          </p>
-          <IndicatorSelector selected={state.indicadores} onToggle={onToggleIndicator} />
-        </div>
-        <div>
-          <label htmlFor="sb-region" className="label py-0 pb-1">
-            <span className="whitespace-normal text-xs font-medium">País / Región</span>
-          </label>
-          <input
-            id="sb-region"
-            type="text"
-            className="input input-sm w-full"
-            placeholder="Chile"
-            value={state.region}
-            onChange={e => onSetRegion(e.target.value)}
-            maxLength={80}
-            autoComplete="off"
-          />
-        </div>
-      </SidebarSection>
-
-      <SidebarSection title="Períodos">
+      <SidebarSection title="Períodos" step={2} summary={`${state.periodos.length} períodos configurados`}>
         <div aria-live="polite" aria-label="Lista de períodos de análisis" className="space-y-3">
           {state.periodos.map(periodo => (
             <PeriodRow
@@ -140,32 +84,32 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         {state.periodos.length < 6 ? (
           <button
             type="button"
-            className="btn btn-sm btn-outline btn-primary w-full"
+            className="btn btn-sm btn-outline w-full"
             onClick={onAddPeriodo}
-          >+ Añadir período</button>
+          >+ Crear nuevo periodo</button>
         ) : (
-          <p className="text-xs text-base-content/40 text-center">Máximo 6 períodos</p>
+          <p className="text-xs text-neutral text-center">Máximo 6 períodos</p>
         )}
       </SidebarSection>
 
-      <SidebarSection title="Matemática">
+      <SidebarSection title="Métrica" step={3} summary={state.modoAlineacion === 'calendario' ? 'Calendario' : 'Índice 0'}>
         <div>
           <p className="label py-0 pb-1.5">
             <span className="whitespace-normal text-xs font-medium">Modo de alineación</span>
           </p>
-          <div className="join w-full">
+          <div className="space-y-2">
             <button
               type="button"
-              className={`join-item btn btn-sm flex-1 ${state.modoAlineacion === 'calendario' ? 'btn-primary' : 'btn-ghost border border-base-300'}`}
+              className={`btn h-auto min-h-12 w-full justify-start whitespace-normal rounded-lg px-4 py-3 text-left ${state.modoAlineacion === 'calendario' ? 'btn-soft btn-accent' : 'btn-outline'}`}
               onClick={() => onSetModo('calendario')}
-            >Calendario</button>
+            ><span>Calendario<span className="mt-1 block text-xs font-normal">Valores por fecha real, en su unidad original.</span></span></button>
             <button
               type="button"
-              className={`join-item btn btn-sm flex-1 ${state.modoAlineacion === 'indice_cero' ? 'btn-primary' : 'btn-ghost border border-base-300'}`}
+              className={`btn h-auto min-h-12 w-full justify-start whitespace-normal rounded-lg px-4 py-3 text-left ${state.modoAlineacion === 'indice_cero' ? 'btn-soft btn-accent' : 'btn-outline'}`}
               onClick={() => onSetModo('indice_cero')}
-            >Índice 0</button>
+            ><span>Índice 0<span className="mt-1 block text-xs font-normal">Compara los períodos alineando sus inicios al mes 0.</span></span></button>
           </div>
-          <p className="text-xs text-base-content/40 mt-2 leading-relaxed">
+          <p className="text-xs text-neutral mt-2 leading-relaxed">
             {state.modoAlineacion === 'calendario'
               ? 'Muestra todos los períodos con fechas reales en el eje X.'
               : 'Alinea el inicio de cada período al mes 0 para comparar ritmos, sin importar cuándo ocurrieron.'}
@@ -177,31 +121,15 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
             id="sb-show-base100-line"
             type="checkbox"
             className="checkbox checkbox-xs checkbox-primary"
-            checked={state.showBase100Line ?? true}
+            checked={state.showBase100Line ?? false}
             onChange={e => onSetShowBase100Line(e.target.checked)}
           />
           <span className="whitespace-normal text-xs font-medium">Mostrar índice base 100</span>
         </label>
       </SidebarSection>
 
-      <SidebarSection title="Eventos macro" defaultOpen={true} className="flex flex-col flex-1 min-h-80">
+      <SidebarSection title="Datos macro" step={4} summary={`${state.macroEventIds.length} eventos seleccionados`}>
         <div className="flex flex-col flex-1 min-h-64">
-          <button
-            type="button"
-            className="btn btn-sm btn-outline btn-primary mb-3 w-full gap-1.5"
-            onClick={() => setIsMacroEventFormOpen(true)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-            </svg>
-            Agregar evento
-          </button>
           <div>
             <label htmlFor="sb-macro-search" className="label py-0 pb-1 sr-only">
               <span className="whitespace-normal text-xs font-medium">Buscar evento</span>
@@ -209,7 +137,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
             <input
               id="sb-macro-search"
               type="search"
-              className="input input-sm w-full"
+              className="input w-full"
               placeholder="Buscar evento…"
               value={macroEventsSearch}
               onChange={e => setMacroEventsSearch(e.target.value)}
@@ -225,12 +153,12 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
                 ))}
               </div>
             ) : macroEvents.length === 0 ? (
-              <p className="text-xs text-base-content/40 text-center py-2">No hay eventos registrados.</p>
+              <p className="text-xs text-neutral text-center py-2">No hay eventos registrados.</p>
             ) : (
               <ul
                 aria-label="Lista de eventos macro"
                 aria-live="polite"
-                className="space-y-1 overflow-y-auto overscroll-contain pr-0.5 h-full"
+                className="divide-y divide-base-300 overflow-y-auto overscroll-contain rounded-lg border border-base-300 max-h-80"
               >
                 {macroEvents
                   .filter(ev =>
@@ -243,7 +171,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
                     return (
                       <li key={ev.id}>
                         <label
-                          className={`flex items-start gap-2.5 rounded-lg px-2.5 py-2 cursor-pointer transition-colors hover:bg-base-200/60 ${checked ? 'bg-primary/8' : ''}`}
+                          className={`flex items-start gap-2.5 px-3 py-3 cursor-pointer transition-colors hover:bg-base-200/60 ${checked ? 'bg-accent/10' : ''}`}
                         >
                           <input
                             type="checkbox"
@@ -253,8 +181,8 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
                             aria-label={`Seleccionar evento: ${ev.name}`}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium leading-snug truncate" title={ev.name}>{ev.name}</p>
-                            <p className="text-xs text-base-content/40 mt-0.5 tabular-nums">
+                            <p className="text-sm font-medium leading-snug" title={ev.name}>{ev.name}</p>
+                            <p className="text-xs text-neutral mt-0.5 tabular-nums">
                               {ev.start_date}{ev.end_date ? ` → ${ev.end_date}` : ''}
                               {ev.geo_region && <span className="ml-1.5">· {ev.geo_region}</span>}
                             </p>
@@ -271,18 +199,32 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
             )}
           </div>
         </div>
-        {state.macroEventIds.length > 0 && (
-          <p className="text-xs text-primary font-medium">
-            {state.macroEventIds.length} evento{state.macroEventIds.length !== 1 ? 's' : ''} seleccionado{state.macroEventIds.length !== 1 ? 's' : ''}
-          </p>
-        )}
+
+
+        <button
+          type="button"
+          className="btn btn-sm btn-outline mb-3 w-full gap-1.5"
+          onClick={() => setIsMacroEventFormOpen(true)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+          </svg>
+          Crear nuevo evento
+        </button>
+
       </SidebarSection>
     </div>
 
-    <div className="shrink-0 border-t border-base-200 bg-base-100 px-4 pb-4 pt-3 space-y-2">
+    <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-3 border-t border-base-300 bg-base-100 px-6 py-4">
       <button
         type="button"
-        className="btn btn-sm btn-primary w-full"
+        className="btn btn-primary order-2 w-full"
         onClick={onSave}
         disabled={isSaving}
       >
@@ -290,15 +232,15 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         {isSaving ? 'Guardando…' : isEditMode ? 'Actualizar análisis' : 'Guardar análisis'}
       </button>
       {saveError && (
-        <p className="text-xs text-error leading-snug" role="alert">{saveError}</p>
+        <p className="col-span-2 order-3 text-xs text-error leading-snug" role="alert">{saveError}</p>
       )}
       {isEditMode ?
         <button
           type="button"
-          className="btn btn-sm btn-outline btn-error w-full"
+          className="btn btn-outline order-1 w-full"
           onClick={() => {
-            if (window.confirm('Se perderan los cambios sin guardar. ¿Continuar?')) {
-              window.location.href = '/analisis/nuevo';
+            if (window.confirm('Se perderán los cambios sin guardar. ¿Continuar?')) {
+              window.location.href = withBase('/analisis/nuevo');
             }
           }}
         >
@@ -307,10 +249,10 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         :
         <button
           type="button"
-          className="btn btn-sm btn-outline btn-error w-full"
+          className="btn btn-outline order-1 w-full"
           onClick={onReset}
         >
-          Reiniciar formulario
+          Reiniciar
         </button>
       }
     </div>

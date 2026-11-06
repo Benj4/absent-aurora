@@ -8,8 +8,7 @@ const PeriodRow: FC<{
   onRemove: () => void;
 }> = ({ periodo, canRemove, onChange, onRemove }) => (
   <div
-    className="rounded-box border border-base-200 bg-base-100 p-3 space-y-2.5"
-    style={{ borderLeftColor: periodo.color, borderLeftWidth: 3 }}
+    className="space-y-3"
   >
     <div className="flex items-center gap-2">
       <input

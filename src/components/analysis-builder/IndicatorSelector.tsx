@@ -1,124 +1,92 @@
-import { useState, useEffect, useRef } from 'react';
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { FC } from 'react';
+import { supabase } from '../../lib/supabase';
 import { ALL_INDICATORS, INDICATOR_MAP } from './analysis-builder.data';
 
-const MAX_INDICATORS = 5;
-
-const IndicatorSelector: FC<{ selected: string[]; onToggle: (id: string) => void }> = ({ selected, onToggle }) => {
+const IndicatorSelector: FC<{
+  selected: string[];
+  onToggle: (id: string) => void;
+  region: string;
+  onSetRegion: (value: string) => void;
+}> = ({ selected, onToggle, region, onSetRegion }) => {
+  const id = useId();
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const searchId = useId();
+  const [pending, setPending] = useState('');
+  const [sources, setSources] = useState<Record<string, string[]>>({});
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const onOut = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onOut);
-    return () => document.removeEventListener('mousedown', onOut);
+    let active = true;
+    async function loadSources() {
+      const { data, error } = await supabase.from('serie_posts')
+        .select('indicator_id, data_source').eq('status', 'approved');
+      if (!active) return;
+      setLoading(false);
+      if (error) {
+        setError('No se pudieron cargar las fuentes.');
+        return;
+      }
+      const grouped: Record<string, string[]> = {};
+      for (const row of data ?? []) {
+        const names = grouped[row.indicator_id] ??= [];
+        if (row.data_source && !names.includes(row.data_source)) names.push(row.data_source);
+      }
+      setSources(grouped);
+    }
+    void loadSources();
+    return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
-
-  const filtered = ALL_INDICATORS.filter(
-    ind =>
-      ind.label.toLowerCase().includes(search.toLowerCase()) ||
-      ind.id.toLowerCase().includes(search.toLowerCase())
-  ).slice(0, 100);
+  const filtered = ALL_INDICATORS.filter(ind =>
+    (ind.label + ' ' + ind.id + ' ' + (sources[ind.id] ?? []).join(' '))
+      .toLocaleLowerCase('es').includes(search.toLocaleLowerCase('es'))
+  );
+  const alreadyAdded = selected.includes(pending);
 
   return (
-    <div ref={containerRef} className="relative">
-      <div
-        role="button"
-        tabIndex={0}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label="Abrir selector de indicadores"
-        className="w-full min-h-10 rounded-field border border-base-300 bg-base-100 px-3 py-1.5 text-left text-sm flex flex-wrap gap-1 items-center hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors cursor-pointer"
-        onClick={() => setOpen(v => !v)}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(v => !v); } }}
-      >
-        {selected.length === 0 ? (
-          <span className="text-base-content/40 text-sm">Buscar indicador…</span>
-        ) : (
-          selected.map(id => (
-            <span key={id} className="badge badge-primary badge-sm gap-1 font-mono">
-              {id}
-              <button
-                type="button"
-                aria-label={`Quitar ${INDICATOR_MAP.get(id) ?? id}`}
-                className="hover:opacity-70 leading-none"
-                onClick={e => { e.stopPropagation(); onToggle(id); }}
-              >×</button>
-            </span>
-          ))
-        )}
+    <div className="space-y-3">
+      <div>
+        <label htmlFor={id + '-search'} className="label mb-1.5">Buscar indicador</label>
+        <input id={id + '-search'} type="search" className="input w-full"
+          placeholder="Ej. PIB real, inflación, desempleo"
+          value={search} onChange={e => setSearch(e.target.value)} />
       </div>
+      <div className="max-h-40 overflow-y-auto rounded-lg border border-base-300" aria-label="Indicadores disponibles">
+        {filtered.map(ind => (
+          <button key={ind.id} type="button" aria-pressed={pending === ind.id}
+            className={`block w-full border-b border-base-300 px-3 py-3 text-left text-sm last:border-b-0 hover:bg-base-200 ${pending === ind.id ? 'bg-accent/10' : 'bg-base-100'}`}
+            onClick={() => setPending(ind.id)}>
+            <span className={pending === ind.id ? 'font-semibold' : ''}>{ind.label}</span>
+            <span className="text-neutral"> · {sources[ind.id]?.join(', ') || (loading ? 'Cargando fuentes…' : 'Sin fuentes aprobadas')}</span>
+          </button>
+        ))}
+        {filtered.length === 0 && <p className="p-3 text-sm text-neutral">No se encontraron indicadores.</p>}
+      </div>
+      {error && <p role="alert" className="text-xs text-error">{error}</p>}
+      <div>
+        <label htmlFor={id + '-country'} className="label mb-1.5">País</label>
+        <select id={id + '-country'} className="select w-full" value={region || 'Chile'} onChange={e => onSetRegion(e.target.value)}>
+          <option value="Chile">Chile</option>
+          {region && region !== 'Chile' && <option value={region}>{region}</option>}
+        </select>
+      </div>
+      <button type="button" className="btn btn-outline btn-accent w-full"
+        disabled={!pending || alreadyAdded || selected.length >= 5}
+        onClick={() => { if (!region) onSetRegion('Chile'); onToggle(pending); }}>
+        {alreadyAdded ? 'Ya agregado al gráfico' : '+ Agregar al gráfico'}
+      </button>
+      {selected.length >= 5 && <p className="text-xs text-neutral">Máximo 5 indicadores.</p>}
 
-      {open && (
-        <div
-          role="listbox"
-          aria-multiselectable="true"
-          aria-label="Lista de indicadores"
-          className="absolute z-50 left-0 right-0 top-full mt-1 rounded-box border border-base-300 bg-base-100 shadow-2xl flex flex-col"
-          style={{ maxHeight: 300 }}
-        >
-          <div className="p-2 border-b border-base-200 shrink-0">
-            <label htmlFor={searchId} className="sr-only">Filtrar indicadores</label>
-            <input
-              id={searchId}
-              autoFocus
-              type="search"
-              className="input input-sm w-full"
-              placeholder="Filtrar…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              spellCheck={false}
-              autoComplete="off"
-            />
-          </div>
-          <div className="overflow-y-auto overscroll-contain">
-            {filtered.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-base-content/40">Sin resultados</p>
-            ) : (
-              filtered.map(ind => {
-                const sel = selected.includes(ind.id);
-                const disabled = !sel && selected.length >= MAX_INDICATORS;
-                return (
-                  <button
-                    key={ind.id}
-                    type="button"
-                    role="option"
-                    aria-selected={sel}
-                    disabled={disabled}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${sel ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-base-200'} disabled:opacity-40 disabled:cursor-not-allowed`}
-                    onClick={() => !disabled && onToggle(ind.id)}
-                  >
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs checkbox-primary"
-                      checked={sel}
-                      onChange={() => {}}
-                      tabIndex={-1}
-                      aria-hidden="true"
-                    />
-                    <span className="flex-1 truncate">{ind.label}</span>
-                    <span className="font-mono text-xs text-base-content/40 shrink-0">{ind.id}</span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-          {selected.length >= MAX_INDICATORS && (
-            <p className="px-3 py-2 text-xs text-warning border-t border-base-200 shrink-0">
-              Máximo {MAX_INDICATORS} indicadores seleccionados
-            </p>
-          )}
+      <label className="label mb-1.5">AgregadosNN</label>
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-2" aria-label="Indicadores agregados">
+          {selected.map(ind => (
+            <button key={ind} type="button" className="badge badge-outline h-auto gap-2 py-1.5 text-xs"
+              onClick={() => onToggle(ind)} aria-label={`Quitar ${INDICATOR_MAP.get(ind) ?? ind}`}>
+              {INDICATOR_MAP.get(ind) ?? ind} <span aria-hidden="true">×</span>
+            </button>
+          ))}
         </div>
       )}
     </div>

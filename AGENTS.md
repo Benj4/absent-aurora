@@ -109,6 +109,6 @@ The cleanup helper must always receive the exact user IDs created by the current
 
 `docs/components.md` is a domain map, not a manually maintained full file tree. Update it only when a route, domain boundary, important entry point, or placement rule changes.
 
-**Last reviewed:** 2026-08-27
+**Last reviewed:** 2026-10-28
 
 **Package version:** 0.0.1
