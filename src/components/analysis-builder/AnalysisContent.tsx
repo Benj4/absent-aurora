@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FC } from 'react';
 import { withBase } from '../../lib/paths';
 import type { MacroEvent } from '../../lib/macro-events';
-import type { AnalisisState, HCSeriesData, HCEventMarker, SourceConflict } from './analysis-builder.types';
+import type { AnalisisState, RawPoint, SourceConflict } from './analysis-builder.types';
 import type { MacroMarkerMode } from './use-analisis-state';
 import { fmt, getDefaultMacroEventColor } from './analysis-builder.utils';
-import AnalysisChart from './AnalysisChart';
+import AnalysisContainer from '../analysis/AnalysisContainer';
+import AnalysisSources from '../analysis/AnalysisSources';
 import { sourceStatus } from '../../lib/analysis-validity';
 import SourceConflictResolver from './SourceConflictResolver';
 import type { Analysis } from '../../lib/supabase';
@@ -28,9 +29,9 @@ interface AnalysisContentProps {
   state: AnalisisState;
   loading: boolean;
   sourceConflicts: SourceConflict[];
-  chartSeries: HCSeriesData[];
+  rawData: RawPoint[];
+  onSelectIndexZeroIndicator: (id: string) => void;
   selectedMacroEvents: MacroEvent[];
-  chartMarkers: HCEventMarker[];
   // kpiRows: KPIRow[];
   hasData: boolean;
   isConfigured: boolean;
@@ -51,9 +52,9 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
   onSetDescripcion,
   loading,
   sourceConflicts,
-  chartSeries,
+  rawData,
+  onSelectIndexZeroIndicator,
   selectedMacroEvents,
-  chartMarkers,
   // kpiRows,
   hasData,
   isConfigured,
@@ -153,31 +154,12 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
           </div>
         ) : loading ? (
           <div className="skeleton rounded-xl" style={{ height: 360 }} />
-        ) : !hasData ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 text-base-content/30">
-            <p className="text-sm text-center">No se encontraron datos aprobados para esta combinación de indicadores y fechas.</p>
-          </div>
         ) : (
-          <AnalysisChart series={chartSeries} mode={state.modoAlineacion} markers={chartMarkers} />
+          <AnalysisContainer configuration={state} points={rawData} events={selectedMacroEvents} onSelectIndicator={onSelectIndexZeroIndicator} />
         )}
       </section>
 
-      {tableRows.length > 0 && (
-        <section aria-label="Datos y fuentes">
-          <h2 className="mb-3 text-base font-bold">Datos y fuentes</h2>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from(new Map(tableRows.map(row => [row.indicator + row.postId, row])).values()).map(row => (
-              <a key={row.indicator + row.postId} href={withBase(`/post?id=${encodeURIComponent(row.postId)}`)} className="card card-border flex-row overflow-hidden rounded-xl bg-base-100 transition-shadow hover:shadow-md">
-                <span className="w-1.5 shrink-0" style={{ backgroundColor: row.color }} aria-hidden="true" />
-                <div className="card-body min-w-0 gap-1 p-3">
-                  <h3 className="text-sm font-semibold">{row.indicator}</h3>
-                  <p className="text-xs text-base-content/65">Fuente: {row.sourceName}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
+      <AnalysisSources rows={tableRows} mode={state.modoAlineacion} />
 
       {selectedMacroEvents.length > 0 && (
         <section aria-label="Tabla de eventos macro seleccionados" className="card card-border rounded-xl bg-base-100 p-5">

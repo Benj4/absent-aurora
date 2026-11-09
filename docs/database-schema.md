@@ -4,6 +4,13 @@
 
 This guide describes the data model and how to work with it safely in the app.
 
+Analysis presentation settings are stored in `analysis.chart_settings` (JSON object):
+`indicatorColors` maps indicator IDs to stable hex colors, and `indexZeroIndicatorId`
+selects the indicator compared across periods. Empty legacy settings use deterministic
+client defaults. The atomic save RPC writes these settings; published-content protection
+and version copying include them. Apply `20261106000000_analysis_chart_settings.sql`
+before deploying the corresponding client. This migration changes no access policies.
+
 Core rules:
 - Data submissions are immutable
 - Validation history is append-only for browser roles; reviewers cannot validate their own submissions.

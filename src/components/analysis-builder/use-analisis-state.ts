@@ -12,14 +12,12 @@ import {
   makeInitialState,
   sanitizeState,
   findSourceConflicts,
-  filterByPeriod,
   // buildKPIRows,
-  buildChartSeries,
-  buildBase100OverlaySeries,
-  buildMacroEventMarkers,
+  activeIndicator,
+  assignIndicatorColors,
+  buildDataRows,
   getDefaultMacroEventColor,
 } from './analysis-builder.utils';
-import { INDICATOR_MAP } from './analysis-builder.data';
 
 export type MacroMarkerMode = MarkerMode;
 
@@ -38,14 +36,23 @@ export function useAnalisisState(analysisId?: string) {
   const [markerModeByEventId, setMarkerModeByEventId] = useState<Record<string, MacroMarkerMode>>(initial.markerModeByEventId ?? {});
   const [markerColorByEventId, setMarkerColorByEventId] = useState<Record<string, string>>(initial.markerColorByEventId ?? {});
   const [showBase100Line, setShowBase100Line] = useState<boolean>(initial.showBase100Line ?? false);
+  const [indicatorColors, setIndicatorColors] = useState<Record<string, string>>({});
+  const [indexZeroIndicatorId, setIndexZeroIndicatorId] = useState<string | undefined>();
   const [savedScope, setSavedScope] = useState<AnalisisState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const state: AnalisisState = {
     titulo, descripcion, status, region, modoAlineacion,
     indicadores, periodos, sourceSelections, macroEventIds,
-    markerModeByEventId, markerColorByEventId, showBase100Line,
+    markerModeByEventId, markerColorByEventId, showBase100Line, indicatorColors, indexZeroIndicatorId,
   };
+
+  useEffect(() => {
+    const assigned = assignIndicatorColors(state);
+    if (JSON.stringify(assigned) !== JSON.stringify(indicatorColors)) setIndicatorColors(assigned);
+    const active = activeIndicator(state);
+    if (active !== indexZeroIndicatorId) setIndexZeroIndicatorId(active);
+  }, [JSON.stringify(indicadores), indicatorColors, indexZeroIndicatorId]);
 
   // ── Draft persistence ──────────────────────────────────────────────────────
 
@@ -62,6 +69,8 @@ export function useAnalisisState(analysisId?: string) {
     setMarkerModeByEventId(s.markerModeByEventId ?? {});
     setMarkerColorByEventId(s.markerColorByEventId ?? {});
     setShowBase100Line(s.showBase100Line ?? false);
+    setIndicatorColors(assignIndicatorColors(s));
+    setIndexZeroIndicatorId(activeIndicator(s));
   }, []);
 
   const [isDraftReady, setIsDraftReady] = useState(false);
@@ -253,10 +262,7 @@ export function useAnalisisState(analysisId?: string) {
   // ── Derived values ─────────────────────────────────────────────────────────
 
   const sourceConflicts = findSourceConflicts(rawData);
-  const base100Overlay = (state.showBase100Line ?? false) ? buildBase100OverlaySeries(rawData, state) : [];
-  const chartSeries = [...buildChartSeries(rawData, state), ...base100Overlay];
   const selectedMacroEvents = macroEvents.filter(ev => state.macroEventIds.includes(ev.id));
-  const chartMarkers = buildMacroEventMarkers(selectedMacroEvents, state, markerModeByEventId, markerColorByEventId);
   // const kpiRows = buildKPIRows(rawData, state);
   const hasActivePeriods = state.periodos.some(p => p.fechaInicio && p.fechaFin);
   const hasData = rawData.length > 0;
@@ -264,20 +270,7 @@ export function useAnalisisState(analysisId?: string) {
   const displayTitle = state.titulo.trim() || 'Análisis sin título';
   const periodsSummary = state.periodos.filter(p => p.nombre).map(p => p.nombre).join(' vs. ');
 
-  const tableRows = state.periodos.flatMap(periodo =>
-    state.indicadores.flatMap(indicId =>
-      filterByPeriod(rawData, indicId, periodo, state.sourceSelections).map(d => ({
-        date: d.date,
-        indicator: INDICATOR_MAP.get(indicId) ?? indicId,
-        period: periodo.nombre,
-        color: periodo.color,
-        value: d.value,
-        postId: d.post_id ?? '',
-        sourceName: d.data_source ?? 'Fuente',
-        status: d.status ?? 'approved',
-      }))
-    )
-  );
+  const tableRows = buildDataRows(rawData, state);
 
   return {
     // State
@@ -289,6 +282,7 @@ export function useAnalisisState(analysisId?: string) {
     onSetRegion: setRegion,
     onSetModo: setModoAlineacion,
     onSetShowBase100Line: setShowBase100Line,
+    onSelectIndexZeroIndicator: setIndexZeroIndicatorId,
     onToggleIndicator: toggleIndicator,
     onAddPeriodo: addPeriodo,
     onUpdatePeriodo: updatePeriodo,
@@ -314,9 +308,7 @@ export function useAnalisisState(analysisId?: string) {
     rawData,
     // Derived
     sourceConflicts,
-    chartSeries,
     selectedMacroEvents,
-    chartMarkers,
     // kpiRows,
     hasData,
     isConfigured,

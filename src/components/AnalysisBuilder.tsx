@@ -19,7 +19,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
   const {
     state,
     onSetTitulo, onSetDescripcion, onSetStatus, onSetRegion, onSetModo,
-    onSetShowBase100Line,
+    onSetShowBase100Line, onSelectIndexZeroIndicator,
     onToggleIndicator, onAddPeriodo, onUpdatePeriodo, onRemovePeriodo,
     onToggleMacroEvent, onSelectSource, onReset,
     macroEvents, macroEventsLoading, macroEventsSearch, setMacroEventsSearch,
@@ -27,7 +27,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     markerModeByEventId, setMarkerModeByEventId,
     markerColorByEventId, setMarkerColorByEventId,
     loading, dataError, isDraftReady, rawData,
-    sourceConflicts, chartSeries, selectedMacroEvents, chartMarkers,
+    sourceConflicts, selectedMacroEvents,
     hasData, isConfigured, displayTitle, periodsSummary, tableRows,
   } = useAnalisisState(analysisId);
 
@@ -103,9 +103,9 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
         loading={loading}
         onSetStatus={onSetStatus}
         sourceConflicts={sourceConflicts}
-        chartSeries={chartSeries}
+        rawData={rawData}
+        onSelectIndexZeroIndicator={onSelectIndexZeroIndicator}
         selectedMacroEvents={selectedMacroEvents}
-        chartMarkers={chartMarkers}
         // kpiRows={kpiRows}
         hasData={hasData}
         isConfigured={isConfigured}

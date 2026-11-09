@@ -16,6 +16,6 @@ if (!types.includes('export type Database') && !types.includes('export interface
 }
 mkdirSync(new URL('../src/types/', import.meta.url), { recursive: true });
 const temporary = fileURLToPath(output) + '.tmp';
-writeFileSync(temporary, types);
+writeFileSync(temporary, types.replace(/[\t ]+$/gm, ''));
 renameSync(temporary, output);
 console.log('Generated src/types/database.types.ts using Supabase CLI.');

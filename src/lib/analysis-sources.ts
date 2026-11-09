@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { RawPoint, SourceSelection } from '../components/analysis-builder/analysis-builder.types';
+import type { RawPoint, SourceSelection } from './analysis-types';
 
 /** Load only the original posts and observations recorded in the analysis. */
 export async function loadSavedPoints(selections: SourceSelection): Promise<{ data: RawPoint[]; error: string | null }> {

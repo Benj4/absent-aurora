@@ -11,12 +11,10 @@ import { fetchMacroEvents } from '../lib/macro-events';
 import type { MacroEvent } from '../lib/macro-events';
 import { withBase } from '../lib/paths';
 import { useAuthSession } from '../lib/use-auth-session';
-import AnalysisChart from './analysis-builder/AnalysisChart';
+import AnalysisContainer from './analysis/AnalysisContainer';
+import AnalysisSources from './analysis/AnalysisSources';
 import {
-  buildChartSeries,
-  buildBase100OverlaySeries,
-  buildMacroEventMarkers,
-  filterByPeriod,
+  buildDataRows,
   fmt,
   getDefaultMacroEventColor,
 } from './analysis-builder/analysis-builder.utils';
@@ -45,7 +43,7 @@ interface TableRow {
   value: number;
   postId: string;
   sourceName: string;
-  status?: string;
+  status: string;
 }
 
 function changeDate(value?: string | null): string {
@@ -98,6 +96,7 @@ const AnalysisViewer: FC = () => {
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [changingVisibility, setChangingVisibility] = useState(false);
   const [visibilityError, setVisibilityError] = useState('');
+  const [selectedIndicator, setSelectedIndicator] = useState<string | undefined>();
   const [selectedMode, setSelectedMode] = useState<ModoAlineacion>('calendario');
 
   // Phase 1: parallel fetch — analysis state and creator metadata
@@ -122,6 +121,7 @@ const AnalysisViewer: FC = () => {
       }
 
       setState(analysisResult);
+      setSelectedIndicator(analysisResult.indexZeroIndicatorId);
 
       if (!creatorRes.error && creatorRes.data) {
         setCreatedBy(creatorRes.data.created_by as string);
@@ -256,46 +256,12 @@ const AnalysisViewer: FC = () => {
     return {
       ...state,
       modoAlineacion: selectedMode,
+      indexZeroIndicatorId: selectedIndicator,
     };
-  }, [selectedMode, state]);
+  }, [selectedMode, selectedIndicator, state]);
 
-  const chartSeries = useMemo(() => {
-    if (!chartState) return [];
-    const base100Overlay = (chartState.showBase100Line ?? false)
-      ? buildBase100OverlaySeries(rawData, chartState)
-      : [];
-    return [...buildChartSeries(rawData, chartState), ...base100Overlay];
-  }, [chartState, rawData]);
+  const tableRows = useMemo<TableRow[]>(() => chartState ? buildDataRows(rawData, chartState) : [], [rawData, chartState]);
 
-  const chartMarkers = useMemo(() => {
-    if (!chartState) return [];
-    return buildMacroEventMarkers(
-      selectedMacroEvents,
-      chartState,
-      chartState.markerModeByEventId ?? {},
-      chartState.markerColorByEventId ?? {},
-    );
-  }, [chartState, selectedMacroEvents]);
-
-  const tableRows = useMemo<TableRow[]>(() => {
-    if (!state) return [];
-    return state.periodos.flatMap(periodo =>
-      state.indicadores.flatMap(indicId =>
-        filterByPeriod(rawData, indicId, periodo, state.sourceSelections).map(d => ({
-          date: d.date,
-          indicator: INDICATOR_MAP.get(indicId) ?? indicId,
-          period: periodo.nombre,
-          color: periodo.color,
-          value: d.value,
-          postId: d.post_id ?? '',
-          sourceName: d.data_source ?? 'Fuente',
-          status: d.status,
-        })),
-      ),
-    );
-  }, [rawData, state]);
-
-  const hasData = rawData.length > 0;
   const isAuthor = Boolean(currentUserId && createdBy && currentUserId === createdBy);
 
   // ── Loading skeleton ────────────────────────────────────────────────────────
@@ -501,16 +467,12 @@ const AnalysisViewer: FC = () => {
               Este análisis no tiene indicadores o períodos configurados.
             </p>
           </div>
-        ) : !hasData ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 text-base-content/30">
-            <p className="text-sm text-center">
-              No se encontraron datos originales para esta combinación de indicadores y fechas.
-            </p>
-          </div>
         ) : (
-          <AnalysisChart series={chartSeries} mode={selectedMode} markers={chartMarkers} />
+          <AnalysisContainer configuration={chartState!} points={rawData} events={selectedMacroEvents} onSelectIndicator={setSelectedIndicator} />
         )}
       </section>
+
+      <AnalysisSources rows={tableRows} mode={selectedMode} />
 
       {/* ── Section 3: Macro events table (read-only) ─────────────────────── */}
       {selectedMacroEvents.length > 0 && (

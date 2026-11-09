@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import type { AnalisisState } from '../components/analysis-builder/analysis-builder.types';
+import type { AnalisisState } from './analysis-types';
+import { activeIndicator, assignIndicatorColors, sanitizeState } from './analysis-chart';
 
 export interface SaveAnalysisResult {
   id: string;
@@ -29,7 +30,7 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
   const [rootRes, indicatorsRes, periodsRes, selectionsRes, eventsRes] = await Promise.all([
     supabase
       .from('analysis')
-      .select('title, description, status, alignment_mode, region, show_base100')
+      .select('title, description, status, alignment_mode, region, show_base100, chart_settings')
       .eq('id', id)
       .single(),
     supabase
@@ -82,7 +83,10 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
     if (r.marker_color) markerColorByEventId[r.macro_event_id as string] = r.marker_color as string;
   }
 
-  return {
+  const settings = root.chart_settings && typeof root.chart_settings === 'object' && !Array.isArray(root.chart_settings) ? root.chart_settings : {};
+  const configuration = sanitizeState({
+    indicatorColors: settings.indicatorColors,
+    indexZeroIndicatorId: settings.indexZeroIndicatorId,
     titulo: root.title as string,
     descripcion: (root.description as string) ?? '',
     status: (root.status as string) ?? 'draft',
@@ -95,7 +99,8 @@ export async function loadAnalysis(id: string): Promise<AnalisisState | SaveAnal
     markerModeByEventId,
     markerColorByEventId,
     showBase100Line: root.show_base100 as boolean,
-  };
+  })!;
+  return { ...configuration, indicatorColors: assignIndicatorColors(configuration), indexZeroIndicatorId: activeIndicator(configuration) };
 }
 
 /** Save the complete configuration in a single database transaction. */
@@ -111,6 +116,7 @@ async function persistAnalysis(id: string | null, state: AnalisisState): Promise
       title: state.titulo, description: state.descripcion, status: state.status,
       alignment_mode: state.modoAlineacion, region: state.region,
       show_base100: state.showBase100Line ?? false,
+      chart_settings: { indicatorColors: assignIndicatorColors(state), indexZeroIndicatorId: activeIndicator(state) ?? null },
       indicators: state.indicadores.map((indicator_id, sort_order) => ({ indicator_id, sort_order })),
       periods: state.periodos.map((period, sort_order) => ({
         id: period.id, name: period.nombre, start_date: period.fechaInicio,

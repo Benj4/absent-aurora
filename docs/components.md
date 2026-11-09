@@ -55,18 +55,20 @@ Paths in the table are relative to `src/` unless they begin with `/`.
 
 `src/components/analysis-builder/` is the most developed domain folder:
 
-- `analysis-builder.types.ts`: UI state and chart types.
-- `analysis-builder.data.ts`: indicator lookup data.
-- `analysis-builder.utils.ts`: pure transformations and chart helpers.
+- `analysis-builder.types.ts`, `analysis-builder.data.ts`, and `analysis-builder.utils.ts`: compatibility exports for shared modules in `src/lib/`.
 - `use-analisis-state.ts`: orchestration, loading, and derived state.
 - `AnalysisSidebar.tsx`: editor controls.
 - `AnalysisContent.tsx`: editable analysis canvas.
-- `AnalysisChart.tsx`: Highcharts wrapper.
+- `../analysis/AnalysisContainer.tsx`: controlled composition shared by editor and viewer, choosing `charts/CalendarChart.tsx` or `charts/IndexZeroChart.tsx`.
+- `../analysis/charts/HighchartsAdapter.tsx`: shared Highcharts lifecycle; `chart-options.ts` supplies common options and provenance tooltips.
+- `../analysis/AnalysisSources.tsx`: shared mode-aware source cards.
 - `SourceConflictResolver.tsx`: source conflict handling.
 
 `src/components/AnalysisBuilder.tsx` and `AnalysisViewer.tsx` are the public entry components for editing and reading analyses.
 
-The [calendar and index-zero separation proposal](analysis-chart-separation.md) audits the current shared renderer and defines a staged component split. It is a plan, not the implemented component map.
+The [calendar and index-zero separation proposal](analysis-chart-separation.md) records the pre-refactor investigation. The implemented boundary keeps configuration in the editor hook or viewer, neutral types in `lib/analysis-types.ts`, indicator lookup in `lib/analysis-indicators.ts`, shared preparation in `lib/analysis-chart.ts`, and mode-specific series in `lib/analysis-calendar.ts` and `lib/analysis-index-zero.ts`. Calendar colors identify indicators and period backgrounds; index zero displays one selected indicator with period-colored lines. Month offsets and optional base-100 mathematics remain independent.
+
+`analysis.chart_settings` persists indicator color assignments and the selected index-zero indicator, including when creating versions. Legacy empty settings use deterministic defaults. Viewer changes remain local. Apply the additive migration before deploying this client.
 
 ## Dependency direction
 
