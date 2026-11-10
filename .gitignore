@@ -35,3 +35,8 @@ coverage/
 
 # vitest
 .vitest/
+
+#impeccable
+.impeccable/config.local.json
+.impeccable/questions/
+.impeccable/review/

@@ -21,7 +21,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json",
     "generate:types": "tsx scripts/generate-types.ts",
-    "demo:users": "tsx scripts/demo-users.ts"
+    "demo:users": "tsx scripts/demo-users.ts",
+    "skills": "pnpm dlx skills@1.7.6"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
