@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-10T01:00:55.911049+00:00",
+  "generatedAt": "2026-11-10T15:40:18.566806+00:00",
   "title": "Design System: Absent Aurora",
   "extensions": {
     "colorMeta": {
@@ -277,7 +277,9 @@
       "Editor source inspected against the approved replacement direction; parent reviewed 1440px, 390px, and 320px layouts.",
       "Save, publication, and database integration were not verified by this documentation pass.",
       "Tonal ramps are synthesized panel swatches, not implemented application tokens.",
-      "Portable editor previews resolve the scoped light-theme palette to literal values; approximate framework hover and focus states are labeled. Application navigation retains host light/dark theme variables."
+      "Portable editor previews resolve the scoped light-theme palette to literal values; approximate framework hover and focus states are labeled. Application navigation retains host light/dark theme variables.",
+      "The approved analysis editor is the app-wide design reference. Existing views have not been migrated by this documentation update; scoped editor tokens and the editor theme boundary are unchanged.",
+      "Application light is the default; dark is selected manually in Navbar and saved as absent-aurora-theme. System color preference is ignored. The editor remains explicitly light."
     ]
   },
   "components": [
@@ -345,29 +347,37 @@
   ],
   "narrative": {
     "northStar": "Informe en construcción",
-    "overview": "The editor takes the character of a statistical publication in progress: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while the report keeps evidence and provenance visible.\n\nMaintain a persistent component baseline. The approved replacement editor establishes a restrained publication palette and a guided configuration flow; it does not replace the wider application light/dark themes. This record captures the implemented system, rather than prescribing changes to other screens.\n\nThe editor uses one compact navy row for steps and saving. Its creation/edit routes omit separate breadcrumbs and keep the page heading visually hidden. Mobile configuration/preview switching occupies a second compact row. Controls remain at least 44px high.",
+    "overview": "Absent Aurora takes the character of a statistical publication in progress. The approved analysis editor is the visual reference: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while evidence and provenance remain visible.\n\nUse this visual language across all views, including the dashboard, authentication, publications, series, events, and user workspace. New and revised screens should inherit its restrained typography, surface hierarchy, control shapes, spacing rhythm, and action hierarchy. Adapt composition to the task; the editor's guided configuration flow belongs to analysis creation and editing.\n\nThis is an app-wide design direction, not a completed migration of every screen. Outside the editor, light is the default and dark is an optional manual choice in the shared navigation. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Apply shared patterns through semantic DaisyUI roles in the active theme; palette or theme changes require a deliberate implementation in `src/styles/global.css`.",
     "keyCharacteristics": [
-      "Clear, contained controls with a persistent report surface.",
+      "Clear, contained controls with a distinct primary content surface.",
       "Contained depth: structural separation with occasional elevation.",
       "Functional color names that remain useful when palette values change.",
-      "Reusable components with explicit theme boundaries."
+      "Reusable components across views with explicit theme boundaries."
     ],
     "rules": [
       {
         "name": "The Theme Boundary Rule",
-        "body": "Resolve semantic colors in the active theme. Do not apply editor palette values to general application screens merely because they appear in this document.",
+        "body": "Carry the analysis view's visual hierarchy across all screens through semantic colors in the active theme. Keep literal editor palette values and editor-only tokens scoped until an explicit theme migration.",
         "section": "colors"
+      },
+      {
+        "name": "The Shared Composition Rule",
+        "body": "Reuse the analysis view's bounded canvas, clear content surface, compact action group, and internal separators across routes. Preserve each view's task and information hierarchy rather than copying the editor's sidebar or steps.",
+        "section": "layout"
       }
     ],
     "dos": [
       "Do reuse the existing component baseline before introducing another visual treatment.",
+      "Do use the approved analysis view as the visual reference for every new or revised screen.",
+      "Do adapt its surface, typography, control, and spacing patterns to each view's task.",
       "Do name colors by their function and update this snapshot when their source values change.",
       "Do preserve theme scope, including the editor's explicitly light theme.",
       "Do prioritize usability, readable composition, and visible data provenance.",
       "Do preserve Spanish labels and textual status explanations."
     ],
     "donts": [
-      "Don't treat the editor palette as a global application palette.",
+      "Don't hard-code the editor palette into other views or bypass active-theme semantics.",
+      "Don't copy analysis-specific steps, hidden headings, or preview switching into unrelated views.",
       "Don't introduce a separate rounded card around every report subsection.",
       "Don't assume the bundled code font is the rendered font of every monospace utility.",
       "Don't promote chart series colors or one-off utility values into brand tokens.",

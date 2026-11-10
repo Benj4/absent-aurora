@@ -72,17 +72,19 @@ components:
 
 **Creative North Star: "Informe en construcción"**
 
-The editor takes the character of a statistical publication in progress: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while the report keeps evidence and provenance visible.
+Absent Aurora takes the character of a statistical publication in progress. The approved analysis editor is the visual reference: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while evidence and provenance remain visible.
 
-Maintain a persistent component baseline. The approved replacement editor establishes a restrained publication palette and a guided configuration flow; it does not replace the wider application light/dark themes. This record captures the implemented system, rather than prescribing changes to other screens.
+Use this visual language across all views, including the dashboard, authentication, publications, series, events, and user workspace. New and revised screens should inherit its restrained typography, surface hierarchy, control shapes, spacing rhythm, and action hierarchy. Adapt composition to the task; the editor's guided configuration flow belongs to analysis creation and editing.
+
+This is an app-wide design direction, not a completed migration of every screen. Outside the editor, light is the default and dark is an optional manual choice in the shared navigation. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Apply shared patterns through semantic DaisyUI roles in the active theme; palette or theme changes require a deliberate implementation in `src/styles/global.css`.
 
 **Key Characteristics:**
-- Clear, contained controls with a persistent report surface.
+- Clear, contained controls with a distinct primary content surface.
 - Contained depth: structural separation with occasional elevation.
 - Functional color names that remain useful when palette values change.
-- Reusable components with explicit theme boundaries.
+- Reusable components across views with explicit theme boundaries.
 
-**Scope and evidence.** This is a source-based capture of `src/styles/global.css`, the shared layout and navigation, dashboard cards, analysis editor, and shared chart options. The general application uses DaisyUI light/dark themes; `AnalysisBuilder.tsx` explicitly selects the light `analysis-editor` theme. Frontmatter tokens prefixed `editor-` apply only inside that theme. They must not become implicit global defaults.
+**Scope and evidence.** The user approved the analysis view as the shared design reference. The concrete source for the captured direction is `AnalysisBuilder.tsx` and its editor components, with theme values in `src/styles/global.css`. The general application still uses DaisyUI light/dark themes; `AnalysisBuilder.tsx` explicitly selects the light `analysis-editor` theme. Frontmatter names prefixed `editor-` identify the implemented reference tokens, not a second global token namespace. Reuse their semantic roles and visual relationships across screens; their literal values remain scoped until a theme migration is implemented.
 
 The editor implementation was inspected in source. The parent build review exercised desktop (1440px), mobile (390px), and narrow (320px) layouts; this document does not independently certify all computed states. Save, publication, and database integration were not verified by this documentation pass. Sidecar snippets are portable previews, not live application integrations. The executable stylesheet and components remain authoritative when this snapshot drifts.
 
@@ -108,7 +110,7 @@ Info, success, warning, and error retain distinct semantic roles. Warning has it
 
 Chart colors encode indicators in calendar mode and periods in index-zero mode. User-assigned series colors are data configuration, not brand tokens. Invalid chart points use diamond markers and a separate fixed red outline in `chart-options.ts`; that exception is not the theme error token.
 
-**The Theme Boundary Rule.** Resolve semantic colors in the active theme. Do not apply editor palette values to general application screens merely because they appear in this document.
+**The Theme Boundary Rule.** Carry the analysis view's visual hierarchy across all screens through semantic colors in the active theme. Keep literal editor palette values and editor-only tokens scoped until an explicit theme migration.
 
 ## Typography
 
@@ -117,6 +119,8 @@ The general application inherits its sans-serif stack from the framework styles.
 JetBrains Mono Variable is bundled and explicitly assigned to `code`. Tailwind monospace utilities used by dates and values do not automatically select that font. Tabular numerals are applied to some table values and dates.
 
 The observed hierarchy uses larger, bold page and dashboard headings; regular body copy; semibold labels and card titles; and smaller muted metadata. Dashboard headings grow at the medium breakpoint. Editor section titles and summaries use the explicit sizes in frontmatter. The chart legend uses small medium-weight text; event labels are smaller still.
+
+For new and revised views, use the editor's system UI sans character and compact hierarchy as the reference: a clear page title, bold section titles, readable body copy, and smaller secondary metadata. Reserve the report-title treatment for the main content title. Keep standard form text at least 16px on mobile, and use tabular numerals where aligned values or dates aid comparison. These are shared design targets; the current global stylesheet does not yet enforce the editor's typography outside its scope.
 
 **Cascade caveat.** Unlayered editor field, button, and label rules can override utility typography. Ghost inputs and textareas are excluded from the standard field override; selects are not. Document utility declarations as intended local styling until computed styles have been checked; do not claim every requested size is rendered.
 
@@ -130,6 +134,20 @@ The configuration panel exposes only the current step: data selection; periods a
 
 Spacing is primarily the Tailwind utility scale: recurring small gaps, moderate panel padding, and larger separation between sections. There is no separate application spacing token system. Do not duplicate the framework scale as a new independent authority.
 
+**The Shared Composition Rule.** Reuse the analysis view's bounded canvas, clear content surface, compact action group, and internal separators across routes. Preserve each view's task and information hierarchy rather than copying the editor's sidebar or steps.
+
+Use these adaptations when building or revising other views:
+
+| Surface | Shared design application |
+|---|---|
+| Dashboard and catalogs | Bounded canvas, compact title/action row, consistent metadata, and restrained card borders; preserve the dashboard's responsive indicator grid. |
+| Publications, series, and analysis reader | One main reading surface with title, metadata, evidence, and sources; separate subsections with spacing and thin rules. |
+| Data-entry and event forms | Group labeled controls by task, use the reference control shapes and minimum heights, and place validation near the affected fields. |
+| User workspace and review lists | Compact filters and actions above readable rows; use textual statuses and contain horizontal table overflow. |
+| Authentication | A focused form with the same type hierarchy, labeled controls, and action variants; size its container to the shorter task. |
+
+The 1600px maximum and split configuration/report columns are editor measurements, not mandatory widths for every route. Keep a visible page title and useful breadcrumbs on other screens; the editor's hidden heading is a local response to its toolbar. Mobile layouts stack content and wrap actions; use a configuration/preview switch only for a workflow that needs it.
+
 Tables use horizontal overflow containers. The detailed data table also has a bounded scroll area and a sticky header. Chips and action rows wrap. The main navigation changes from a dropdown on small screens to horizontal links at the medium breakpoint.
 
 ## Elevation & Depth
@@ -138,15 +156,25 @@ Contained depth: structural separation with occasional elevation. The editor use
 
 The observed shadow vocabulary is the framework's small, medium, and large utilities. Exact framework shadow values are not promoted to application tokens in this capture. Do not replace this hybrid with a blanket no-shadow rule.
 
+Across new and revised views, prefer the editor's restrained tonal separation and thin borders for working and reading surfaces. Retain elevation where it communicates interaction or an overlay; avoid adding hover lift to static content just to imitate a dashboard card.
+
 ## Shapes
 
 Editor fields and buttons have gently rounded corners defined by `editor-field`; theme boxes use `editor-box`. Explicit component utilities can introduce larger corners on detailed-data panels and empty states. Pills and circular step markers coexist with rectangular controls; there is no single universal radius.
 
 Fields have thin borders. Selected soft controls have a stronger two-pixel primary border. Editor buttons and standard fields have a minimum height of 44px, rather than a fixed height; multiline labels can expand. On narrower screens, standard inputs, selects, and textareas use 16px text to avoid mobile focus zoom; the title retains its larger heading size. Title and description ghost fields have transparent backgrounds and borders with square corners.
 
+Use the reference's gently rounded fields (8px) and main surfaces (12px) as the shared shape direction. Consume active-theme radius variables rather than repeating those literals in component CSS. Maintain 44px minimum heights for primary form controls and actions when adapting other views. Existing exceptions remain implementation details until those views are revised.
+
 ## Components
 
 **Philosophy:** clear, contained controls. Reuse DaisyUI primitives directly and existing domain components. There is no separate general-purpose React button, input, or card API to import.
+
+### Reuse across views
+
+Use `btn-primary` for the main action, outline or ghost variants for secondary actions, and soft treatments for selected modes. Pair `bg-base-200` canvas regions with `bg-base-100` content surfaces, `border-base-300` separators, and `text-base-content` text resolved by the active theme. Use the theme's secondary-text treatment without applying the editor's literal neutral color to other themes. Preserve native select arrows, focus indicators, disabled states, and labels. Reuse domain components for their actual behavior; do not import `AnalysisBuilder` or apply `.analysis-editor` to unrelated pages as a styling shortcut.
+
+Treat the editor's report surface, compact actions, labeled fields, section separators, and textual feedback as reusable patterns. Its three steps, mobile preview switch, source markers, and save-state help remain analysis-specific. New shared wrappers are justified by repeated behavior or meaningful markup reuse, not visual similarity alone.
 
 ### Buttons and fields
 
@@ -155,6 +183,8 @@ Primary, outline, ghost, and soft variants express action hierarchy. In the edit
 ### Cards and navigation
 
 `IndicatorCard.tsx` combines a title, unit and frequency metadata, an optional sparkline, and text links. `Navbar.tsx` owns the shared navigation and account dropdown. The editor's results panels use bordered surfaces and compact section headings; they should not inherit the dashboard card's hover elevation by default.
+
+The navigation exposes a keyboard-accessible moon button labeled “Tema oscuro”; its pressed state indicates that dark is selected. It is available to signed-in visitors and guests at desktop and mobile widths. `Layout.astro` applies the saved theme before rendering to avoid a light-theme flash on return visits. The analysis editor retains its explicitly scoped light theme even when the surrounding shell is dark.
 
 ### Chips, statuses, and feedback
 
@@ -173,6 +203,8 @@ The shared chart is transparent against its containing surface and inherits typo
 ### Do
 
 - Do reuse the existing component baseline before introducing another visual treatment.
+- Do use the approved analysis view as the visual reference for every new or revised screen.
+- Do adapt its surface, typography, control, and spacing patterns to each view's task.
 - Do name colors by their function and update this snapshot when their source values change.
 - Do preserve theme scope, including the editor's explicitly light theme.
 - Do prioritize usability, readable composition, and visible data provenance.
@@ -180,7 +212,8 @@ The shared chart is transparent against its containing surface and inherits typo
 
 ### Don't
 
-- Don't treat the editor palette as a global application palette.
+- Don't hard-code the editor palette into other views or bypass active-theme semantics.
+- Don't copy analysis-specific steps, hidden headings, or preview switching into unrelated views.
 - Don't introduce a separate rounded card around every report subsection.
 - Don't assume the bundled code font is the rendered font of every monospace utility.
 - Don't promote chart series colors or one-off utility values into brand tokens.

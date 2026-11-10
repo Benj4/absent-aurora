@@ -7,13 +7,33 @@ const Navbar = () => {
   const { user, ready } = useAuthSession();
   const [activePath, setActivePath] = useState('/');
   const [mounted, setMounted] = useState(false);
+  const [darkTheme, setDarkTheme] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     setActivePath(stripBase(window.location.pathname));
+    setDarkTheme(document.documentElement.dataset.theme === 'dark');
 
-    return undefined;
+    const syncTheme = (event: StorageEvent) => {
+      if (event.key !== 'absent-aurora-theme' && event.key !== null) return;
+      const theme = event.newValue === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = theme;
+      setDarkTheme(theme === 'dark');
+    };
+    window.addEventListener('storage', syncTheme);
+    return () => window.removeEventListener('storage', syncTheme);
   }, []);
+
+  const toggleTheme = () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    setDarkTheme(theme === 'dark');
+    try {
+      localStorage.setItem('absent-aurora-theme', theme);
+    } catch {
+      // The selection still applies to this page when storage is unavailable.
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -27,9 +47,9 @@ const Navbar = () => {
   const isActive = (path: string) => activePath === path;
 
   return (
-    <div className="navbar bg-base-100 border-b border-base-200 px-4">
+    <div className="navbar flex-wrap gap-y-2 bg-base-100 border-b border-base-200 px-4">
       {/* Brand and mobile navigation */}
-      <div className="navbar-start">
+      <div className="navbar-start w-auto flex-1">
         <details className="dropdown md:hidden">
           <summary className="btn btn-ghost btn-sm" aria-label="Abrir navegación">☰</summary>
           <ul className="dropdown-content menu z-50 w-52 rounded-box border border-base-200 bg-base-100 p-2 shadow-lg">
@@ -76,7 +96,20 @@ const Navbar = () => {
       </div>
 
       {/* Right section */}
-      <div className="navbar-end">
+      <div className="navbar-end w-auto gap-2">
+        <button
+          type="button"
+          className="btn btn-ghost btn-square min-h-11 min-w-11"
+          aria-label="Tema oscuro"
+          aria-pressed={darkTheme}
+          title={darkTheme ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+          disabled={!mounted}
+          onClick={toggleTheme}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.9 13.1A9 9 0 0 1 10.9 3.1a9 9 0 1 0 10 10Z" />
+          </svg>
+        </button>
         {!mounted ? (
           // Server/initial render: always show login button to avoid hydration mismatch
           <a href={withBase('/login')} className="btn btn-primary btn-sm">

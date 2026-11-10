@@ -18,9 +18,17 @@ const {
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light">
 	<head>
 		<meta charset="UTF-8" />
+		<script is:inline>
+			try {
+				document.documentElement.dataset.theme =
+					localStorage.getItem('absent-aurora-theme') === 'dark' ? 'dark' : 'light';
+			} catch {
+				// Keep the default light theme when storage is unavailable.
+			}
+		</script>
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
 		<meta name="generator" content={Astro.generator} />
