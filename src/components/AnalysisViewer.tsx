@@ -1,5 +1,5 @@
 // filepath: src/components/AnalysisViewer.tsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useId } from 'react';
 import type { FC } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Analysis } from '../lib/supabase';
@@ -35,16 +35,7 @@ function versionValidity(value?: AnalysisValidity): string {
   return value.unknown || value.referencesUnverified ? 'Desconocida' : 'Válida';
 }
 
-interface TableRow {
-  date: string;
-  indicator: string;
-  period: string;
-  color: string;
-  value: number;
-  postId: string;
-  sourceName: string;
-  status: string;
-}
+type TableRow = ReturnType<typeof buildDataRows>[number];
 
 function changeDate(value?: string | null): string {
   if (!value) return 'No disponible';
@@ -98,6 +89,8 @@ const AnalysisViewer: FC = () => {
   const [visibilityError, setVisibilityError] = useState('');
   const [selectedIndicator, setSelectedIndicator] = useState<string | undefined>();
   const [selectedMode, setSelectedMode] = useState<ModoAlineacion>('calendario');
+  const [alignmentHelpOpen, setAlignmentHelpOpen] = useState(false);
+  const alignmentHelpId = useId();
 
   // Phase 1: parallel fetch — analysis state and creator metadata
   useEffect(() => {
@@ -267,8 +260,8 @@ const AnalysisViewer: FC = () => {
   // ── Loading skeleton ────────────────────────────────────────────────────────
   if (loadState === 'loading') {
     return (
-      <div className="max-w-5xl mx-auto p-5 space-y-5">
-        <div className="skeleton rounded-2xl h-40" />
+      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-10 lg:py-8">
+        <div className="skeleton rounded-box h-40 mb-5" />
         <div className="skeleton rounded-2xl" style={{ height: 420 }} />
       </div>
     );
@@ -277,10 +270,10 @@ const AnalysisViewer: FC = () => {
   // ── Error state ─────────────────────────────────────────────────────────────
   if (loadState === 'error' || !state) {
     return (
-      <div className="max-w-5xl mx-auto p-5">
-        <div className="bg-base-100 rounded-2xl border border-error/30 p-10 text-center space-y-2">
+      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-10">
+        <div className="bg-base-100 rounded-box border border-error/30 p-10 text-center space-y-2">
           <p className="font-semibold text-base-content/70">No se pudo cargar el análisis</p>
-          <p className="text-sm text-base-content/50">{errorMsg || 'El análisis no existe o ocurrió un error inesperado.'}</p>
+          <p className="text-sm text-base-content/75">{errorMsg || 'El análisis no existe o ocurrió un error inesperado.'}</p>
         </div>
       </div>
     );
@@ -289,71 +282,34 @@ const AnalysisViewer: FC = () => {
   const isConfigured = state.indicadores.length > 0 && state.periodos.some(p => p.fechaInicio && p.fechaFin);
 
   return (
-    <div className="max-w-5xl mx-auto p-5 space-y-5">
+    <div className="bg-base-200/60">
+      <article className="mx-auto max-w-7xl px-4 py-6 lg:px-10 lg:py-8">
+        <div className="rounded-box border border-base-300 bg-base-100">
 
-      {/* ── Section 1: Header card ─────────────────────────────────────────── */}
-      <section className="bg-base-100 rounded-2xl border border-base-200 p-5 lg:p-7">
+      {/* Report title, provenance, and saved configuration. */}
+      <section className="p-5 lg:p-8">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0 flex-1">
             <h1
-              className="text-2xl lg:text-3xl font-bold leading-tight tracking-tight"
+              className="break-words text-2xl lg:text-[28px] font-bold leading-tight tracking-tight"
               style={{ textWrap: 'balance' } as React.CSSProperties}
             >
               {state.titulo || 'Análisis sin título'}
             </h1>
 
-            {validity && (validity.sources.length > 0 || validity.events.length > 0) && (
-              <div className="alert alert-warning mt-3 block" role="alert">
-                <div className="flex items-center gap-2 font-semibold">
-                  <span aria-hidden="true">⚠</span>
-                  <span>Este análisis contiene fuentes o eventos invalidados.</span>
-                </div>
-                <p className="mt-1 text-sm">Sus conclusiones pueden basarse en información invalidada.</p>
-                <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
-                  {validity.sources.map(source => {
-                    const change = validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status);
-                    return <li key={source.id} className="break-words"><strong>Serie: {sourceName(source)}</strong><br />Estado: {historyStatus(source.status)}<br />Motivo: {changeReason(change?.reason)}<br />Fecha del cambio: {changeDate(change?.changed_at)}</li>;
-                  })}
-                  {validity.events.map(event => {
-                    const change = validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status);
-                    return <li key={event.id} className="break-words"><strong>Evento: {event.name?.trim() || 'Nombre no disponible'}</strong><br />Estado: {historyStatus(event.status)}<br />Motivo: {changeReason(change?.reason)}<br />Fecha del cambio: {changeDate(change?.changed_at)}</li>;
-                  })}
-                </ul>
-                <details className="mt-3"><summary className="cursor-pointer font-medium">Consultar historial de cambios</summary>
-                  {validity.history.length ? <ul className="mt-3 space-y-3 text-sm">{validity.history.map(item => {
-                    const event = validity.events.find(entry => item.record_type === 'event' && entry.id === item.record_id);
-                    const source = validity.sources.find(entry => item.record_type === 'series' && entry.id === item.record_id);
-                    const name = event ? event.name?.trim() || 'Nombre no disponible' : source ? sourceName(source) : 'Nombre no disponible';
-                    return <li key={item.id} className="rounded-lg border border-current/20 p-3 break-words">
-                      <p className="font-semibold">{item.record_type === 'event' ? 'Evento' : 'Serie'}: {name}</p>
-                      <p className="mt-1"><span className="font-medium">Cambio de estado:</span> {historyStatus(item.old_status)} → {historyStatus(item.new_status)}</p>
-                      <p className="mt-1"><span className="font-medium">Motivo:</span> {changeReason(item.reason)}</p>
-                      <p><span className="font-medium">Fecha del cambio:</span> {changeDate(item.changed_at)}</p>
-                      <p><span className="font-medium">Responsable:</span> No disponible</p>
-                    </li>;
-                  })}</ul> : <p className="mt-2 text-sm">Historial de cambios no disponible.</p>}
-                </details>
-              </div>
-            )}
-            {validity?.referencesUnverified && <p className="alert alert-warning mt-3" role="alert"><span aria-hidden="true">⚠</span> No se puede confirmar que este análisis conserve todas sus referencias originales. Solo se muestran los registros guardados; no se han reconstruido datos con el catálogo actual.</p>}
-            {validity?.unknown && <p className="alert alert-error mt-3" role="alert">No se pudo comprobar la validez de algunas fuentes. Su estado es desconocido.</p>}
-
-            {state.region && (
-              <p className="mt-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-base-200 px-2.5 py-0.5 text-xs font-medium text-base-content/60">
-                  {state.region}
-                </span>
-              </p>
-            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+              <span className="badge badge-outline">{publicationStatus(state.status)}</span>
+              {state.region && <span className="break-words text-base-content/75">{state.region}</span>}
+            </div>
 
             {state.descripcion && (
-              <p className="mt-2 text-sm text-base-content/60 max-w-2xl leading-relaxed">
+              <p className="mt-4 max-w-prose whitespace-pre-wrap break-words text-base leading-relaxed text-base-content/80">
                 {state.descripcion}
               </p>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 [&_.btn]:min-h-11">
           {isAuthor && (state.status === 'public' || state.status === 'hidden') && (
             <button type="button" className="btn btn-sm btn-outline" disabled={changingVisibility} onClick={handleVisibilityChange}>
               {changingVisibility ? 'Guardando…' : state.status === 'public' ? 'Ocultar análisis' : 'Hacer público'}
@@ -367,7 +323,7 @@ const AnalysisViewer: FC = () => {
               href={withBase(`/analisis/editar?id=${analysisId}`)}
               className="btn btn-sm btn-outline shrink-0"
             >
-              Editar
+              Editar análisis
             </a>
           )}
           {state.status === 'draft' && (isAuthor || isAdmin) && (
@@ -377,7 +333,43 @@ const AnalysisViewer: FC = () => {
           )}
           </div>
         </div>
-        <nav aria-label="Versiones del análisis" className="mt-5 space-y-4 text-sm">
+        {validity && (validity.sources.length > 0 || validity.events.length > 0) && (
+          <div className="alert alert-warning mt-3 block" role="alert">
+            <div className="flex items-center gap-2 font-semibold">
+              <span aria-hidden="true">⚠</span>
+              <span>Este análisis contiene fuentes o eventos invalidados.</span>
+            </div>
+            <p className="mt-1 text-sm">Sus conclusiones pueden basarse en información invalidada.</p>
+            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
+              {validity.sources.map(source => {
+                const change = validity.history.find(item => item.record_type === 'series' && item.record_id === source.id && item.new_status === source.status);
+                return <li key={source.id} className="break-words"><strong>Serie: {sourceName(source)}</strong><br />Estado: {historyStatus(source.status)}<br />Motivo: {changeReason(change?.reason)}<br />Fecha del cambio: {changeDate(change?.changed_at)}</li>;
+              })}
+              {validity.events.map(event => {
+                const change = validity.history.find(item => item.record_type === 'event' && item.record_id === event.id && item.new_status === event.status);
+                return <li key={event.id} className="break-words"><strong>Evento: {event.name?.trim() || 'Nombre no disponible'}</strong><br />Estado: {historyStatus(event.status)}<br />Motivo: {changeReason(change?.reason)}<br />Fecha del cambio: {changeDate(change?.changed_at)}</li>;
+              })}
+            </ul>
+            <details className="mt-3"><summary className="cursor-pointer font-medium">Consultar historial de cambios</summary>
+              {validity.history.length ? <ul className="mt-3 space-y-3 text-sm">{validity.history.map(item => {
+                const event = validity.events.find(entry => item.record_type === 'event' && entry.id === item.record_id);
+                const source = validity.sources.find(entry => item.record_type === 'series' && entry.id === item.record_id);
+                const name = event ? event.name?.trim() || 'Nombre no disponible' : source ? sourceName(source) : 'Nombre no disponible';
+                return <li key={item.id} className="rounded-lg border border-current/20 p-3 break-words">
+                  <p className="font-semibold">{item.record_type === 'event' ? 'Evento' : 'Serie'}: {name}</p>
+                  <p className="mt-1"><span className="font-medium">Cambio de estado:</span> {historyStatus(item.old_status)} → {historyStatus(item.new_status)}</p>
+                  <p className="mt-1"><span className="font-medium">Motivo:</span> {changeReason(item.reason)}</p>
+                  <p><span className="font-medium">Fecha del cambio:</span> {changeDate(item.changed_at)}</p>
+                  <p><span className="font-medium">Responsable:</span> No disponible</p>
+                </li>;
+              })}</ul> : <p className="mt-2 text-sm">Historial de cambios no disponible.</p>}
+            </details>
+          </div>
+        )}
+        {validity?.referencesUnverified && <p className="alert alert-warning mt-3" role="alert"><span aria-hidden="true">⚠</span> No se puede confirmar que este análisis conserve todas sus referencias originales. Solo se muestran los registros guardados; no se han reconstruido datos con el catálogo actual.</p>}
+        {validity?.unknown && <p className="alert alert-error mt-3" role="alert">No se pudo comprobar la validez de algunas fuentes. Su estado es desconocido.</p>}
+
+        <nav aria-label="Versiones del análisis" className="space-y-3 text-sm empty:hidden [&:not(:empty)]:mt-5">
           {versionsLoading && <p role="status">Cargando versiones vinculadas…</p>}
           {previousVersion && <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="font-semibold">Versión anterior:</span>
@@ -402,43 +394,50 @@ const AnalysisViewer: FC = () => {
         {visibilityError && <p className="mt-2 text-sm text-error" role="alert">{visibilityError}</p>}
         {deleteError && <p className="mt-2 text-sm text-error" role="alert">{deleteError}</p>}
 
-        {state.periodos.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {state.periodos.map(p => (
-              <span
-                key={p.id}
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
-                style={{
-                  backgroundColor: `${p.color}1a`,
-                  color: p.color,
-                  border: `1px solid ${p.color}40`,
-                }}
-              >
-                <span
-                  className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: p.color }}
-                  aria-hidden="true"
-                />
-                {p.nombre}
-                {p.fechaInicio && p.fechaFin && (
-                  <span className="opacity-60 font-normal">{p.fechaInicio} → {p.fechaFin}</span>
-                )}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="mt-6 grid gap-6 border-t border-base-300 pt-5 md:grid-cols-2">
+          <section aria-labelledby="analysis-indicators">
+            <h2 id="analysis-indicators" className="text-sm font-bold">Indicadores · {state.indicadores.length}</h2>
+            {state.indicadores.length ? <ul className="mt-3 space-y-2 text-sm">
+              {state.indicadores.map(id => <li key={id} className="break-words">{INDICATOR_MAP.get(id) ?? id}</li>)}
+            </ul> : <p className="mt-2 text-sm text-base-content/75">Sin indicadores configurados.</p>}
+          </section>
+          <section aria-labelledby="analysis-periods">
+            <h2 id="analysis-periods" className="text-sm font-bold">Períodos · {state.periodos.length}</h2>
+            <ul className="mt-3 space-y-3 text-sm">
+              {state.periodos.map(period => <li key={period.id} className="flex items-start gap-2">
+                <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: period.color }} aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="break-words font-semibold">{period.nombre}</p>
+                  <p className="mt-0.5 tabular-nums text-base-content/75">{period.fechaInicio || 'Sin inicio'} → {period.fechaFin || 'Sin fin'}</p>
+                </div>
+              </li>)}
+            </ul>
+          </section>
+        </div>
       </section>
 
-      {/* ── Section 2: Chart card ──────────────────────────────────────────── */}
-      <section aria-label="Gráfico comparativo" className="bg-base-100 rounded-2xl border border-base-200 p-5">
+      {/* Interactive chart controls only affect this reading session. */}
+      <section aria-label="Gráfico comparativo" className="border-t border-base-300 p-5 lg:p-8">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <h2 className="text-sm font-semibold text-base-content/60">Gráfico comparativo</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-base-content/60">Modo de alineación</span>
+          <h2 className="text-base font-bold">Gráfico comparativo</h2>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-base-content/75">Alineación</span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm min-h-11"
+                aria-label="Ayuda sobre la alineación"
+                aria-expanded={alignmentHelpOpen}
+                aria-controls={alignmentHelpId}
+                onClick={() => setAlignmentHelpOpen(open => !open)}
+              >
+                Ayuda
+              </button>
+            </div>
             <div className="join">
               <button
                 type="button"
-                className={`join-item btn btn-xs ${selectedMode === 'calendario' ? 'btn-primary' : 'btn-ghost border border-base-300'}`}
+                className={`join-item btn min-h-11 ${selectedMode === 'calendario' ? 'btn-active' : 'btn-outline'}`}
                 onClick={() => setSelectedMode('calendario')}
                 aria-pressed={selectedMode === 'calendario'}
               >
@@ -446,23 +445,28 @@ const AnalysisViewer: FC = () => {
               </button>
               <button
                 type="button"
-                className={`join-item btn btn-xs ${selectedMode === 'indice_cero' ? 'btn-primary' : 'btn-ghost border border-base-300'}`}
+                className={`join-item btn min-h-11 ${selectedMode === 'indice_cero' ? 'btn-active' : 'btn-outline'}`}
                 onClick={() => setSelectedMode('indice_cero')}
                 aria-pressed={selectedMode === 'indice_cero'}
               >
-                Índice 0
+                Índice cero
               </button>
             </div>
           </div>
         </div>
 
+        <div id={alignmentHelpId} hidden={!alignmentHelpOpen} className="mb-5 max-w-prose space-y-2 text-sm leading-relaxed text-base-content/75">
+          <p><strong>Calendario:</strong> compara los indicadores por fecha, en su unidad original. Los colores identifican cada indicador.</p>
+          <p><strong>Índice cero:</strong> compara un indicador desde el inicio de cada período. Los colores identifican los períodos.</p>
+          <p>Esta selección solo cambia la vista actual.</p>
+        </div>
         {dataError && <p role="alert" className="alert alert-error mb-4">{dataError}</p>}
         {eventError && <p role="alert" className="alert alert-error mb-4">{eventError}</p>}
-        {rawData.some(point => point.status !== 'approved') && <p className="text-sm text-warning mb-3">Los rombos identifican datos cuya fuente ya no está aprobada.</p>}
+        {rawData.some(point => point.status !== 'approved') && <p className="alert alert-warning mb-3 text-sm">Los rombos identifican datos cuya fuente ya no está aprobada.</p>}
         {dataLoading ? (
           <div className="skeleton rounded-xl" style={{ height: 360 }} />
         ) : !isConfigured ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 text-base-content/30">
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-base-content/75">
             <p className="text-sm text-center">
               Este análisis no tiene indicadores o períodos configurados.
             </p>
@@ -472,16 +476,19 @@ const AnalysisViewer: FC = () => {
         )}
       </section>
 
-      <AnalysisSources rows={tableRows} mode={selectedMode} />
+      <div className="border-t border-base-300 p-5 lg:p-8">
+        <AnalysisSources rows={tableRows} mode={selectedMode} layout="rows" />
+        {!dataLoading && !tableRows.length && <p className="text-sm text-base-content/75" role="status">No hay datos guardados disponibles para esta vista. Revisa los indicadores, los períodos y los avisos de referencias.</p>}
+      </div>
 
       {/* ── Section 3: Macro events table (read-only) ─────────────────────── */}
       {selectedMacroEvents.length > 0 && (
         <section aria-label="Tabla de eventos macro">
-          <details className="bg-base-100 rounded-2xl border border-base-200 overflow-hidden group">
-            <summary className="flex cursor-pointer select-none items-center justify-between px-5 py-4 hover:bg-base-200/40 transition-colors list-none">
-              <span className="font-semibold text-sm">Eventos macro</span>
-              <div className="flex items-center gap-2 text-xs text-base-content/40">
-                <span className="badge badge-ghost badge-sm">{selectedMacroEvents.length} eventos</span>
+          <details open className="group border-t border-base-300">
+            <summary className="flex cursor-pointer select-none items-center justify-between min-h-16 gap-3 px-5 py-4 lg:px-8 hover:bg-base-200/40 transition-colors list-none">
+              <span className="font-bold text-base">Eventos macro</span>
+              <div className="flex items-center gap-2 text-xs text-base-content/75">
+                <span className="badge badge-ghost badge-sm">{selectedMacroEvents.length} {selectedMacroEvents.length === 1 ? 'evento' : 'eventos'}</span>
                 <svg
                   aria-hidden="true"
                   className="h-4 w-4 transition-transform duration-200 group-open:rotate-180"
@@ -495,8 +502,8 @@ const AnalysisViewer: FC = () => {
               </div>
             </summary>
 
-            <div className="border-t border-base-200 overflow-x-auto">
-              <table className="table table-sm table-zebra w-full">
+            <div className="border-t border-base-300 overflow-x-auto" tabIndex={0} role="region" aria-label="Eventos macro del análisis">
+              <table className="table table-zebra w-full">
                 <thead className="bg-base-200/70">
                   <tr>
                     <th>Color</th>
@@ -521,24 +528,24 @@ const AnalysisViewer: FC = () => {
                             aria-label={`Color del evento: ${eventColor}`}
                           />
                         </td>
-                        <td className="max-w-xs">
-                          <p className="text-xs font-medium truncate" title={event.name}>
+                        <td className="min-w-48 max-w-sm">
+                          <p className="text-sm font-medium whitespace-normal break-words" title={event.name}>
                             {event.name}
                           </p>
                           {event.status === 'invalid' && <span className="badge badge-warning badge-xs">⚠ Invalidado</span>}
                         </td>
                         <td>
-                          <span className="font-mono text-xs" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          <span className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
                             {event.start_date}
                           </span>
                         </td>
                         <td>
                           {event.end_date ? (
-                            <span className="font-mono text-xs" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            <span className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
                               {event.end_date}
                             </span>
                           ) : (
-                            <span className="text-xs text-base-content/40">—</span>
+                            <span className="text-xs text-base-content/75">—</span>
                           )}
                         </td>
                         <td>
@@ -559,14 +566,14 @@ const AnalysisViewer: FC = () => {
         </section>
       )}
 
-      {/* ── Section 4: Data table (collapsible) ───────────────────────────── */}
+      {/* ── Section 4: Data table ───────────────────────────── */}
       {tableRows.length > 0 && (
         <section aria-label="Tabla de datos detallados">
-          <details className="bg-base-100 rounded-2xl border border-base-200 overflow-hidden group">
-            <summary className="flex cursor-pointer select-none items-center justify-between px-5 py-4 hover:bg-base-200/40 transition-colors list-none">
-              <span className="font-semibold text-sm">Datos detallados</span>
-              <div className="flex items-center gap-2 text-xs text-base-content/40">
-                <span className="badge badge-ghost badge-sm">{tableRows.length} registros</span>
+          <details open className="group border-t border-base-300">
+            <summary className="flex cursor-pointer select-none items-center justify-between min-h-16 gap-3 px-5 py-4 lg:px-8 hover:bg-base-200/40 transition-colors list-none">
+              <span className="font-bold text-base">Datos detallados</span>
+              <div className="flex items-center gap-2 text-xs text-base-content/75">
+                <span className="badge badge-ghost badge-sm">{tableRows.length} {tableRows.length === 1 ? 'registro' : 'registros'}</span>
                 <svg
                   aria-hidden="true"
                   className="h-4 w-4 transition-transform duration-200 group-open:rotate-180"
@@ -581,16 +588,17 @@ const AnalysisViewer: FC = () => {
             </summary>
 
             <div
-              className="border-t border-base-200 overflow-x-auto overflow-y-auto"
+              className="border-t border-base-300 overflow-x-auto overflow-y-auto"
+              tabIndex={0} role="region" aria-label="Registros del análisis"
               style={{ maxHeight: 400 }}
             >
-              <table className="table table-sm table-zebra w-full">
+              <table className="table table-zebra w-full">
                 <thead className="sticky top-0 bg-base-200 z-10">
                   <tr>
                     <th>Período</th>
                     <th>Fecha</th>
                     <th>Indicador</th>
-                    <th style={{ fontVariantNumeric: 'tabular-nums' }}>Valor</th>
+                    <th className="text-right tabular-nums">Valor</th>
                     <th>Fuente</th>
                     <th>Estado</th>
                   </tr>
@@ -600,8 +608,7 @@ const AnalysisViewer: FC = () => {
                     <tr key={i}>
                       <td>
                         <span
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold"
-                          style={{ color: row.color }}
+                          className="inline-flex min-w-24 items-center gap-1.5 text-sm font-semibold"
                         >
                           <span
                             className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
@@ -612,14 +619,14 @@ const AnalysisViewer: FC = () => {
                         </span>
                       </td>
                       <td>
-                        <span className="font-mono text-xs">{row.date}</span>
+                        <span className="whitespace-nowrap font-mono text-sm tabular-nums">{row.date}</span>
                       </td>
-                      <td className="max-w-xs">
-                        <span className="text-xs truncate block" title={row.indicator}>
+                      <td className="min-w-48 max-w-sm">
+                        <span className="text-sm whitespace-normal break-words block" title={row.indicator}>
                           {row.indicator}
                         </span>
                       </td>
-                      <td className="font-mono text-xs" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      <td className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
                         {fmt(row.value)}
                       </td>
                       <td>
@@ -634,10 +641,10 @@ const AnalysisViewer: FC = () => {
                             <span aria-hidden="true">↗</span>
                           </a>
                         ) : (
-                          <span className="text-xs text-base-content/40">—</span>
+                          <span className="text-xs text-base-content/75">—</span>
                         )}
                       </td>
-                      <td>{row.status && row.status !== 'approved' ? <span className="badge badge-warning">Sin aprobación ({row.status === 'disabled' ? 'deshabilitada' : row.status === 'rejected' ? 'rechazada' : 'pendiente'})</span> : 'Aprobada'}</td>
+                      <td>{row.status !== 'approved' ? <span className="badge badge-warning">Sin aprobación ({row.status === 'disabled' ? 'deshabilitada' : row.status === 'rejected' ? 'rechazada' : row.status === 'pending' ? 'pendiente' : 'estado desconocido'})</span> : 'Aprobada'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -647,29 +654,8 @@ const AnalysisViewer: FC = () => {
         </section>
       )}
 
-      {/* ── Empty state ────────────────────────────────────────────────────── */}
-      {!isConfigured && !dataLoading && (
-        <aside
-          className="rounded-2xl border-2 border-dashed border-base-300 p-12 text-center text-base-content/30"
-          aria-label="Análisis vacío"
-        >
-          <svg
-            aria-hidden="true"
-            className="mx-auto mb-3 h-10 w-10 opacity-40"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-          <p className="text-sm font-medium">Este análisis no contiene indicadores ni períodos configurados.</p>
-        </aside>
-      )}
+        </div>
+      </article>
     </div>
   );
 };

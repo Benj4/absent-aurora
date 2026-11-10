@@ -148,6 +148,8 @@ Use these adaptations when building or revising other views:
 
 The 1600px maximum and split configuration/report columns are editor measurements, not mandatory widths for every route. Keep a visible page title and useful breadcrumbs on other screens; the editor's hidden heading is a local response to its toolbar. Mobile layouts stack content and wrap actions; use a configuration/preview switch only for a workflow that needs it.
 
+The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active light or dark theme and does not force the editor theme.
+
 Tables use horizontal overflow containers. The detailed data table also has a bounded scroll area and a sticky header. Chips and action rows wrap. The main navigation changes from a dropdown on small screens to horizontal links at the medium breakpoint.
 
 ## Elevation & Depth

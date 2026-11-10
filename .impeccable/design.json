@@ -364,6 +364,11 @@
         "name": "The Shared Composition Rule",
         "body": "Reuse the analysis view's bounded canvas, clear content surface, compact action group, and internal separators across routes. Preserve each view's task and information hierarchy rather than copying the editor's sidebar or steps.",
         "section": "layout"
+      },
+      {
+        "name": "Analysis reader composition",
+        "body": "The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active light or dark theme and does not force the editor theme.",
+        "section": "layout"
       }
     ],
     "dos": [
