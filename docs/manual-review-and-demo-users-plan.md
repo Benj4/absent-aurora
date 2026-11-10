@@ -134,7 +134,7 @@ These are repository findings, not new runtime results. G01–G08 are retained t
 | G04 | Validation integrity migration removes legacy series update policies and replaces the content-immutability trigger. | Effective privileges after all migrations; JWT role checks on protected RPCs. |
 | G05 | Analysis viewer uses the shared auth-session hook. | Logout and refreshed roles without a page reload. |
 | G06 | `ApprovedSeriesLoader` queries approved data when mounted in the browser. | Reload after moderation; no realtime subscription or automatic refresh is promised. |
-| G07 | Automatic seed execution is disabled; packageManager and Volta pnpm declarations agree; README refers to package configuration. | Bootstrap/reset in an explicitly selected disposable environment. |
+| G07 | Automatic seed execution is disabled; the mise pnpm declaration agrees with packageManager; README refers to the tool configuration. | Bootstrap/reset in an explicitly selected disposable environment. |
 | G08 | Database guide describes annual SQL date storage and current transitions/reason requirements. | Editors cannot reactivate disabled series; admins can, and need reasons for every actual series/event change. |
 
 ## Provisioning design

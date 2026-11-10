@@ -12,7 +12,7 @@ Absent Aurora is a time-series data platform for submitting, reviewing, and visu
 
 ## Stack
 
-- Node.js and pnpm versions are specified in `package.json`.
+- Node.js and pnpm versions are specified in `mise.toml`.
 - Astro, React, TypeScript, Tailwind CSS, and DaisyUI versions are specified in `package.json`.
 - Supabase Auth and PostgreSQL.
 - Vitest for Supabase integration tests.
