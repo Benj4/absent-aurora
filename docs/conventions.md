@@ -29,7 +29,7 @@ const supabase = createClient(...);
 - **DaisyUI foundation**: Keep DaisyUI as the visual foundation. Use its component classes, such as `btn`, `input`, `card`, `alert`, and `table`, with Tailwind utilities for layout, spacing, and responsive adjustments.
 - **Style entry point**: `src/styles/global.css` imports Tailwind and registers DaisyUI. Tailwind is integrated through the Vite plugin in `astro.config.mjs`. Keep shared CSS, font declarations, and theme customizations in the global stylesheet; prefer utilities for component styling.
 - **Semantic colors**: Prefer DaisyUI roles such as `primary`, `base-100`, `base-200`, `base-content`, `success`, and `error` over fixed colors for application surfaces, text, and feedback.
-- **Themes and dark mode**: The global stylesheet explicitly enables DaisyUI’s `light` default theme and `dark` theme for the system dark preference. Keep theme configuration here. `tailwind.config.mjs` declares `darkMode: 'class'`, but the stylesheet does not explicitly load that config. Do not assume this declaration controls the active theme or Tailwind's `dark:` variant. Review the stylesheet and layout when changing theme behavior.
+- **Themes and dark mode**: The global stylesheet enables DaisyUI’s `light` default theme and `dark` theme for the system dark preference. `AnalysisBuilder.tsx` explicitly selects the light `analysis-editor` theme, whose palette and control overrides also live in the global stylesheet. There is no `tailwind.config.mjs` in the current repository. Review the stylesheet and theme scope when changing theme behavior.
 - **Forms**: Use `input`, `select`, and `textarea` directly; their borders are built in. Do not use removed `*-bordered`, `form-control`, or `label-text` classes. Use Tailwind layout utilities to group labels and controls, and allow long labels to wrap. Preserve DaisyUI’s default focus indicators.
 - **Simple composition**: Prefer DaisyUI classes directly in existing markup. Add wrappers or shared components only when they remove meaningful duplication or centralize shared behavior. Keep Tailwind for layout and specialized UI, including chart containers.
 - **Responsive grid**: The dashboard uses `grid-cols-[repeat(auto-fit,minmax(220px,1fr))]` for its indicator grid.
@@ -37,7 +37,8 @@ const supabase = createClient(...);
 
 ### Tokens, Components, and Patterns
 
-- **Tokens**: Use DaisyUI's semantic theme roles and Tailwind's utility scales as the shared base. The project does not currently define a separate application token layer or the previously documented `--theme-*` variables.
+- **CSS overrides**: Define editor-only field-border and soft-surface tokens in the scoped DaisyUI theme. Consume semantic colors and radius variables in component overrides, consolidate duplicate selectors, and preserve native control affordances and DaisyUI interaction states.
+- **Tokens**: Use DaisyUI's semantic theme roles and Tailwind's utility scales as the shared base. The editor defines scoped theme values and control overrides in `src/styles/global.css`; do not promote them to global defaults. [DESIGN.md](../DESIGN.md) records the existing visual system and its verification limits, with portable component previews in `.impeccable/design.json`. Keep these records aligned when the implemented baseline changes.
 - **Components**: Reuse existing shared and domain components. DaisyUI classes can be used directly; a dedicated React or Astro wrapper is not required for every control. Extract a component when repeated markup or behavior benefits from a shared implementation.
 - **Patterns**: Forms, filtered lists, loading indicators, errors, and empty states currently live in individual domain components. There is no separate pattern catalog. When updating these flows, follow nearby implementations and keep labels, validation, feedback, and accessibility consistent.
 
@@ -81,7 +82,6 @@ const { data: { user } } = await supabase.auth.getUser();
 ## Testing Rules
 
 - **Test creation**: Create or generate tests of any kind only when the user explicitly requests them. Existing tests may still be run under the applicable safety rules.
-- **Unit tests**: Keep isolated tests under `tests/unit/`; `pnpm test` must not contact external services.
 - **Integration tests**: Keep Supabase and RLS tests under `tests/rls/` and run them explicitly with `pnpm test:integration`.
 - **Test project only**: Integration tests require a local or dedicated Supabase test project and the safety variables documented in `.env.test.example`.
 - **Admin client**: Use `getAdminClient()` for setup and teardown only; it bypasses RLS.

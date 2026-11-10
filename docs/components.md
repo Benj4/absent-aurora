@@ -86,7 +86,7 @@ Avoid importing UI component types from `src/lib/`. If a type is shared by data 
 - Add domain UI beside the closest existing domain folder.
 - Create a new domain folder when a feature gains several related components; do not add an unrelated cluster to the root of `src/components/`.
 - Put pure parsing, validation, URL, and data-access logic in `src/lib/`.
-- Put isolated tests in `tests/unit/` and external Supabase/RLS tests in `tests/rls/`.
+- Keep Supabase/RLS integration tests in `tests/rls/`; creating tests requires an explicit user request.
 - Keep product notes and positioning under `docs/`, never inside `src/components/`.
 
 ## Known structural pressure

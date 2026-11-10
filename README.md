@@ -15,7 +15,7 @@ Absent Aurora is a time-series data platform for submitting, reviewing, and visu
 - Node.js and pnpm versions are specified in `package.json`.
 - Astro, React, TypeScript, Tailwind CSS, and DaisyUI versions are specified in `package.json`.
 - Supabase Auth and PostgreSQL.
-- Vitest for unit and Supabase integration tests.
+- Vitest for Supabase integration tests.
 - GitHub Pages deployment from the `staging` branch.
 
 ## Local setup
@@ -61,15 +61,12 @@ When the site is built for GitHub Pages, routes include the repository base path
 pnpm dev                 # development server
 pnpm build               # production build
 pnpm preview             # preview the production build
-pnpm test                # local unit tests; does not contact Supabase
-pnpm test:watch          # unit tests in watch mode
-pnpm test:ui             # unit-test UI
 pnpm test:integration    # RLS tests against an isolated Supabase test project
 pnpm generate:types      # generate official TypeScript types from the linked database
 pnpm generate:indicator-map
 ```
 
-Unit tests cover the login-first authentication flow with mocked Supabase responses. The RLS suite is intentionally isolated behind `pnpm test:integration`.
+The RLS suite is intentionally isolated behind `pnpm test:integration`.
 
 ### Supabase integration-test safety
 
@@ -84,6 +81,8 @@ The suite creates unique users for each run and deletes only posts owned by thos
 ## Documentation
 
 - [Agent instructions](AGENTS.md)
+- [Product purpose and constraints](PRODUCT.md)
+- [Visual system](DESIGN.md)
 - [Domain and component map](docs/components.md)
 - [Development conventions](docs/conventions.md)
 - [Database guide](docs/database-schema.md)

@@ -16,7 +16,7 @@ const PeriodRow: FC<{
         aria-label="Color del período"
         value={periodo.color}
         onChange={e => onChange('color', e.target.value)}
-        className="h-7 w-7 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0"
+        className="h-11 w-11 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0"
       />
       <input
         type="text"
@@ -32,12 +32,12 @@ const PeriodRow: FC<{
         <button
           type="button"
           aria-label={`Eliminar ${periodo.nombre}`}
-          className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+          className="btn btn-ghost btn-xs min-w-11 text-error hover:bg-error/10"
           onClick={onRemove}
         >✕</button>
       )}
     </div>
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
       <div>
         <label className="label py-0 pb-1">
           <span className="whitespace-normal text-xs">Inicio</span>
@@ -45,7 +45,7 @@ const PeriodRow: FC<{
         <input
           type="date"
           aria-label={`Fecha de inicio de ${periodo.nombre}`}
-          className="input input-sm w-full"
+          className="input input-sm min-w-0 w-full"
           value={periodo.fechaInicio}
           onChange={e => onChange('fechaInicio', e.target.value)}
         />
@@ -57,7 +57,7 @@ const PeriodRow: FC<{
         <input
           type="date"
           aria-label={`Fecha de fin de ${periodo.nombre}`}
-          className="input input-sm w-full"
+          className="input input-sm min-w-0 w-full"
           value={periodo.fechaFin}
           onChange={e => onChange('fechaFin', e.target.value)}
         />

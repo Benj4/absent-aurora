@@ -4,6 +4,8 @@ Absent Aurora is an Astro and Supabase application for publishing, validating, a
 
 ## Read first
 
+- Product purpose and constraints: [PRODUCT.md](PRODUCT.md)
+- Visual system and theme boundaries: [DESIGN.md](DESIGN.md)
 - Domain ownership and entry points: [docs/components.md](docs/components.md)
 - Coding and UI conventions: [docs/conventions.md](docs/conventions.md)
 - Database concepts and operational notes: [docs/database-schema.md](docs/database-schema.md)
@@ -26,14 +28,14 @@ Do not copy versions into documentation when they can be read from `package.json
 
 ## Current architecture
 
-- Astro 6 generates the route shell and the GitHub Pages build.
+- Astro generates the route shell and the GitHub Pages build.
 - React islands implement interactive forms, charts, authentication state, and data loading.
 - Supabase provides browser authentication and PostgreSQL access.
 - `src/lib/supabase.ts` is the only application client instance. Tests use isolated clients under `tests/utils/`.
 - Database interfaces are generated into `src/types/database.types.ts` and re-exported by `src/lib/supabase.ts`.
 - GitHub Pages builds from `staging`; the repository base path is added only during GitHub Actions builds.
 
-Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capture remote schema with `supabase db pull` and review generated SQL before committing. Remote migration application requires authorization. Run `pnpm generate:types` after schema changes to introspect the linked database with the official CLI.
+Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capture remote schema with `supabase db pull` and review generated SQL before committing. Remote migration application requires authorization. Run `pnpm run generate:types` after schema changes to introspect the linked database with the official CLI.
 
 ## Non-negotiable rules
 
@@ -50,7 +52,16 @@ Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capt
 11. Run project tasks only through scripts defined in `package.json`, using `pnpm run <script>`. Do not bypass them with direct executable calls or substitute servers such as `python -m http.server`. If a required task has no script, add an appropriate script to `package.json` before running it.
 12. Never leave processes started for a task running after the task ends. Track any servers, watchers, and other long-running processes you start, stop them and their child processes before the final response, and verify that they have exited. Preserve processes that were already running before the task.
 13. Whenever application behavior requires a role check, use the authenticated user's roles from the current session (`user.app_metadata.role`). Reuse `src/lib/use-auth-session.ts` and the normalization in `src/lib/auth-session.ts`; check exact role membership. Do not query `user_roles` or another database table to determine the current user's roles. Treat a missing session or missing roles as having no privileged role. Enforce protected operations in database policies as well, reading roles from the validated JWT's `app_metadata.role` via `auth.jwt()`; UI checks alone do not authorize an operation. Role changes take effect after the session token is refreshed.
-14. Create or generate tests of any kind, including unit and RLS tests, only when the user explicitly requests them. This restriction does not prevent running existing tests under the applicable safety rules.
+14. Create or generate tests of any kind only when the user explicitly requests them. This restriction does not prevent running existing tests under the applicable safety rules.
+
+## UI implementation
+
+- Use DaisyUI component classes for controls and Tailwind utilities for layout, spacing, and responsive behavior.
+- Reuse existing domain components and preserve route composition; extract shared components only for meaningful reuse or behavior.
+- Keep Tailwind integration in `astro.config.mjs` and CSS configuration in `src/styles/global.css`.
+- Define colors and radii in the active DaisyUI theme and consume its semantic variables; keep necessary editor-only tokens scoped to `analysis-editor`. Avoid repeated literal values and duplicate CSS rules.
+- Preserve DaisyUI focus indicators, dropdown arrows, disabled states, and native control behavior when adding CSS overrides.
+- Keep `DESIGN.md` and `.impeccable/design.json` aligned with visual changes. These files document the design; they are not runtime style configuration.
 
 ## Safe commands
 
@@ -61,17 +72,12 @@ pnpm run dev
 pnpm run build
 pnpm run check
 pnpm run preview
-pnpm run test
-pnpm run test:watch
-pnpm run test:ui
 pnpm run generate:types
 ```
 
-`pnpm test` runs only `tests/unit/**/*.test.ts` and never loads Supabase credentials.
-
 ### Integration tests require explicit authorization
 
-`pnpm test:integration` uses a Supabase service-role key, creates users, and mutates database rows. Run it only when all of these are true:
+`pnpm run test:integration` uses a Supabase service-role key, creates users, and mutates database rows. Run it only when all of these are true:
 
 - The task requires database integration or RLS verification.
 - `.env.test` targets a local or dedicated test project, never production.
@@ -92,8 +98,8 @@ The cleanup helper must always receive the exact user IDs created by the current
 | Change | Minimum validation |
 |---|---|
 | Documentation only | Check paths, commands, and links against the repository |
-| TypeScript, React, or Astro | `pnpm build` and relevant unit tests |
-| Generated database interfaces | `pnpm generate:types`, inspect the diff, then `pnpm build` |
+| TypeScript, React, or Astro | `pnpm run check`, `pnpm run build`, and relevant browser verification |
+| Generated database interfaces | `pnpm run generate:types`, inspect the diff, then `pnpm run build` |
 | SQL or RLS | Review all migration SQL files; run integration tests only against an isolated test project |
 | Route or domain ownership | Update `docs/components.md` |
 
@@ -104,11 +110,10 @@ The cleanup helper must always receive the exact user IDs created by the current
 - `src/components/`: shared UI and legacy domain components not yet grouped.
 - `src/lib/`: reusable application and data-access logic, not visual components.
 - `src/types/database.types.ts`: generated database declarations.
-- `tests/unit/`: isolated tests with no external services.
 - `tests/rls/`: Supabase integration tests.
 
 `docs/components.md` is a domain map, not a manually maintained full file tree. Update it only when a route, domain boundary, important entry point, or placement rule changes.
 
-**Last reviewed:** 2026-10-28
+**Last reviewed:** 2026-11-10
 
 **Package version:** 0.0.1

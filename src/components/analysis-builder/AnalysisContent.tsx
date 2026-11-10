@@ -9,7 +9,6 @@ import AnalysisContainer from '../analysis/AnalysisContainer';
 import AnalysisSources from '../analysis/AnalysisSources';
 import { sourceStatus } from '../../lib/analysis-validity';
 import SourceConflictResolver from './SourceConflictResolver';
-import type { Analysis } from '../../lib/supabase';
 
 interface TableRow {
   date: string;
@@ -38,7 +37,6 @@ interface AnalysisContentProps {
   displayTitle: string;
   periodsSummary: string;
   tableRows: TableRow[];
-  onSetStatus: React.Dispatch<React.SetStateAction<Analysis['status']>>;
   onSelectSource: (key: string, sourceId: string) => void;
   markerModeByEventId: Record<string, MacroMarkerMode>;
   setMarkerModeByEventId: React.Dispatch<React.SetStateAction<Record<string, MacroMarkerMode>>>;
@@ -61,7 +59,6 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
   displayTitle,
   periodsSummary,
   tableRows,
-  onSetStatus,
   onSelectSource,
   markerModeByEventId,
   setMarkerModeByEventId,
@@ -86,47 +83,26 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
     };
   }, []);
 
-  const statusOptions: Analysis['status'][] = ['draft', 'public', 'hidden' ];
-
   return (
     <main aria-label="Lienzo de resultados del análisis" className="flex-1 min-w-0">
-      <div className="mx-auto max-w-7xl space-y-6 p-5 lg:sticky lg:top-6 lg:px-10 lg:py-8">
+      <div className="space-y-6 rounded-xl border border-base-300 bg-base-100 p-5 lg:p-7">
         <section className="space-y-4">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-4">
+            <div className="min-w-0 w-full flex-1">
               <label htmlFor="analysis-title" className="sr-only">Título del análisis</label>
               <input id="analysis-title" className="input input-ghost h-12 w-full px-0 text-2xl font-bold lg:text-[28px]" value={state.titulo} onChange={e => onSetTitulo(e.target.value)} placeholder={displayTitle} maxLength={120} />
               <label htmlFor="analysis-description" className="sr-only">Descripción o notas</label>
               <textarea id="analysis-description" className="textarea textarea-ghost mt-2 w-full px-0 text-[15px] text-neutral" value={state.descripcion} onChange={e => onSetDescripcion(e.target.value)} placeholder="Descripción, hipótesis o notas del análisis…" maxLength={500} rows={2} />
-              {periodsSummary && <p className="text-xs text-base-content/60">{periodsSummary}</p>}
-            </div>
-            <div className="flex flex-col gap-2 items-end">
-              <div className="flex items-center gap-2 mt-2">
-                <select
-                  className="select select-sm"
-                  value={state.status}
-                  onChange={e => onSetStatus(e.target.value as Analysis['status'])}
-                  aria-label="Cambiar estado del análisis"
-                >
-                  {statusOptions.map(opt => (
-                    <option key={opt} value={opt}>{
-                      opt === 'draft' ? 'Borrador' :
-                      opt === 'public' ? 'Público' :
-                      opt === 'hidden' ? 'Oculto' : opt
-                    }</option>
-                  ))}
-                </select>
-              </div>
-              <span className="text-xs">El estado se aplicará al guardar el análisis.</span>
+              {periodsSummary && <p className="text-xs text-neutral">{periodsSummary}</p>}
             </div>
           </div>
         {state.periodos.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {state.periodos.map(p => (
-              <span key={p.id} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: `${p.color}1a`, color: p.color, border: `1px solid ${p.color}40` }}>
+              <span key={p.id} className="inline-flex items-center flex-wrap gap-1.5 max-w-full break-words text-base-content rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: `${p.color}1a`, border: `1px solid ${p.color}40` }}>
                 <span className="inline-block h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} aria-hidden="true" />
                 {p.nombre}
-                {p.fechaInicio && p.fechaFin && (<span className="opacity-60 font-normal">{p.fechaInicio} → {p.fechaFin}</span>)}
+                {p.fechaInicio && p.fechaFin && (<span className="font-normal">{p.fechaInicio} → {p.fechaFin}</span>)}
               </span>
             ))}
           </div>
@@ -141,12 +117,12 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
         />
       )}
 
-      <section aria-label="Gráfico comparativo" className="card card-border rounded-xl bg-base-100 p-5">
+      <section aria-label="Gráfico comparativo" className="border-t border-base-300 pt-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-base-content/60">Gráfico comparativo</h2>
+          <h2 className="text-sm font-semibold text-neutral">Gráfico comparativo</h2>
         </div>
         {!isConfigured ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-base-content/25">
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-neutral">
             <svg aria-hidden="true" className="h-14 w-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -162,9 +138,9 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
       <AnalysisSources rows={tableRows} mode={state.modoAlineacion} />
 
       {selectedMacroEvents.length > 0 && (
-        <section aria-label="Tabla de eventos macro seleccionados" className="card card-border rounded-xl bg-base-100 p-5">
+        <section aria-label="Tabla de eventos macro seleccionados" className="border-t border-base-300 pt-5">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-            <h2 className="text-sm font-semibold text-base-content/60">Eventos macro seleccionados</h2>
+            <h2 className="text-sm font-semibold text-neutral">Eventos macro seleccionados</h2>
             <p className="text-xs text-base-content/50">Control individual de líneas por evento</p>
           </div>
 
@@ -266,7 +242,6 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
               <table className="table table-sm table-zebra w-full">
                 <thead className="sticky top-0 bg-base-200 z-10">
                   <tr>
-                    <th></th>
                     <th>Período</th>
                     <th>Fecha</th>
                     <th>Indicador</th>
@@ -312,15 +287,6 @@ const AnalysisContent: FC<AnalysisContentProps> = ({
         </section>
       )}
 
-      {!state.titulo && state.indicadores.length === 0 && (
-        <aside className="rounded-2xl border-2 border-dashed border-base-300 p-12 text-center text-base-content/30" aria-label="Estado inicial">
-          <svg aria-hidden="true" className="mx-auto mb-3 h-10 w-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          <p className="text-sm font-medium">Comienza escribiendo el título y seleccionando indicadores en el panel de configuración.</p>
-          <p className="text-xs mt-1 opacity-70">Los resultados se actualizarán automáticamente.</p>
-        </aside>
-      )}
     </div>
   </main>
   )

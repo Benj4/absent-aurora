@@ -78,11 +78,11 @@ const IndicatorSelector: FC<{
       </button>
       {selected.length >= 5 && <p className="text-xs text-neutral">Máximo 5 indicadores.</p>}
 
-      <label className="label mb-1.5">AgregadosNN</label>
+      {selected.length > 0 && <p className="text-xs font-semibold text-neutral">Indicadores agregados</p>}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-2" aria-label="Indicadores agregados">
           {selected.map(ind => (
-            <button key={ind} type="button" className="badge badge-outline h-auto gap-2 py-1.5 text-xs"
+            <button key={ind} type="button" className="btn btn-outline h-auto max-w-full gap-2 whitespace-normal py-2 text-left text-xs"
               onClick={() => onToggle(ind)} aria-label={`Quitar ${INDICATOR_MAP.get(ind) ?? ind}`}>
               {INDICATOR_MAP.get(ind) ?? ind} <span aria-hidden="true">×</span>
             </button>

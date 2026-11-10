@@ -24,9 +24,9 @@ interface AnalysisSidebarProps {
   setMacroEventsSearch: Dispatch<SetStateAction<string>>;
   onMacroEventCreated: (event: MacroEvent) => void;
   onReset: () => void;
-  onSave: () => void;
-  isSaving: boolean;
-  saveError: string | null;
+  step: number;
+  onSetStep: (step: number) => void;
+  onPreview: () => void;
   isEditMode: boolean;
 }
 
@@ -46,9 +46,9 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
   setMacroEventsSearch,
   onMacroEventCreated,
   onReset,
-  onSave,
-  isSaving,
-  saveError,
+  step,
+  onSetStep,
+  onPreview,
   isEditMode,
 }) => {
   const [isMacroEventFormOpen, setIsMacroEventFormOpen] = useState(false);
@@ -56,20 +56,23 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
   return (
     <>
       <aside
-        aria-label="Panel de configuración del analisis"
-        className="min-w-0 flex flex-col border-b border-base-300 bg-base-100 lg:border-b-0 lg:border-r"
+        aria-label="Panel de configuración del análisis"
+        className="min-w-0 flex flex-col"
       >
-    <div className="flex items-center gap-3 px-6 py-5">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true" className="shrink-0 text-accent"><rect x="2" y="2" width="24" height="24" rx="6" fill="currentColor" /><path d="M7 19l5-6 4 3 5-8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      <h2 className="text-base font-bold">Constructor de gráficos</h2>
+    <div className="mb-6">
+      <h2 className="text-xl font-bold">{step === 1 ? 'Selecciona los datos' : step === 2 ? 'Define la comparación' : 'Da contexto al análisis'}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-neutral">{step === 1 ? 'Agrega hasta cinco indicadores para construir el gráfico.' : step === 2 ? 'Elige las fechas y cómo quieres comparar los períodos.' : 'Agrega acontecimientos económicos y sociales que ayuden a interpretar los cambios en los datos.'}</p>
     </div>
     <div className="flex-1">
-      <SidebarSection title="Datos" step={1} summary={`${state.indicadores.length} series agregadas`}>
+      <div hidden={step !== 1}>
+      <SidebarSection title="Datos" summary={state.indicadores.length === 1 ? '1 serie agregada' : `${state.indicadores.length} series agregadas`}>
         <IndicatorSelector selected={state.indicadores} onToggle={onToggleIndicator}
           region={state.region} onSetRegion={onSetRegion} />
       </SidebarSection>
 
-      <SidebarSection title="Períodos" step={2} summary={`${state.periodos.length} períodos configurados`}>
+      </div>
+      <div hidden={step !== 2}>
+      <SidebarSection title="Períodos" summary={state.periodos.length === 1 ? '1 período configurado' : `${state.periodos.length} períodos configurados`}>
         <div aria-live="polite" aria-label="Lista de períodos de análisis" className="space-y-3">
           {state.periodos.map(periodo => (
             <PeriodRow
@@ -92,7 +95,7 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         )}
       </SidebarSection>
 
-      <SidebarSection title="Métrica" step={3} summary={state.modoAlineacion === 'calendario' ? 'Calendario' : 'Índice 0'}>
+      <SidebarSection title="Métrica" summary={state.modoAlineacion === 'calendario' ? 'Calendario' : 'Índice 0'}>
         <div>
           <p className="label py-0 pb-1.5">
             <span className="whitespace-normal text-xs font-medium">Modo de alineación</span>
@@ -101,11 +104,13 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
             <button
               type="button"
               className={`btn h-auto min-h-12 w-full justify-start whitespace-normal rounded-lg px-4 py-3 text-left ${state.modoAlineacion === 'calendario' ? 'btn-soft btn-accent' : 'btn-outline'}`}
+              aria-pressed={state.modoAlineacion === 'calendario'}
               onClick={() => onSetModo('calendario')}
             ><span>Calendario<span className="mt-1 block text-xs font-normal">Valores por fecha real, en su unidad original.</span></span></button>
             <button
               type="button"
               className={`btn h-auto min-h-12 w-full justify-start whitespace-normal rounded-lg px-4 py-3 text-left ${state.modoAlineacion === 'indice_cero' ? 'btn-soft btn-accent' : 'btn-outline'}`}
+              aria-pressed={state.modoAlineacion === 'indice_cero'}
               onClick={() => onSetModo('indice_cero')}
             ><span>Índice 0<span className="mt-1 block text-xs font-normal">Compara los períodos alineando sus inicios al mes 0.</span></span></button>
           </div>
@@ -128,7 +133,9 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         </label>
       </SidebarSection>
 
-      <SidebarSection title="Datos macro" step={4} summary={`${state.macroEventIds.length} eventos seleccionados`}>
+      </div>
+      <div hidden={step !== 3}>
+      <SidebarSection title="Eventos macro" summary={`${state.macroEventIds.length} eventos seleccionados`}>
         <div className="flex flex-col flex-1 min-h-64">
           <div>
             <label htmlFor="sb-macro-search" className="label py-0 pb-1 sr-only">
@@ -219,25 +226,24 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         </button>
 
       </SidebarSection>
+      <div className="mt-5 space-y-3 text-sm text-neutral">
+        <p>{state.indicadores.length} {state.indicadores.length === 1 ? 'indicador' : 'indicadores'} · {state.periodos.filter(p => p.fechaInicio && p.fechaFin).length} {state.periodos.filter(p => p.fechaInicio && p.fechaFin).length === 1 ? 'período con fechas' : 'períodos con fechas'}</p>
+        <p>Revisa el gráfico y sus fuentes en la vista previa antes de guardar.</p>
+        <button type="button" className="btn btn-outline w-full lg:hidden" onClick={onPreview}>Revisar vista previa</button>
+      </div>
     </div>
 
-    <div className="sticky bottom-0 z-10 grid grid-cols-2 gap-3 border-t border-base-300 bg-base-100 px-6 py-4">
-      <button
-        type="button"
-        className="btn btn-primary order-2 w-full"
-        onClick={onSave}
-        disabled={isSaving}
-      >
-        {isSaving ? <span className="loading loading-spinner loading-xs" /> : null}
-        {isSaving ? 'Guardando…' : isEditMode ? 'Actualizar análisis' : 'Guardar análisis'}
-      </button>
-      {saveError && (
-        <p className="col-span-2 order-3 text-xs text-error leading-snug" role="alert">{saveError}</p>
-      )}
+      </div>
+    <div className="mt-6 space-y-4 border-t border-base-300 pt-5">
+      <div className="flex items-center gap-3">
+        {step > 1 && <button type="button" className="btn btn-outline" onClick={() => onSetStep(step - 1)}>Anterior</button>}
+        {step < 3 && <button type="button" className="btn btn-primary flex-1" onClick={() => onSetStep(step + 1)}>{step === 1 ? 'Definir períodos' : 'Agregar contexto'}</button>}
+        {step === 3 && <p className="text-xs leading-relaxed text-neutral">Guarda desde la barra superior cuando termines la revisión.</p>}
+      </div>
       {isEditMode ?
         <button
           type="button"
-          className="btn btn-outline order-1 w-full"
+          className="btn btn-ghost w-full"
           onClick={() => {
             if (window.confirm('Se perderán los cambios sin guardar. ¿Continuar?')) {
               window.location.href = withBase('/analisis/nuevo');
@@ -249,8 +255,8 @@ const AnalysisSidebar: FC<AnalysisSidebarProps> = ({
         :
         <button
           type="button"
-          className="btn btn-outline order-1 w-full"
-          onClick={onReset}
+          className="btn btn-ghost w-full"
+          onClick={() => { if (window.confirm('Se perderá la configuración actual. ¿Reiniciar el análisis?')) onReset(); }}
         >
           Reiniciar
         </button>
