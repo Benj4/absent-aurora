@@ -116,10 +116,10 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
           </details>
           </div>
         <button type="button" className="btn btn-outline shrink-0 px-3" onClick={handleSave} disabled={isSaving || !isDraftReady || loading || Boolean(dataError)}
-          aria-label={isSaving ? 'Guardando análisis' : isEditMode ? 'Actualizar análisis' : state.status === 'draft' ? 'Guardar borrador' : 'Guardar análisis'}>
+          aria-label={isSaving ? 'Guardando análisis' : isEditMode ? 'Guardar cambios' : state.status === 'draft' ? 'Guardar borrador' : 'Guardar análisis'}>
           {isSaving && <span className="loading loading-spinner loading-xs" aria-hidden="true" />}
           <span className="sm:hidden">{isSaving ? 'Guardando…' : 'Guardar'}</span>
-          <span className="hidden sm:inline">{isSaving ? 'Guardando…' : isEditMode ? 'Actualizar análisis' : state.status === 'draft' ? 'Guardar borrador' : 'Guardar análisis'}</span>
+          <span className="hidden sm:inline">{isSaving ? 'Guardando…' : isEditMode ? 'Guardar cambios' : state.status === 'draft' ? 'Guardar borrador' : 'Guardar análisis'}</span>
         </button>
         </div>
       </header>

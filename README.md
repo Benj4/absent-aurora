@@ -57,6 +57,8 @@ Run `pnpm run supabase:clean` to delete local application records without restar
 
 When the site is built for GitHub Pages, routes include the repository base path configured by Astro.
 
+Create a migration with `pnpm run supabase:migration:new <name>`.
+
 ## Commands
 
 ```bash

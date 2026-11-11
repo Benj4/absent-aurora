@@ -105,12 +105,17 @@ const PostDetail: FC = () => {
     setPostStatus(postData.status);
     setPendingStatus(postData.status);
 
-    if (postData.status !== 'pending') {
+    if (postData.status !== 'pending' || isEditor) {
       const { data: valsData, error: valsError } = await supabase
         .from('serie_validations')
         .select('id, validation_status, validation_notes, validated_at')
         .eq('post_id', postId!);
-      if (!valsError && valsData) setValidations(valsData);
+      if (valsError) {
+          setPageError('No se pudieron cargar las revisiones.');
+          setLoading(false);
+          return;
+        }
+        setValidations(valsData ?? []);
     }
 
     if (currentUser) {
@@ -128,12 +133,17 @@ const PostDetail: FC = () => {
       const userValidation = existVal ?? null;
       setExistingValidation(userValidation);
 
-      if (userValidation && postData.status === 'pending') {
+      if (userValidation && postData.status === 'pending' && !isEditor) {
         const { data: valsData, error: valsError } = await supabase
           .from('serie_validations')
           .select('id, validation_status, validation_notes, validated_at')
           .eq('post_id', postId!);
-        if (!valsError && valsData) setValidations(valsData);
+        if (valsError) {
+          setPageError('No se pudieron cargar las revisiones.');
+          setLoading(false);
+          return;
+        }
+        setValidations(valsData ?? []);
       }
     }
 
@@ -148,7 +158,7 @@ const PostDetail: FC = () => {
     }
 
     void loadData();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, isEditor, postId]);
 
   const handleStatusUpdate = async () => {
     if (!isEditor || !post || updatingRef.current || pendingStatus === postStatus || (!isAdmin && postStatus === 'disabled')) return;
@@ -344,8 +354,8 @@ const PostDetail: FC = () => {
           </div>
         )}
 
-        {/* Validaciones para publicaciones no pendientes */}
-        {post.status !== 'pending' && validations.length > 0 && (
+        {/* Reviews visible to validators or after an independent review. */}
+        {(post.status !== 'pending' || isEditor || existingValidation) && validations.length > 0 && (
           <>
             <div className="divider text-sm text-base-content/60 my-1">
               Validaciones ({validations.length})
@@ -404,26 +414,6 @@ const PostDetail: FC = () => {
                   </div>
                 </div>
 
-                {/* Pending reviews become visible after the current user votes. */}
-                {post.status === 'pending' && validations.length > 0 && (
-                  <div className="space-y-2">
-                    {validations.map((val) => (
-                      <div key={val.id} className="card bg-base-100 border border-base-200 p-3">
-                        <div className="flex items-center justify-between">
-                          <span className={`badge badge-sm ${STATUS_BADGE[val.validation_status] ?? 'badge-neutral'}`}>
-                            {STATUS_LABEL[val.validation_status] ?? val.validation_status}
-                          </span>
-                          <span className="text-xs text-base-content/50">{new Date(val.validated_at).toLocaleString('es-ES')}</span>
-                        </div>
-                        {val.validation_notes ? (
-                          <p className="text-sm pt-2">{val.validation_notes}</p>
-                        ) : (
-                          <p className="text-sm text-base-content/50 italic mt-2">Sin notas.</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </>
             ) : currentUser && currentUser.id === post.submitted_by ? (
               <p className="alert">No puedes validar tu propia publicación.</p>

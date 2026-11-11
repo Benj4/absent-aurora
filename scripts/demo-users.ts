@@ -21,7 +21,11 @@ const actors = [
 ] as const;
 type Alias = typeof actors[number][0];
 type Manifest = { version: 1; target: string; marker: string; ids: Partial<Record<Alias, string>> };
-type Credentials = Record<Alias, string>;
+// Null means an adopted account whose password remains externally managed.
+type Credentials = Record<Alias, string | null>;
+const args = process.argv.slice(2);
+if (args.some(arg => arg !== '--adopt-existing')) throw new Error('Argumento desconocido. Usa --adopt-existing para adoptar cuentas locales existentes.');
+const adoptExisting = args.includes('--adopt-existing');
 const dir = '.demo-users';
 const manifestPath = `${dir}/manifest.json`;
 const credentialsPath = `${dir}/credentials.json`;
@@ -52,7 +56,7 @@ async function main() {
   if (existsSync(manifestPath)) {
     manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
     credentials = JSON.parse(readFileSync(credentialsPath, 'utf8'));
-    if (manifest.version !== 1 || manifest.target !== fingerprint || !manifest.marker || !manifest.ids || actors.some(([alias]) => typeof credentials[alias] !== 'string')) {
+    if (manifest.version !== 1 || manifest.target !== fingerprint || !manifest.marker || !manifest.ids || actors.some(([alias]) => typeof credentials[alias] !== 'string' && credentials[alias] !== null)) {
       throw new Error('Invalid manifest, credentials, or different Supabase target.');
     }
   } else {
@@ -68,40 +72,75 @@ async function main() {
     allUsers.push(...result.data.users);
     if (result.data.users.length < 100) break;
   }
-  // Refuse every collision before creating or changing any account.
+  // Validate all identities before changing any account. Missing users can be
+  // recreated; a surviving ID with another email must never be reassigned.
+  const needsAdoption = new Set<Alias>();
   for (const [alias] of actors) {
     const found = allUsers.filter(user => user.email?.toLowerCase() === email(alias));
-    if (found.length > 1 || (found[0] && (found[0].user_metadata?.demo_marker !== manifest.marker || (manifest.ids[alias] && manifest.ids[alias] !== found[0].id))) || (manifest.ids[alias] && !found[0])) {
-      throw new Error(`Account collision or missing managed account: ${email(alias)}; no account changes made.`);
+    const previous = allUsers.find(user => user.id === manifest.ids[alias]);
+    if (found.length > 1 || (previous && previous.email?.toLowerCase() !== email(alias))) {
+      throw new Error(`Identidad incompatible para ${email(alias)}; no se modificaron cuentas.`);
+    }
+    if (found[0] && (found[0].user_metadata?.demo_marker !== manifest.marker ||
+        (manifest.ids[alias] && manifest.ids[alias] !== found[0].id))) {
+      if (!adoptExisting) {
+        throw new Error(`La cuenta ${email(alias)} no pertenece al manifiesto. Ejecuta pnpm run demo:users --adopt-existing para adoptarla conservando su contraseña. No se modificaron cuentas.`);
+      }
+      needsAdoption.add(alias);
     }
   }
   for (const [alias, role] of actors) {
     const address = email(alias);
     let user = allUsers.find(item => item.email?.toLowerCase() === address);
     if (!user) {
-      const result = await admin.auth.admin.createUser({ email: address, password: credentials[alias], email_confirm: true, user_metadata: { demo_marker: manifest.marker } });
+      credentials[alias] ??= randomBytes(24).toString('base64url');
+      save(credentialsPath, credentials);
+      const result = await admin.auth.admin.createUser({ email: address, password: credentials[alias]!, email_confirm: true, user_metadata: { demo_marker: manifest.marker } });
       must(result.error, `Create ${address}`);
       user = result.data.user!;
+    }
+    if (needsAdoption.has(alias)) {
+      // Discard obsolete stored credentials before marking the account managed.
+      credentials[alias] = null;
+      save(credentialsPath, credentials);
+      const result = await admin.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...user.user_metadata, demo_marker: manifest.marker },
+      });
+      must(result.error, `Adoptar ${address}`);
     }
     manifest.ids[alias] = user.id;
     save(manifestPath, manifest);
     const existing = await admin.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
     must(existing.error, `Read role ${address}`);
-    if (role && existing.data?.role !== role) {
+    if (role) {
       const result = await admin.from('user_roles').upsert({ user_id: user.id, role });
       must(result.error, `Assign role ${address}`);
     } else if (!role && existing.data) {
       const result = await admin.from('user_roles').delete().eq('user_id', user.id);
       must(result.error, `Remove role ${address}`);
     }
-    const client = createClient<Database>(target.origin, localAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const session = await client.auth.signInWithPassword({ email: address, password: credentials[alias] });
-    must(session.error, `Sign in ${address}`);
-    if (session.data.user?.id !== user.id || (role === null ? 'role' in session.data.user.app_metadata : session.data.user.app_metadata.role !== role)) {
-      throw new Error(`Unexpected session identity or role: ${address}`);
+    const verified = await admin.auth.admin.getUserById(user.id);
+    must(verified.error, `Verificar ${address}`);
+    const metadata = verified.data.user?.app_metadata;
+    if (!metadata || (role === null ? 'role' in metadata : metadata.role !== role)) {
+      throw new Error(`El rol de Auth no coincide para ${address}.`);
     }
-    await client.auth.signOut();
-    console.log(`${address}\t${role ?? 'no role'}\t${user.id}`);
+    const password = credentials[alias];
+    if (password !== null) {
+      const client = createClient<Database>(target.origin, localAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      try {
+        const session = await client.auth.signInWithPassword({ email: address, password });
+        must(session.error, `Iniciar sesión ${address}`);
+        if (session.data.user?.id !== user.id ||
+            (role === null ? 'role' in session.data.user.app_metadata : session.data.user.app_metadata.role !== role)) {
+          throw new Error(`Identidad o rol de sesión inesperado: ${address}`);
+        }
+      } finally {
+        const signedOut = await client.auth.signOut({ scope: 'local' });
+        must(signedOut.error, `Cerrar sesión de verificación ${address}`);
+      }
+    }
+    console.log(`${address}\t${role ?? 'sin rol'}\t${password === null ? 'contraseña conservada; rol verificado en Auth' : 'sesión verificada'}`);
   }
   console.log(`Credentials: ${credentialsPath} (owner only); manifest: ${manifestPath}`);
 }

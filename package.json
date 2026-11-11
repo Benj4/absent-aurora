@@ -15,6 +15,7 @@
     "supabase:reset": "supabase db reset --local",
     "supabase:clean": "supabase db query --file supabase/clean-local.sql",
     "supabase:query": "supabase db query --local",
+    "supabase:migration:new": "supabase migration new",
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
