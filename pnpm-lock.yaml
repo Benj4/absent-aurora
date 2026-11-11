@@ -203,6 +203,9 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
     devDependencies:
+      '@puppeteer/replay':
+        specifier: ^4.0.2
+        version: 4.0.2(puppeteer@25.16.0(yauzl@3.4.0))
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18
@@ -227,6 +230,9 @@ importers:
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
+      puppeteer:
+        specifier: ^25.16.0
+        version: 25.16.0(yauzl@3.4.0)
       supabase:
         specifier: ^3.1.0
         version: 3.1.0
@@ -239,6 +245,9 @@ importers:
       vitest:
         specifier: ^4.0.16
         version: 4.0.18(@types/node@25.2.3)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.33.0)(tsx@4.21.0)(yaml@2.9.1)
+      yauzl:
+        specifier: ^3.4.0
+        version: 3.4.0
 
 packages:
 
@@ -845,6 +854,32 @@ packages:
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
+
+  '@puppeteer/browsers@3.2.6':
+    resolution: {integrity: sha512-MJP29gVoHznmqmwhH1tlZqzfeQ3aylTpSSa6WKZXtkwYUH02i9imBmWGTyZrbnAou5paX78SE4jMAUqnEPf8ug==}
+    engines: {node: '>=22.12.0'}
+    hasBin: true
+    peerDependencies:
+      proxy-agent: '>=8.0.1'
+      yauzl: ^2.10.0 || ^3.4.0
+    peerDependenciesMeta:
+      proxy-agent:
+        optional: true
+      yauzl:
+        optional: true
+
+  '@puppeteer/replay@4.0.2':
+    resolution: {integrity: sha512-EeE0THQFSTsI2RGxWI07PURCutx9JBM8QbwlFjdykfDu0MMiBrdSmXX9eXZf5Wvo9DmtvGAimWTCZnty44NYqQ==}
+    engines: {node: '>=22.12'}
+    hasBin: true
+    peerDependencies:
+      lighthouse: '>=13.0.0'
+      puppeteer: '>=25.0.0'
+    peerDependenciesMeta:
+      lighthouse:
+        optional: true
+      puppeteer:
+        optional: true
 
   '@rolldown/binding-android-arm-eabi@1.2.14':
     resolution: {integrity: sha512-aWR+XKH9+rW7m5fWq/5360J3mHycrx/o6xZM2DQFdJnTMdyP7/WzxPjhtLbVWdKo2y612/4U1bWqb3HQhiF7vg==}
@@ -1514,6 +1549,12 @@ packages:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
     engines: {node: '>= 20.19.0'}
 
+  chromium-bidi@157.0.8090-0:
+    resolution: {integrity: sha512-KJw7IQgqXwxpJgJlEIPg5mr2ZoqA+jkTRtc5EABI7sUJ3bu3cpI7NuEBoj4Gn1AsF78CaT9So5WQWspK3/wYag==}
+    engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0'}
+    peerDependencies:
+      devtools-protocol: '*'
+
   ci-info@4.4.0:
     resolution: {integrity: sha512-77PSwercCZU2Fc4sX94eF8k8Pxte6JAwL4/ICZLFjJLqegs7kCuAsqqj/70NQF6TvDpgFjkubQB2FW2ZZddvQg==}
     engines: {node: '>=8'}
@@ -1591,6 +1632,9 @@ packages:
 
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
+
+  devtools-protocol@0.0.1704951:
+    resolution: {integrity: sha512-GQhQOs9u/Mvm1zMtJIH872JS4AskuZdUSsPNPk4ChahtWAUqgz6atEtIsMt+nO7MqF1Ic4HxII/k8Cu36JivNg==}
 
   diff@9.0.0:
     resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
@@ -1949,6 +1993,10 @@ packages:
     resolution: {integrity: sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA==}
     engines: {node: '>= 12.0.0'}
 
+  lilconfig@3.1.4:
+    resolution: {integrity: sha512-zJZyBmQhArDRefuWTypZxwDpFDIYmrj8ypSBvwGD5P13Y95s6DjzKgu4DVdGbeQa5PDEsAOCAPNk4X+QOR006w==}
+    engines: {node: '>=14'}
+
   lru-cache@11.5.3:
     resolution: {integrity: sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==}
     engines: {node: 20 || >=22}
@@ -1985,6 +2033,13 @@ packages:
 
   micromark-util-types@2.0.2:
     resolution: {integrity: sha512-Yw0ECSpJoViF1qTU4DC6NwtC4aWGt1EkzaQB8KPPyCRR8z9TWeV0HbEFGTO+ZY1wB22zmxnJqhPyTpOVCpeHTA==}
+
+  mitt@3.0.1:
+    resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
+
+  modern-tar@0.8.6:
+    resolution: {integrity: sha512-LYSks0tNVqbtez/9OB0YFP6qLRSqkdAxJWOQpVaR67lNTbj2zNLyYpowkRMia5lXLCZKzxwoxkxH2MbbBR2aEg==}
+    engines: {node: '>=18.0.0'}
 
   mrmime@2.0.1:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
@@ -2072,6 +2127,9 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
+  pend@1.2.0:
+    resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
+
   piccolore@0.1.3:
     resolution: {integrity: sha512-o8bTeDWjE086iwKrROaDf31K0qC/BENdm15/uH9usSC/uZjJOKb2YGiVHfLY4GhwsERiPI1jmwI2XrA7ACOxVw==}
 
@@ -2116,6 +2174,15 @@ packages:
 
   property-information@7.1.0:
     resolution: {integrity: sha512-TwEZ+X+yCJmYfL7TPUOcvBZ4QfoT5YenQiJuX//0th53DE6w0xxLEtfK3iyryQFddXuvkIk51EEgrJQ0WJkOmQ==}
+
+  puppeteer-core@25.16.0:
+    resolution: {integrity: sha512-VA5Pf54N8shfopNkZZXCdiiwfnnY8ZJYAMqFQRhlH5mGUhfwf53Ar770GPtdpTDLUqvQeYpIBtC9/G2Jij2IJw==}
+    engines: {node: '>=22.12.0'}
+
+  puppeteer@25.16.0:
+    resolution: {integrity: sha512-LOr3reYnxAYYfQkpopz1fQnL0LdvqhpR5U2Fu+QnwzTX2gpVTHsn91UETo5NNC1md2/oC54Zu1ChBXgZDNSP1A==}
+    engines: {node: '>=22.12.0'}
+    hasBin: true
 
   radix3@1.1.2:
     resolution: {integrity: sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA==}
@@ -2318,6 +2385,9 @@ packages:
     resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
+
+  typed-query-selector@2.12.3:
+    resolution: {integrity: sha512-/dtuMZyutHLlrxWhhC1uib00ELUr2dZ8C9B8YzZYsJmeE3V56OxRblrSM2UaF142pcMtak7ehZ6+poWGeehNIg==}
 
   typesafe-path@0.2.2:
     resolution: {integrity: sha512-OJabfkAg1WLZSqJAJ0Z6Sdt3utnbzr/jh+NAHoyWHJe8CMSy79Gm085094M9nvTPy22KzTVn5Zq5mbapCI/hPA==}
@@ -2668,6 +2738,9 @@ packages:
   vscode-uri@3.2.0:
     resolution: {integrity: sha512-m2gXo3bn0G1kT9InzMf07fTbqMbGtyckj3bH5ktLO+1Ssv+yiATZ4dhwaQv9UZWxJh6E9IFGnQyjgWVDWVBDrg==}
 
+  webdriver-bidi-protocol@1.0.1:
+    resolution: {integrity: sha512-WXWs/aXF2a6Al1Z2/V/7Gp2oPZOAAmHjJOTmv4KCXRJ122IMj3tSSMc6a4q3K4QOmhQbse/Ahr+oTVJOU2dUiw==}
+
   why-is-node-running@2.3.0:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
@@ -2679,6 +2752,18 @@ packages:
 
   ws@8.19.0:
     resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+  ws@8.22.2:
+    resolution: {integrity: sha512-/rEZ2ejown2N5gxVTHUu9bVVC7ttu0/Tgzf5hbTOixR3Fs7mbbXgn2DbdbcKgJOmpQMtrIUWivtYuVMnp/W/yA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -2717,6 +2802,10 @@ packages:
   yargs@18.2.0:
     resolution: {integrity: sha512-9OpKOLeaoNFecEp7P6iYbzze/5CqWoH7N3SMs/6y1XF4nMvFMspEGZzJ6uFi9MmQwXhyzqYoSEKO3tvA3Z/o2w==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
+
+  yauzl@3.4.0:
+    resolution: {integrity: sha512-jIH9yLR9wqr0wOS0TpBvo/g/2UgZH5qePVbjgRliiF0BYvOZyaBknKsF+x9Iht0O6sqgnB93rCICdOZFecJuDw==}
+    engines: {node: '>=12'}
 
   yocto-queue@1.2.2:
     resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
@@ -3246,6 +3335,17 @@ snapshots:
   '@oxc-project/types@0.154.0': {}
 
   '@polka/url@1.0.0-next.29': {}
+
+  '@puppeteer/browsers@3.2.6(yauzl@3.4.0)':
+    dependencies:
+      modern-tar: 0.8.6
+      yargs: 18.2.0
+    optionalDependencies:
+      yauzl: 3.4.0
+
+  '@puppeteer/replay@4.0.2(puppeteer@25.16.0(yauzl@3.4.0))':
+    optionalDependencies:
+      puppeteer: 25.16.0(yauzl@3.4.0)
 
   '@rolldown/binding-android-arm-eabi@1.2.14':
     optional: true
@@ -3911,6 +4011,12 @@ snapshots:
     dependencies:
       readdirp: 5.0.0
 
+  chromium-bidi@157.0.8090-0(devtools-protocol@0.0.1704951):
+    dependencies:
+      devtools-protocol: 0.0.1704951
+      mitt: 3.0.1
+      zod: 4.6.7
+
   ci-info@4.4.0: {}
 
   cliui@9.0.1:
@@ -3976,6 +4082,8 @@ snapshots:
   devlop@1.1.0:
     dependencies:
       dequal: 2.0.3
+
+  devtools-protocol@0.0.1704951: {}
 
   diff@9.0.0: {}
 
@@ -4288,6 +4396,8 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.33.0
       lightningcss-win32-x64-msvc: 1.33.0
 
+  lilconfig@3.1.4: {}
+
   lru-cache@11.5.3: {}
 
   magic-string@0.30.21:
@@ -4336,6 +4446,10 @@ snapshots:
   micromark-util-symbol@2.0.1: {}
 
   micromark-util-types@2.0.2: {}
+
+  mitt@3.0.1: {}
+
+  modern-tar@0.8.6: {}
 
   mrmime@2.0.1: {}
 
@@ -4408,6 +4522,8 @@ snapshots:
 
   pathe@2.0.3: {}
 
+  pend@1.2.0: {}
+
   piccolore@0.1.3: {}
 
   picocolors@1.1.1: {}
@@ -4439,6 +4555,34 @@ snapshots:
   process-ancestry@0.1.0: {}
 
   property-information@7.1.0: {}
+
+  puppeteer-core@25.16.0(yauzl@3.4.0):
+    dependencies:
+      '@puppeteer/browsers': 3.2.6(yauzl@3.4.0)
+      chromium-bidi: 157.0.8090-0(devtools-protocol@0.0.1704951)
+      devtools-protocol: 0.0.1704951
+      typed-query-selector: 2.12.3
+      webdriver-bidi-protocol: 1.0.1
+      ws: 8.22.2
+    transitivePeerDependencies:
+      - bufferutil
+      - proxy-agent
+      - utf-8-validate
+      - yauzl
+
+  puppeteer@25.16.0(yauzl@3.4.0):
+    dependencies:
+      '@puppeteer/browsers': 3.2.6(yauzl@3.4.0)
+      chromium-bidi: 157.0.8090-0(devtools-protocol@0.0.1704951)
+      devtools-protocol: 0.0.1704951
+      lilconfig: 3.1.4
+      puppeteer-core: 25.16.0(yauzl@3.4.0)
+      typed-query-selector: 2.12.3
+    transitivePeerDependencies:
+      - bufferutil
+      - proxy-agent
+      - utf-8-validate
+      - yauzl
 
   radix3@1.1.2: {}
 
@@ -4718,6 +4862,8 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
+  typed-query-selector@2.12.3: {}
+
   typesafe-path@0.2.2: {}
 
   typescript-auto-import-cache@0.3.6:
@@ -4976,6 +5122,8 @@ snapshots:
 
   vscode-uri@3.2.0: {}
 
+  webdriver-bidi-protocol@1.0.1: {}
+
   why-is-node-running@2.3.0:
     dependencies:
       siginfo: 2.0.0
@@ -4988,6 +5136,8 @@ snapshots:
       strip-ansi: 7.2.0
 
   ws@8.19.0: {}
+
+  ws@8.22.2: {}
 
   xxhash-wasm@1.1.0: {}
 
@@ -5022,6 +5172,10 @@ snapshots:
       string-width: 8.3.0
       y18n: 5.0.8
       yargs-parser: 22.0.0
+
+  yauzl@3.4.0:
+    dependencies:
+      pend: 1.2.0
 
   yocto-queue@1.2.2: {}
 

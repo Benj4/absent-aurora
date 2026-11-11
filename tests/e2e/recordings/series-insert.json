@@ -1,0 +1,901 @@
+{
+    "title": "Series-new-logout",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1563,
+            "height": 1291,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "navigate",
+            "url": "http://localhost:4321/login",
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:4321/login",
+                    "title": "Iniciar sesión · Absent Aurora"
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Correo electrónico"
+                ],
+                [
+                    "#login-email"
+                ],
+                [
+                    "xpath///*[@id=\"login-email\"]"
+                ],
+                [
+                    "pierce/#login-email"
+                ]
+            ],
+            "offsetY": 26.15625,
+            "offsetX": 194.5
+        },
+        {
+            "type": "change",
+            "value": "a-demo-author-a@example.test",
+            "selectors": [
+                [
+                    "aria/Correo electrónico"
+                ],
+                [
+                    "#login-email"
+                ],
+                [
+                    "xpath///*[@id=\"login-email\"]"
+                ],
+                [
+                    "pierce/#login-email"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "7375643a-b277-4e8a-b284-1a9da97cdc22",
+            "selectors": [
+                [
+                    "aria/Contraseña"
+                ],
+                [
+                    "#login-password"
+                ],
+                [
+                    "xpath///*[@id=\"login-password\"]"
+                ],
+                [
+                    "pierce/#login-password"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Iniciar sesión[role=\"button\"]"
+                ],
+                [
+                    "fieldset > button"
+                ],
+                [
+                    "xpath///*[@id=\"login-page\"]/astro-island/section/div/form/fieldset/button"
+                ],
+                [
+                    "pierce/fieldset > button"
+                ]
+            ],
+            "offsetY": 24.15625,
+            "offsetX": 264.5,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:4321/",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/PIB per cápita",
+                    "aria/+ Añadir serie"
+                ],
+                [
+                    "section:nth-of-type(1) > div:nth-of-type(2) astro-island:nth-of-type(2) a:nth-of-type(2)"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/section[1]/div[2]/div[2]/astro-island[2]/article/div[4]/a[2]"
+                ],
+                [
+                    "pierce/section:nth-of-type(1) > div:nth-of-type(2) astro-island:nth-of-type(2) a:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 14.5,
+            "offsetX": 37.296875,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:4321/series/annual/E02",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(1) select"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[1]/td[1]/select"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) select"
+                ]
+            ],
+            "offsetY": 21,
+            "offsetX": 282.5
+        },
+        {
+            "type": "change",
+            "value": "2026",
+            "selectors": [
+                [
+                    "aria/2026[role=\"cell\"]",
+                    "aria/[role=\"combobox\"]"
+                ],
+                [
+                    "tr:nth-of-type(1) select"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[1]/td[1]/select"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) select"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 20,
+            "offsetX": 147.546875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) input"
+                ]
+            ],
+            "offsetY": 18,
+            "offsetX": 83.546875
+        },
+        {
+            "type": "change",
+            "value": "23",
+            "selectors": [
+                [
+                    "tr:nth-of-type(4) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[4]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(4) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[3]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) input"
+                ]
+            ],
+            "offsetY": 13,
+            "offsetX": 51.546875
+        },
+        {
+            "type": "change",
+            "value": "24",
+            "selectors": [
+                [
+                    "tr:nth-of-type(3) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[3]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "2",
+            "selectors": [
+                [
+                    "tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) input"
+                ]
+            ],
+            "offsetY": 9,
+            "offsetX": 32.546875
+        },
+        {
+            "type": "change",
+            "value": "25",
+            "selectors": [
+                [
+                    "tr:nth-of-type(2) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[2]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/0.00[role=\"cell\"]",
+                    "aria/[role=\"spinbutton\"]"
+                ],
+                [
+                    "tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 17,
+            "offsetX": 37.546875
+        },
+        {
+            "type": "change",
+            "value": "26",
+            "selectors": [
+                [
+                    "aria/0.00[role=\"cell\"]",
+                    "aria/[role=\"spinbutton\"]"
+                ],
+                [
+                    "tr:nth-of-type(1) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[1]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Agregar Fila"
+                ],
+                [
+                    "div.space-y-3 > button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/button"
+                ],
+                [
+                    "pierce/div.space-y-3 > button"
+                ],
+                [
+                    "text/Agregar Fila"
+                ]
+            ],
+            "offsetY": 24,
+            "offsetX": 98.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Agregar Fila"
+                ],
+                [
+                    "div.space-y-3 > button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/button"
+                ],
+                [
+                    "pierce/div.space-y-3 > button"
+                ],
+                [
+                    "text/Agregar Fila"
+                ]
+            ],
+            "offsetY": 19,
+            "offsetX": 100.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Agregar Fila"
+                ],
+                [
+                    "div.space-y-3 > button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/button"
+                ],
+                [
+                    "pierce/div.space-y-3 > button"
+                ],
+                [
+                    "text/Agregar Fila"
+                ]
+            ],
+            "offsetY": 15,
+            "offsetX": 92.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Agregar Fila"
+                ],
+                [
+                    "div.space-y-3 > button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/button"
+                ],
+                [
+                    "pierce/div.space-y-3 > button"
+                ],
+                [
+                    "text/Agregar Fila"
+                ]
+            ],
+            "offsetY": 24,
+            "offsetX": 91.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Agregar Fila"
+                ],
+                [
+                    "div.space-y-3 > button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/button"
+                ],
+                [
+                    "pierce/div.space-y-3 > button"
+                ],
+                [
+                    "text/Agregar Fila"
+                ]
+            ],
+            "offsetY": 23,
+            "offsetX": 89.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) input"
+                ]
+            ],
+            "offsetY": 17,
+            "offsetX": 60.046875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(9) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[9]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(9) input"
+                ]
+            ],
+            "offsetY": 15,
+            "offsetX": 37.046875
+        },
+        {
+            "type": "change",
+            "value": "18",
+            "selectors": [
+                [
+                    "tr:nth-of-type(9) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[9]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(9) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(8) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[8]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(8) input"
+                ]
+            ],
+            "offsetY": 13,
+            "offsetX": 29.046875
+        },
+        {
+            "type": "change",
+            "value": "19",
+            "selectors": [
+                [
+                    "tr:nth-of-type(8) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[8]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(8) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(7) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[7]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(7) input"
+                ]
+            ],
+            "offsetY": 27,
+            "offsetX": 20.046875
+        },
+        {
+            "type": "change",
+            "value": "20",
+            "selectors": [
+                [
+                    "tr:nth-of-type(7) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[7]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(7) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(6) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[6]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(6) input"
+                ]
+            ],
+            "offsetY": 3,
+            "offsetX": 29.046875
+        },
+        {
+            "type": "change",
+            "value": "21",
+            "selectors": [
+                [
+                    "tr:nth-of-type(6) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[6]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(6) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/0.00[role=\"cell\"]",
+                    "aria/[role=\"spinbutton\"]"
+                ],
+                [
+                    "tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) input"
+                ]
+            ],
+            "offsetY": 14,
+            "offsetX": 40.046875
+        },
+        {
+            "type": "change",
+            "value": "22",
+            "selectors": [
+                [
+                    "aria/0.00[role=\"cell\"]",
+                    "aria/[role=\"spinbutton\"]"
+                ],
+                [
+                    "tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[3]/div/table/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/tr:nth-of-type(5) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Enviar Datos de Series"
+                ],
+                [
+                    "form > div.flex-col button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[4]/div/button"
+                ],
+                [
+                    "pierce/form > div.flex-col button"
+                ],
+                [
+                    "text/Enviar Datos"
+                ]
+            ],
+            "offsetY": 22,
+            "offsetX": 83
+        },
+        {
+            "type": "change",
+            "value": "Ajemplo 20s",
+            "selectors": [
+                [
+                    "aria/Fuente de Datos *"
+                ],
+                [
+                    "label:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[2]/label[1]/input"
+                ],
+                [
+                    "pierce/label:nth-of-type(1) > input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "https>?",
+            "selectors": [
+                [
+                    "aria/URL de la Fuente (opcional)"
+                ],
+                [
+                    "label:nth-of-type(2) > input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[2]/label[2]/input"
+                ],
+                [
+                    "pierce/label:nth-of-type(2) > input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "/",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "https://www.example.com",
+            "selectors": [
+                [
+                    "aria/URL de la Fuente (opcional)"
+                ],
+                [
+                    "label:nth-of-type(2) > input"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[2]/label[2]/input"
+                ],
+                [
+                    "pierce/label:nth-of-type(2) > input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Tab"
+        },
+        {
+            "type": "keyUp",
+            "key": "Tab",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "descripcion de ejemplo",
+            "selectors": [
+                [
+                    "aria/Notas (opcional)"
+                ],
+                [
+                    "textarea"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[2]/label[3]/textarea"
+                ],
+                [
+                    "pierce/textarea"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Enviar Datos de Series"
+                ],
+                [
+                    "form > div.flex-col button"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[4]/div/button"
+                ],
+                [
+                    "pierce/form > div.flex-col button"
+                ],
+                [
+                    "text/Enviar Datos"
+                ]
+            ],
+            "offsetY": 28,
+            "offsetX": 85
+        },
+        {
+            "type": "waitForElement",
+            "target": "main",
+            "selectors": [
+                "text/✓ ¡Datos enviados"
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Ver publicación"
+                ],
+                [
+                    "main a"
+                ],
+                [
+                    "xpath//html/body/div/main/section/div/div/astro-island/div/form/div[4]/div[3]/a"
+                ],
+                [
+                    "pierce/main a"
+                ],
+                [
+                    "text/Ver publicación"
+                ]
+            ],
+            "offsetY": 15,
+            "offsetX": 44.5,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:4321/post?id=7de9f3a4-6333-4243-8df9-67f17bb0ba4d",
+                    "title": "Detalle de Publicación"
+                }
+            ]
+        },
+        {
+            "type": "waitForElement",
+            "target": "main",
+            "selectors": [
+                "text/Pendiente"
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "div.navbar-end > div"
+                ],
+                [
+                    "xpath//html/body/div/astro-island[2]/div/div[3]/div"
+                ],
+                [
+                    "pierce/div.navbar-end > div"
+                ]
+            ],
+            "offsetY": 13.5,
+            "offsetX": 163
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Cerrar sesión"
+                ],
+                [
+                    "div.navbar-end > div button"
+                ],
+                [
+                    "xpath//html/body/div/astro-island[2]/div/div[3]/div/ul/li[4]/button"
+                ],
+                [
+                    "pierce/div.navbar-end > div button"
+                ],
+                [
+                    "text/Cerrar sesión"
+                ]
+            ],
+            "offsetY": 18.5,
+            "offsetX": 76,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:4321/login",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "waitForElement",
+            "target": "main",
+            "selectors": [
+                "aria/Iniciar sesión[role=\"heading\"]",
+                "#login-title",
+                "xpath///*[@id=\"login-title\"]",
+                "pierce/#login-title"
+            ]
+        }
+    ]
+}

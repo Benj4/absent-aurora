@@ -13,6 +13,7 @@
     "supabase:status": "supabase status",
     "supabase:migrate": "supabase migration up",
     "supabase:reset": "supabase db reset --local",
+    "supabase:clean": "supabase db query --file supabase/clean-local.sql",
     "supabase:query": "supabase db query --local",
     "astro": "astro",
     "test": "vitest run",
@@ -22,7 +23,13 @@
     "generate:indicator-map": "node scripts/generate-indicator-map.js src/data/names.json",
     "generate:types": "tsx scripts/generate-types.ts",
     "demo:users": "tsx scripts/demo-users.ts",
-    "skills": "pnpm dlx skills@1.7.6"
+    "skills": "pnpm dlx skills@1.7.6",
+    "e2e:install": "puppeteer browsers install chrome",
+    "e2e:replay": "node scripts/e2e-replay.mjs",
+    "e2e:replaytest": "node scripts/e2e-replay.mjs tests/e2e/recordings/series-insert.json",
+    "e2e:test": "vitest run --config vitest.e2e.config.ts",
+    "e2e:check": "node --check scripts/e2e-replay.mjs && node --check scripts/e2e-replay-logging.mjs && node --check scripts/e2e-preflight.mjs && node --check scripts/e2e-env.mjs && node --check scripts/e2e-browser.mjs && node --check scripts/e2e-doctor.mjs && node --check scripts/e2e-global-setup.mjs && node --check scripts/e2e-setup.mjs",
+    "e2e:doctor": "node scripts/e2e-doctor.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -39,6 +46,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@puppeteer/replay": "^4.0.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -47,9 +55,11 @@
     "daisyui": "^5.5.19",
     "dotenv": "^17.2.3",
     "postcss": "^8.5.6",
+    "puppeteer": "^25.16.0",
     "supabase": "^3.1.0",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.19.2",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.16",
+    "yauzl": "^3.4.0"
   }
 }

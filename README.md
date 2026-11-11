@@ -34,6 +34,8 @@ PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
 For a local Supabase environment, install and start Docker, then run `pnpm run supabase:start`. Use the local API URL and anonymous key shown by `pnpm run supabase:status` in `.env.local`; this file takes precedence over `.env` and is ignored by Git. Run `pnpm run supabase:stop` when finished. The first start downloads the container images and applies the migrations. Automatic seeding is disabled; no seed file is provided.
+
+Run `pnpm run supabase:clean` to delete local application records without restarting containers. It preserves Auth users and their roles, the current schema and migration history, and does not remove Storage objects or other Supabase service data. This operation cannot be undone. Use `pnpm run supabase:reset` instead to recreate the local database and reapply migrations; it recreates the PostgreSQL container and restarts dependent services.
 ## Useful routes
 
 | Route | Purpose |
@@ -105,3 +107,11 @@ Create subsequent changes with `pnpm exec supabase migration new <name>`, edit t
 Run `pnpm generate:types` after schema changes to refresh `src/types/database.types.ts` using the official CLI. Use `pnpm generate:types --local` for a running local database after applying migrations. Commit the generated file; builds do not require CLI authentication. The singleton client uses `createClient<Database>` and exports table aliases and the official `Tables`, `TablesInsert`, `TablesUpdate`, and `Enums` helpers. `pnpm check` validates TypeScript and also runs in CI before building.
 
 Official reference: [Supabase TypeScript generation](https://supabase.com/docs/guides/api/rest/generating-types).
+
+## Manual browser E2E
+
+Chrome Recorder baselines and AI-derived Puppeteer cases are isolated from unit tests and CI. See [the manual workflow](docs/e2e.md). Execute only on human request with `pnpm run e2e:replay <recording.json>` or `pnpm run e2e:test`.
+
+Set `E2E_BASE_URL=http://localhost:4321/` in `.env.local` (also documented in `.env.example`); the E2E tools load `.env.local` before `.env`, with shell variables taking precedence. Supabase availability is checked through its public JWKS endpoint without Docker CLI access.
+
+Run `pnpm run e2e:doctor` to check the running Astro application, its local Supabase configuration and services, and Chrome launch/cleanup without executing recorded actions. Start services manually; failed prerequisites show the commands needed to fix them.

@@ -45,6 +45,8 @@ Paths in the table are relative to `src/` unless they begin with `/`.
 
 ### Supabase and generated types
 
+- `src/pages/e2e-environment.json.ts`: public configuration metadata used by manual E2E prerequisite checks in development and static preview; exposes the Supabase URL, never keys or session state. Tooling and browser ownership live in `scripts/e2e-*.mjs`; see `docs/e2e.md`.
+
 - `src/lib/supabase.ts`: singleton application client and database-type re-exports.
 - `src/types/database.types.ts`: generated table interfaces; never edit manually.
 - `scripts/generate-types.ts`: official Supabase CLI type-generation wrapper.

@@ -40,3 +40,6 @@ coverage/
 .impeccable/config.local.json
 .impeccable/questions/
 .impeccable/review/
+
+# Manual browser artifacts
+.e2e-artifacts/
