@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { MacroEvent, MacroEventTopic } from '../../lib/macro-events';
+import EventCorrections from './EventCorrections';
 
 const TOPICS: Record<MacroEventTopic, string> = {
   politics: 'Política', economy: 'Economía', nature: 'Naturaleza', health: 'Salud', social: 'Social',
@@ -38,13 +39,13 @@ function Description({ description }: { description: string | null }) {
 
 interface Props {
   event: MacroEvent;
-  original: MacroEvent | null;
-  corrections: MacroEvent[];
+  original: Pick<MacroEvent, 'id' | 'name'> | null;
+  correctionCount: number;
   onFollowEvent: (id: string) => void;
   actions?: ReactNode;
 }
 
-export default function MacroEventCard({ event, original, corrections, onFollowEvent, actions }: Props) {
+export default function MacroEventCard({ event, original, correctionCount, onFollowEvent, actions }: Props) {
   const geography = [event.geo_scope, event.geo_region].filter(Boolean).join(' · ');
   return (
     <article id={`event-${event.id}`} tabIndex={-1} aria-labelledby={`event-title-${event.id}`} className="card min-w-0 scroll-mt-4 border border-base-300 bg-base-100 target:ring-2 target:ring-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
@@ -82,23 +83,12 @@ export default function MacroEventCard({ event, original, corrections, onFollowE
         </div>
       </div>
 
-      {(event.corrects_event_id || corrections.length > 0) && <div className="rounded-b-box border-t border-base-300 bg-base-200/30 px-5 py-3 text-sm sm:px-6">
+      {(event.corrects_event_id || correctionCount > 0) && <div className="rounded-b-box border-t border-base-300 bg-base-200/30 px-5 py-3 text-sm sm:px-6">
         {event.corrects_event_id && <p className="py-1 wrap-anywhere">
           <span className="font-semibold">Corrección de: </span>
           {original ? <a className="link link-primary" href={`#event-${original.id}`} onClick={() => onFollowEvent(original.id)}>{original.name || 'Sin nombre'}</a> : <span className="text-base-content/70">Evento original no disponible.</span>}
         </p>}
-        {corrections.length > 0 && <details className="group">
-          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">
-            <span>{corrections.length === 1 ? 'Tiene 1 corrección' : `Tiene ${corrections.length} correcciones`}</span>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4 shrink-0 group-open:rotate-180"><path d="m6 9 6 6 6-6" /></svg>
-          </summary>
-          <ul className="space-y-3 pb-2">
-            {corrections.map(correction => <li key={correction.id} className="wrap-anywhere">
-              <a className="link link-primary" href={`#event-${correction.id}`} onClick={() => onFollowEvent(correction.id)}>{correction.name || 'Sin nombre'}</a>
-              <span className="mt-1 block text-xs text-base-content/70">Creada el {formatDate(correction.created_at)}{correction.status === 'invalid' ? ' · Invalidada' : ''}</span>
-            </li>)}
-          </ul>
-        </details>}
+        {correctionCount > 0 && <EventCorrections id={event.id} count={correctionCount} onFollowEvent={onFollowEvent} />}
       </div>}
     </article>
   );

@@ -357,7 +357,12 @@
     "rules": [
       {
         "name": "Event correction provenance",
-        "body": "Correction provenance occupies a subdued region at the bottom of an event card: the immediate predecessor is labeled “Corrección de”, and an initially closed disclosure shows the number of direct corrections. Expanding it reveals their links, creation dates, and invalidity when applicable. These links clear the status filter and focus the linked event; URL fragments support direct access and a primary-colored ring highlights the target. The creation form identifies the event being corrected before submission. Correction relationships remain separate from validity badges.",
+        "body": "Correction provenance occupies a subdued region at the bottom of an event card: the immediate predecessor is labeled “Corrección de”, and an initially closed disclosure shows the number of all direct corrections. Expanding it loads links, creation dates and invalidity on demand, with additional pages available. Links focus their target; targets outside the loaded results appear in a separately labeled linked-event section that preserves the active filters. URL fragments support direct access and a primary-colored ring highlights the target. The creation form identifies the event being corrected before submission. Correction relationships remain separate from validity badges. Browser verification of the new filter and pagination controls is pending.",
+        "section": "layout"
+      },
+      {
+        "name": "Event catalog filters and pagination",
+        "body": "The catalog toolbar groups status, topic, geographic scope and region in a responsive four-column grid. A second row provides either independent inclusive Desde/Hasta bounds or a specific date. Explicit Aplicar filtros and Limpiar filtros actions reset the 20-event page; Cargar más appends up to 20 matches. Loading, validation, empty and retry states stay within the affected region. Dates describe event occurrence, including overlapping periods, rather than record creation. Name search is deferred.",
         "section": "layout"
       },
       {

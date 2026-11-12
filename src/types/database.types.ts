@@ -300,8 +300,24 @@ isOneToOne: false
 "has_authorized_role":
 { Args: { "allowed": (string)[] }; Returns: boolean
                            },
+"macro_event_context":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "correction_count": number,"event_id": string,"original_name": string
+            }[]
+                           },
+"macro_event_locations":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "field": string,"value": string
+            }[]
+                           },
+"normalize_event_location":
+{ Args: { "value": string }; Returns: string
+                           },
 "save_analysis":
 { Args: { "p_config": Json,"p_id": string }; Returns: string
+                           },
+"search_macro_events":
+{ Args: { "p_cursor_date"?: string,"p_cursor_id"?: string,"p_from"?: string,"p_region"?: string,"p_scope"?: string,"p_status"?: string,"p_topic"?: Database["public"]['Enums']["macro_event_topic"],"p_until"?: string }; Returns: Json
                            }
           }
           Enums: {
