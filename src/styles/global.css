@@ -21,6 +21,37 @@ code {
   font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
 }
 
+/* The event catalog follows the analysis reader and keeps the active theme. */
+.events-catalog {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+.events-catalog .btn {
+  min-height: 44px;
+  height: auto;
+  border-radius: var(--radius-field);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.events-catalog .input,
+.events-catalog .select,
+.events-catalog .textarea {
+  min-width: 0;
+  min-height: 44px;
+  border-radius: var(--radius-field);
+  font-size: 16px;
+}
+
+@media (min-width: 1024px) {
+  .events-catalog .input,
+  .events-catalog .select,
+  .events-catalog .textarea {
+    font-size: 14px;
+  }
+}
+
 /* Reference palette scoped to the analysis editor. */
 @plugin "daisyui/theme" {
   name: "analysis-editor";

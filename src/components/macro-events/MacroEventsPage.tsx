@@ -1,34 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MacroEvent, MacroEventTopic } from '../../lib/macro-events';
+import type { MacroEvent } from '../../lib/macro-events';
 import { changeMacroEventStatus, deleteMacroEvent, fetchMacroEvents } from '../../lib/macro-events';
 import { useAuthSession } from '../../lib/use-auth-session';
 import MacroEventForm from './MacroEventForm';
-
-const TOPIC: Record<MacroEventTopic, string> = {
-  politics: 'Política', economy: 'Economía', nature: 'Naturaleza', health: 'Salud', social: 'Social',
-};
-
-function fmtDate(raw: string | null): string {
-  if (!raw) return '—';
-  const [year, month, day] = raw.split('-').map(Number);
-  return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
-    .format(new Date(Date.UTC(year, month - 1, day)));
-}
-
-function EventDescription({ description }: { description: string | null }) {
-  const [expanded, setExpanded] = useState(false);
-  const text = description?.trim() || 'Sin descripción.';
-  const limit = 240;
-  const truncated = text.length > limit;
-  const excerpt = truncated ? text.slice(0, limit).replace(/\s+\S*$/, '').trimEnd() || text.slice(0, limit) : text;
-
-  return (
-    <div className="mt-2 text-sm">
-      <p className="whitespace-pre-wrap break-words">{expanded || !truncated ? text : `${excerpt}…`}</p>
-      {truncated && <button type="button" className="link link-primary mt-1" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos' : 'Ver más'}</button>}
-    </div>
-  );
-}
+import MacroEventCard from './MacroEventCard';
 
 export default function MacroEventsPage() {
   const { user } = useAuthSession();
@@ -40,6 +15,7 @@ export default function MacroEventsPage() {
   const [fetchError, setFetchError] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'valid' | 'invalid'>('all');
+  const [linkedEventId, setLinkedEventId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [correction, setCorrection] = useState<MacroEvent | null>(null);
   const [statusTarget, setStatusTarget] = useState<MacroEvent | null>(null);
@@ -65,6 +41,33 @@ export default function MacroEventsPage() {
     }
   }, []);
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    function followHash() {
+      if (window.location.hash.startsWith('#event-')) {
+        setFilter('all');
+        setLinkedEventId(window.location.hash.slice('#event-'.length));
+      }
+    }
+    followHash();
+    window.addEventListener('hashchange', followHash);
+    return () => window.removeEventListener('hashchange', followHash);
+  }, []);
+
+  useEffect(() => {
+    if (!linkedEventId || loading || fetchError) return;
+    const target = document.getElementById(`event-${linkedEventId}`);
+    if (target) {
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: 'start' });
+      setLinkedEventId(null);
+    }
+  }, [linkedEventId, loading, fetchError, filter, events]);
+
+  function followEvent(id: string) {
+    setFilter('all');
+    setLinkedEventId(id);
+  }
 
   function openStatus(event: MacroEvent) {
     setActionError(null);
@@ -107,7 +110,7 @@ export default function MacroEventsPage() {
       setDeleteTarget(null);
       await load();
     } catch {
-      setActionError('No se pudo eliminar el evento. Los eventos usados en un análisis no se pueden eliminar; comprueba también tus permisos.');
+      setActionError('No se pudo eliminar el evento. Los eventos usados en un análisis o con correcciones vinculadas no se pueden eliminar; comprueba también tus permisos.');
       deleteDialog.current?.close();
       setDeleteTarget(null);
     } finally {
@@ -117,40 +120,49 @@ export default function MacroEventsPage() {
   }
 
   const visible = filter === 'all' ? events : events.filter(event => event.status === filter);
+  const eventsById = new Map(events.map(event => [event.id, event]));
+  const correctionsByEvent = new Map<string, MacroEvent[]>();
+  for (const event of events) {
+    if (!event.corrects_event_id) continue;
+    const corrections = correctionsByEvent.get(event.corrects_event_id) ?? [];
+    corrections.push(event);
+    correctionsByEvent.set(event.corrects_event_id, corrections);
+  }
   return (
-    <div className="space-y-4">
-      {user && <button type="button" className="btn btn-primary btn-sm" onClick={() => { setCorrection(null); setPanelOpen(true); }}>Nuevo evento</button>}
-      {user && panelOpen && <MacroEventForm isOpen event={correction} onClose={() => { setPanelOpen(false); setCorrection(null); }} onSaved={() => { setPanelOpen(false); setCorrection(null); void load(); }} />}
-      {actionError && <div role="alert" className="alert alert-error text-sm">{actionError}</div>}
-      <label className="flex flex-wrap items-center gap-2 text-sm">
-        Estado
-        <select className="select select-sm" value={filter} onChange={event => setFilter(event.target.value as typeof filter)}>
-          <option value="all">Todos</option><option value="valid">Válidos</option><option value="invalid">Invalidados</option>
-        </select>
-      </label>
-      {loading ? <p role="status">Cargando eventos…</p> : fetchError ? (
-        <div role="alert" className="alert alert-error"><span>No se pudieron cargar los eventos.</span><button className="btn btn-sm" onClick={() => void load()}>Reintentar</button></div>
-      ) : events.length === 0 ? <p>No hay eventos registrados.</p> : visible.length === 0 ? <p>No hay eventos que coincidan con el filtro.</p> : (
-        <div className="space-y-3">
-          {visible.map(event => (
-            <article key={event.id} className="rounded-box border border-base-200 bg-base-100 p-4 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="flex min-w-0 flex-wrap items-center gap-2"><h2 className="font-semibold break-words">{event.name || 'Sin nombre'}</h2><span className={`badge badge-sm ${event.status === 'valid' ? 'badge-success' : 'badge-error'}`}>{event.status === 'valid' ? 'Válido' : 'Invalidado'}</span><span className="badge badge-sm badge-outline">{TOPIC[event.topic] ?? event.topic ?? 'Sin tema'}</span></div>
-                {user && <details className="dropdown dropdown-end" onKeyDown={e => { if (e.key === 'Escape') { e.currentTarget.open = false; e.currentTarget.querySelector('summary')?.focus(); } }}>
-                  <summary className="btn btn-ghost btn-sm" aria-label={`Acciones para ${event.name || 'el evento'}`}>Acciones</summary>
+    <div>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-box border border-base-300 bg-base-100 px-5 py-4 lg:px-6">
+        <label className="flex w-full flex-col gap-1.5 text-xs font-semibold sm:w-52">
+          Estado
+          <select className="select w-full font-normal" value={filter} onChange={event => setFilter(event.target.value as typeof filter)}>
+            <option value="all">Todos</option><option value="valid">Válidos</option><option value="invalid">Invalidados</option>
+          </select>
+        </label>
+        {user && <button type="button" className="btn btn-primary w-full sm:w-auto" aria-expanded={panelOpen} aria-controls="event-form-panel" onClick={() => { setCorrection(null); setPanelOpen(true); }}>Nuevo evento</button>}
+      </div>
+      {user && panelOpen && <div id="event-form-panel" className="mb-6"><MacroEventForm isOpen event={correction} onClose={() => { setPanelOpen(false); setCorrection(null); }} onSaved={() => { setPanelOpen(false); setCorrection(null); void load(); }} /></div>}
+      {actionError && <div role="alert" className="alert alert-error m-5 text-sm lg:mx-8">{actionError}</div>}
+      {loading ? <p role="status" className="flex items-center gap-3 px-5 py-10 text-sm text-base-content/70 lg:px-8"><span className="loading loading-spinner loading-sm" aria-hidden="true" />Cargando eventos…</p> : fetchError ? (
+        <div role="alert" className="alert alert-error m-5 lg:mx-8"><span>No se pudieron cargar los eventos.</span><button className="btn btn-outline" onClick={() => void load()}>Reintentar</button></div>
+      ) : events.length === 0 ? <p className="px-5 py-10 text-sm text-base-content/70 lg:px-8">No hay eventos registrados.</p> : visible.length === 0 ? <p className="px-5 py-10 text-sm text-base-content/70 lg:px-8">No hay eventos que coincidan con el filtro.</p> : (
+        <div className="grid items-start gap-5 lg:grid-cols-2">
+          {visible.map(event => {
+            const original = event.corrects_event_id ? eventsById.get(event.corrects_event_id) : null;
+            const corrections = correctionsByEvent.get(event.id) ?? [];
+            return (
+            <MacroEventCard key={event.id} event={event} original={original ?? null} corrections={corrections} onFollowEvent={followEvent} actions={user && (
+                <details className="dropdown dropdown-end shrink-0" onKeyDown={e => { if (e.key === 'Escape') { e.currentTarget.open = false; e.currentTarget.querySelector('summary')?.focus(); } }}>
+                  <summary className="btn btn-ghost btn-square" aria-label={`Acciones para ${event.name || 'el evento'}`}>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="size-5"><circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" /></svg>
+                  </summary>
                   <ul className="menu dropdown-content z-10 mt-1 w-48 rounded-box bg-base-100 p-2 shadow-lg border border-base-200">
                     <li><button type="button" onClick={e => { e.currentTarget.closest('details')?.removeAttribute('open'); setCorrection(event); setPanelOpen(true); }}>Crear corrección</button></li>
                     {canChange && <li><button type="button" disabled={pending} onClick={e => { e.currentTarget.closest('details')?.removeAttribute('open'); openStatus(event); }}>{event.status === 'valid' ? 'Invalidar' : 'Restablecer'}</button></li>}
                     {canDelete && <li><button type="button" className="text-error" disabled={pending} onClick={e => { e.currentTarget.closest('details')?.removeAttribute('open'); setActionError(null); setDeleteTarget(event); deleteDialog.current?.showModal(); }}>Eliminar</button></li>}
                   </ul>
-                </details>}
-              </div>
-              <p className="mt-2 text-sm">Inicio: {fmtDate(event.start_date)} · Fin: {fmtDate(event.end_date)}</p>
-              <p className="text-sm">Geografía: {[event.geo_scope, event.geo_region].filter(Boolean).join(' · ') || '—'}</p>
-              <EventDescription description={event.description} />
-              <p className="mt-2 break-all text-sm">{event.source_url ? <a className="link link-primary" href={event.source_url} target="_blank" rel="noopener noreferrer">Fuente del evento</a> : 'Sin fuente disponible.'}</p>
-            </article>
-          ))}
+                </details>
+              )} />
+          );
+          })}
         </div>
       )}
       <dialog ref={statusDialog} className="modal" aria-labelledby="status-title" onCancel={event => { if (pendingRef.current) event.preventDefault(); }} onClose={() => setStatusTarget(null)}>

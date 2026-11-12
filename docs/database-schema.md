@@ -135,6 +135,9 @@ The analysis reader and user analysis list check the current status of recorded 
 
 Any authenticated user, including an account without an application role, can create a macro event with initial status `valid`. Public reading is allowed. Existing content is immutable; a correction creates a new event. Only editors and administrators may invalidate or restore events, and only administrators may delete unreferenced events through the protected RPCs.
 
+`corrects_event_id` optionally references the immediate event being corrected. Creation records this link atomically with the new event; corrections can themselves be corrected and an event can have several corrections. The predecessor must already exist, identity and correction links cannot be updated, and the foreign key prevents deleting an event with corrections. Creating a correction does not change the predecessor's validity or replace references in saved analyses. Existing rows retain a null link because historical correction provenance was not recorded and cannot be inferred from matching content.
+
+
 ### analysis_macro_events
 Stores selected macro events and marker customization. Events are valid or invalid; referenced events cannot be deleted. Invalid events remain visible in saved analyses and cannot be newly selected.
 

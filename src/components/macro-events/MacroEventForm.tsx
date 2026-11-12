@@ -133,6 +133,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
       geo_region: form.geo_region.trim() || null,
       topic: form.topic as MacroEventTopic,
       source_url: form.source_url.trim(),
+      corrects_event_id: event?.id ?? null,
     };
 
     setSubmitting(true);
@@ -152,10 +153,10 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
   if (!isOpen) return null;
 
   return (
-    <div className="flex max-h-[calc(100svh-2rem)] flex-col overflow-hidden rounded-box border border-base-200 bg-base-100 shadow-xl sm:max-h-[calc(100svh-3rem)]">
-      <div className="flex flex-none items-center justify-between gap-4 border-b border-base-200 px-4 py-3 sm:px-5">
+    <div className="flex max-h-[calc(100svh-2rem)] flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 sm:max-h-[calc(100svh-3rem)]">
+      <div className="flex flex-none items-center justify-between gap-4 border-b border-base-300 px-4 py-3 sm:px-5">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold leading-tight">
+          <h2 className="text-lg font-bold leading-tight">
             {isCorrection ? 'Crear corrección del evento' : 'Nuevo evento'}
           </h2>
         </div>
@@ -180,7 +181,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
         {/* Scrollable body + sticky footer, all inside the form */}
         <form onSubmit={handleSubmit} noValidate className="flex flex-1 min-h-0 flex-col">
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-            {isCorrection && <p className="alert alert-info mb-4 text-sm">La corrección crea un evento nuevo y conserva el original.</p>}
+            {isCorrection && <p className="alert alert-info mb-4 text-sm wrap-anywhere">Corrección de «{event?.name}». Se creará un evento nuevo vinculado al original, que se conservará.</p>}
             {submitError && (
               <div role="alert" aria-live="polite" className="alert alert-error mb-4 text-sm py-2.5">
                 <svg
@@ -197,8 +198,9 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="rounded-box border border-base-200 bg-base-200/20 p-4">
+            <div className="space-y-6">
+              <fieldset className="min-w-0">
+                <legend className="mb-3 text-sm font-bold">Información del evento</legend>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1 sm:col-span-2">
                     <label htmlFor="ev-name" className="label justify-start pb-1.5">
@@ -293,12 +295,13 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                     />
                   </div>
                 </div>
-              </div>
+              </fieldset>
 
-              <div className="rounded-box border border-base-200 bg-base-200/20 p-4 space-y-4">
+              <fieldset className="min-w-0 space-y-4 border-t border-base-300 pt-4">
+                <legend className="pr-3 text-sm font-bold">Fechas</legend>
                 <label
                   htmlFor="ev-period"
-                  className="flex cursor-pointer select-none items-center gap-3 rounded-lg border border-base-200 px-4 py-3 transition-colors duration-150 hover:bg-base-200/40"
+                  className="flex min-h-11 cursor-pointer select-none items-center gap-3"
                 >
                   <input
                     id="ev-period"
@@ -362,9 +365,10 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                     </div>
                   )}
                 </div>
-              </div>
+              </fieldset>
 
-              <div className="rounded-box border border-base-200 bg-base-200/20 p-4">
+              <fieldset className="min-w-0 border-t border-base-300 pt-4">
+                <legend className="pr-3 text-sm font-bold">Geografía</legend>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1">
                     <label htmlFor="ev-geo-scope" className="label justify-start pb-1.5">
@@ -398,12 +402,12 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
                     />
                   </div>
                 </div>
-              </div>
+              </fieldset>
             </div>
           </div>
 
           {/* Sticky footer */}
-          <div className="flex flex-none items-center justify-end gap-3 border-t border-base-200 px-4 py-3 sm:px-5">
+          <div className="flex flex-none flex-wrap items-center justify-end gap-3 border-t border-base-300 px-4 py-3 sm:px-5">
             <button
               type="button"
               onClick={onClose}

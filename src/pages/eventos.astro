@@ -10,18 +10,21 @@ import MacroEventsPage from '../components/macro-events/MacroEventsPage';
     { label: 'Eventos Macroeconómicos' },
   ]}
 >
-  <section class="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
-    <div class="card border border-base-200 bg-base-100 shadow-sm">
-      <div class="card-body gap-4 md:gap-5">
-        <header class="space-y-2">
-          <h1 class="text-2xl font-semibold leading-tight">Eventos macroeconómicos</h1>
+  <div class="events-catalog min-h-[calc(100svh-8rem)] bg-base-200/60">
+    <section class="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8 lg:py-8" aria-labelledby="events-title">
+      <div>
+        <header class="mb-6 space-y-2">
+          <h1 id="events-title" class="text-2xl font-bold leading-tight text-pretty lg:text-[28px]">Eventos macroeconómicos</h1>
           <p class="text-sm text-base-content/70">
             Consulta hitos y periodos que dan contexto a las series temporales.
           </p>
         </header>
 
         <MacroEventsPage client:load />
+        <noscript>
+          <p class="px-5 py-6 text-sm lg:px-8">Activa JavaScript para consultar el catálogo de eventos.</p>
+        </noscript>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </Layout>

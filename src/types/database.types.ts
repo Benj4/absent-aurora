@@ -131,17 +131,23 @@ isOneToOne: false
                   ]
                 },"macro_events": {
                   Row: {
-                    "created_at": string,"description": string | null,"end_date": string | null,"geo_region": string | null,"geo_scope": string | null,"id": string,"name": string,"source_url": string,"start_date": string,"status": string,"topic": Database["public"]['Enums']["macro_event_topic"]
+                    "corrects_event_id": string | null,"created_at": string,"description": string | null,"end_date": string | null,"geo_region": string | null,"geo_scope": string | null,"id": string,"name": string,"source_url": string,"start_date": string,"status": string,"topic": Database["public"]['Enums']["macro_event_topic"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"description"?: string | null,"end_date"?: string | null,"geo_region"?: string | null,"geo_scope"?: string | null,"id"?: string,"name": string,"source_url": string,"start_date": string,"status"?: string,"topic": Database["public"]['Enums']["macro_event_topic"]
+                    "corrects_event_id"?: string | null,"created_at"?: string,"description"?: string | null,"end_date"?: string | null,"geo_region"?: string | null,"geo_scope"?: string | null,"id"?: string,"name": string,"source_url": string,"start_date": string,"status"?: string,"topic": Database["public"]['Enums']["macro_event_topic"]
                   }
                   Update: {
-                    "created_at"?: string,"description"?: string | null,"end_date"?: string | null,"geo_region"?: string | null,"geo_scope"?: string | null,"id"?: string,"name"?: string,"source_url"?: string,"start_date"?: string,"status"?: string,"topic"?: Database["public"]['Enums']["macro_event_topic"]
+                    "corrects_event_id"?: string | null,"created_at"?: string,"description"?: string | null,"end_date"?: string | null,"geo_region"?: string | null,"geo_scope"?: string | null,"id"?: string,"name"?: string,"source_url"?: string,"start_date"?: string,"status"?: string,"topic"?: Database["public"]['Enums']["macro_event_topic"]
                   }
                   Relationships: [
-
+                    {
+      foreignKeyName: "macro_events_corrects_event_fkey"
+      columns: ["corrects_event_id"]
+isOneToOne: false
+      referencedRelation: "macro_events"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"serie_data": {
                   Row: {
