@@ -76,7 +76,7 @@ const AnalysisBuilder: FC<AnalysisBuilderProps> = ({ mode }) => {
     } else window.location.href = withBase(`/analisis?id=${result.id}`);
   }, [state, isEditMode, analysisId, isDraftReady, loading, dataError, rawData]);
   return (
-    <div data-theme="analysis-editor" className="analysis-editor min-h-[calc(100svh-4rem)] bg-base-200">
+    <div className="analysis-editor min-h-[calc(100svh-4rem)] bg-base-200">
       <header className="editor-toolbar flex flex-wrap items-center gap-2 px-2 py-2 sm:px-5 lg:px-10">
         <h1 className="sr-only">{isEditMode ? 'Editar análisis' : 'Nuevo análisis'}</h1>
         <nav aria-label="Pasos del análisis" className="flex min-w-max flex-1 items-center gap-1 sm:gap-2">

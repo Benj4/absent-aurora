@@ -261,7 +261,7 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
     }
   }, [sourceUrl]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('loading');
     setStatusMessage('');

@@ -4,7 +4,7 @@ import { useAuthSession } from '../lib/use-auth-session';
 import { stripBase, withBase } from '../lib/paths';
 
 const Navbar = () => {
-  const { user, ready } = useAuthSession();
+  const { user } = useAuthSession();
   const [activePath, setActivePath] = useState('/');
   const [mounted, setMounted] = useState(false);
   const [darkTheme, setDarkTheme] = useState(false);

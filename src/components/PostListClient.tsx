@@ -11,7 +11,7 @@ type Filters = {
   to: string;
 };
 
-export default function PostListClient({ initialPosts = [] as any[], initialFilters }: { initialPosts?: any[]; initialFilters?: Filters }) {
+export default function PostListClient({ initialPosts = [] as any[] }: { initialPosts?: any[]; initialFilters?: Filters }) {
   const [posts, setPosts] = useState<any[]>(initialPosts || []);
 
   const [loading, setLoading] = useState(false);

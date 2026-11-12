@@ -76,21 +76,21 @@ Absent Aurora takes the character of a statistical publication in progress. The 
 
 Use this visual language across all views, including the dashboard, authentication, publications, series, events, and user workspace. New and revised screens should inherit its restrained typography, surface hierarchy, control shapes, spacing rhythm, and action hierarchy. Adapt composition to the task; the editor's guided configuration flow belongs to analysis creation and editing.
 
-This is an app-wide design direction, not a completed migration of every screen. Outside the editor, light is the default and dark is an optional manual choice in the shared navigation. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Apply shared patterns through semantic DaisyUI roles in the active theme; palette or theme changes require a deliberate implementation in `src/styles/global.css`.
+The editor palette is the main Absent Aurora theme throughout the application. Custom `light` and `dark` variants share semantic roles, control radii and sizing; no stock DaisyUI themes are loaded. Light is the default and dark is an optional manual choice in the shared navigation, including inside the editor. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Define both variants in `src/styles/global.css`; individual page composition remains domain-specific.
 
 **Key Characteristics:**
 - Clear, contained controls with a distinct primary content surface.
 - Contained depth: structural separation with occasional elevation.
 - Functional color names that remain useful when palette values change.
-- Reusable components across views with explicit theme boundaries.
+- Reusable components across views with shared light and dark theme variants.
 
-**Scope and evidence.** The user approved the analysis view as the shared design reference. The concrete source for the captured direction is `AnalysisBuilder.tsx` and its editor components, with theme values in `src/styles/global.css`. The general application still uses DaisyUI light/dark themes; `AnalysisBuilder.tsx` explicitly selects the light `analysis-editor` theme. Frontmatter names prefixed `editor-` identify the implemented reference tokens, not a second global token namespace. Reuse their semantic roles and visual relationships across screens; their literal values remain scoped until a theme migration is implemented.
+**Scope and evidence.** The user approved the analysis view as the shared design reference. The concrete source for the captured direction is `AnalysisBuilder.tsx` and its editor components, with theme values in `src/styles/global.css`. The application and editor inherit the custom `light` or `dark` variant from the document root. Frontmatter names prefixed `editor-` retain the historical light reference snapshot; runtime styles use shared semantic theme variables. The `.analysis-editor` class now scopes only editor behavior and layout, not a separate palette.
 
-The editor implementation was inspected in source. The parent build review exercised desktop (1440px), mobile (390px), and narrow (320px) layouts; this document does not independently certify all computed states. Save, publication, and database integration were not verified by this documentation pass. Sidecar snippets are portable previews, not live application integrations. The executable stylesheet and components remain authoritative when this snapshot drifts.
+The shared custom light/dark variants were inspected in source and compiled without warnings. Browser verification of this theme migration is pending because the browser automation host is unavailable. Tailwind runs only through its Vite plugin; unused DaisyUI `radial-progress` and `properties` blocks are excluded. The editor implementation was inspected in source. The parent build review exercised desktop (1440px), mobile (390px), and narrow (320px) layouts; this document does not independently certify all computed states. Save, publication, and database integration were not verified by this documentation pass. Sidecar snippets are portable previews, not live application integrations. The executable stylesheet and components remain authoritative when this snapshot drifts.
 
 ## Colors
 
-Use functional names rather than hue-based brand names. The current values above are a replaceable snapshot of the editor theme, not permanent brand commitments.
+Use functional names rather than hue-based brand names. The values above record the shared light variant originally defined by the editor. The dark variant preserves the same roles with pale blue actions and text on deep blue surfaces; executable values live in `src/styles/global.css`.
 
 ### Primary
 
@@ -102,25 +102,25 @@ Use functional names rather than hue-based brand names. The current values above
 
 ### Neutral
 
-`editor-base-100` is the panel and field surface; `editor-base-200` is the surrounding canvas; `editor-base-300` separates regions. `editor-base-content` is the main text role, and `editor-neutral` supplies secondary text. `editor-field-border` is the explicit field and outline-button border override. The scoped DaisyUI theme declares `--editor-field-border` and `--editor-soft`; editor CSS consumes those variables alongside semantic colors and `--radius-field`, rather than repeating palette and radius literals.
+`editor-base-100` is the panel and field surface; `editor-base-200` is the surrounding canvas; `editor-base-300` separates regions. `editor-base-content` is the main text role, and `editor-neutral` supplies secondary text. `editor-field-border` is the explicit field and outline-button border override. Both custom theme variants declare `--app-field-border` and `--app-soft`; editor CSS consumes those variables alongside semantic colors and `--radius-field`, rather than repeating palette and radius literals.
 
 ### Feedback and data
 
-Info, success, warning, and error retain distinct semantic roles. Warning has its own darker content token; info, success, error, and neutral currently use white content in the editor theme. Status badges include Spanish text; do not rely on color alone.
+Info, success, warning, and error retain distinct semantic roles. Warning has its own darker content token; info, success, error, and neutral use white content in the light variant and dark content on pale surfaces in the dark variant. Status badges include Spanish text; do not rely on color alone.
 
 Chart colors encode indicators in calendar mode and periods in index-zero mode. User-assigned series colors are data configuration, not brand tokens. Invalid chart points use diamond markers and a separate fixed red outline in `chart-options.ts`; that exception is not the theme error token.
 
-**The Theme Boundary Rule.** Carry the analysis view's visual hierarchy across all screens through semantic colors in the active theme. Keep literal editor palette values and editor-only tokens scoped until an explicit theme migration.
+**The Theme Boundary Rule.** Carry the analysis view's visual hierarchy across all screens through semantic colors in the active Absent Aurora variant. Define palette values only in the custom light/dark themes. Keep editor-specific layout overrides scoped to `.analysis-editor`.
 
 ## Typography
 
-The general application inherits its sans-serif stack from the framework styles. It does not explicitly set a global display font. The editor explicitly uses the operating system UI stack recorded in `editor-body`; no Inter dependency is implied. Its hierarchy uses bold 20px working headings and an editable report title that grows from 24px to 28px at the large breakpoint. This is a functional interface hierarchy, not an independent decorative display face.
+The application uses the operating system UI stack recorded in `editor-body`, set globally on `body`; no Inter dependency is implied. Its hierarchy uses bold 20px working headings and an editable report title that grows from 24px to 28px at the large breakpoint. This is a functional interface hierarchy, not an independent decorative display face.
 
 JetBrains Mono Variable is bundled and explicitly assigned to `code`. Tailwind monospace utilities used by dates and values do not automatically select that font. Tabular numerals are applied to some table values and dates.
 
 The observed hierarchy uses larger, bold page and dashboard headings; regular body copy; semibold labels and card titles; and smaller muted metadata. Dashboard headings grow at the medium breakpoint. Editor section titles and summaries use the explicit sizes in frontmatter. The chart legend uses small medium-weight text; event labels are smaller still.
 
-For new and revised views, use the editor's system UI sans character and compact hierarchy as the reference: a clear page title, bold section titles, readable body copy, and smaller secondary metadata. Reserve the report-title treatment for the main content title. Keep standard form text at least 16px on mobile, and use tabular numerals where aligned values or dates aid comparison. These are shared design targets; the current global stylesheet does not yet enforce the editor's typography outside its scope.
+For new and revised views, use the editor's system UI sans character and compact hierarchy as the reference: a clear page title, bold section titles, readable body copy, and smaller secondary metadata. Reserve the report-title treatment for the main content title. Keep standard form text at least 16px on mobile, and use tabular numerals where aligned values or dates aid comparison. The body font is shared globally; individual heading sizes and editor-specific control typography remain local.
 
 **Cascade caveat.** Unlayered editor field, button, and label rules can override utility typography. Ghost inputs and textareas are excluded from the standard field override; selects are not. Document utility declarations as intended local styling until computed styles have been checked; do not claim every requested size is rendered.
 
@@ -148,9 +148,9 @@ Use these adaptations when building or revising other views:
 
 The 1600px maximum and split configuration/report columns are editor measurements, not mandatory widths for every route. Keep a visible page title and useful breadcrumbs on other screens; the editor's hidden heading is a local response to its toolbar. Mobile layouts stack content and wrap actions; use a configuration/preview switch only for a workflow that needs it.
 
-The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active light or dark theme and does not force the editor theme.
+The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active custom light or dark variant of the shared application theme.
 
-The event catalog uses the analysis reader's bounded 1280px muted canvas. A visible heading and separate filter/action toolbar precede a grid of independent bordered event cards, with two columns from 1024px and one below. Cards have a subdued date strip with prominent day numerals and month/year; periods connect their start and end with an arrow, while single-date events are labeled “Hito puntual”. The title and expandable narrative lead the card body, followed by textual status and topic metadata. Geography and the external source link share a separated footer with small line icons. The compact, accessibly named actions menu leaves room for long titles. Cards size to their content and use active-theme surfaces and radii without hover elevation or nested cards. The inline creation form groups information, dates, and geography with fieldsets and thin rules; this form is also reused in the analysis editor. Catalog controls have 44px minimum heights and fields use 16px text below the desktop breakpoint. The catalog retains the active light or dark theme and its semantic colors; it does not apply the editor theme.
+The event catalog uses the analysis reader's bounded 1280px muted canvas. A visible heading and separate filter/action toolbar precede a grid of independent bordered event cards, with two columns from 1024px and one below. Cards have a subdued date strip with prominent day numerals and month/year; periods connect their start and end with an arrow, while single-date events are labeled “Hito puntual”. The title and expandable narrative lead the card body, followed by textual status and topic metadata. Geography and the external source link share a separated footer with small line icons. The compact, accessibly named actions menu leaves room for long titles. Cards size to their content and use active-theme surfaces and radii without hover elevation or nested cards. The inline creation form groups information, dates, and geography with fieldsets and thin rules; this form is also reused in the analysis editor. Catalog controls have 44px minimum heights and fields use 16px text below the desktop breakpoint. The catalog retains the active custom light or dark variant of the shared application theme.
 
 The catalog toolbar groups status, topic, geographic scope and region in a responsive four-column grid. A second row provides either independent inclusive Desde/Hasta bounds or a specific date. Explicit Aplicar filtros and Limpiar filtros actions reset the 20-event page; Cargar más appends up to 20 matches. Loading, validation, empty and retry states stay within the affected region. Dates describe event occurrence, including overlapping periods, rather than record creation. Name search is deferred.
 
@@ -192,7 +192,7 @@ Primary, outline, ghost, and soft variants express action hierarchy. In the edit
 
 `IndicatorCard.tsx` combines a title, unit and frequency metadata, an optional sparkline, and text links. `Navbar.tsx` owns the shared navigation and account dropdown. The editor's results panels use bordered surfaces and compact section headings; they should not inherit the dashboard card's hover elevation by default.
 
-The navigation exposes a keyboard-accessible moon button labeled “Tema oscuro”; its pressed state indicates that dark is selected. It is available to signed-in visitors and guests at desktop and mobile widths. `Layout.astro` applies the saved theme before rendering to avoid a light-theme flash on return visits. The analysis editor retains its explicitly scoped light theme even when the surrounding shell is dark.
+The navigation exposes a keyboard-accessible moon button labeled “Tema oscuro”; its pressed state indicates that dark is selected. It is available to signed-in visitors and guests at desktop and mobile widths. `Layout.astro` applies the saved theme before rendering to avoid a light-theme flash on return visits. The analysis editor inherits the same custom light/dark variant as the surrounding shell.
 
 ### Chips, statuses, and feedback
 
@@ -214,7 +214,7 @@ The shared chart is transparent against its containing surface and inherits typo
 - Do use the approved analysis view as the visual reference for every new or revised screen.
 - Do adapt its surface, typography, control, and spacing patterns to each view's task.
 - Do name colors by their function and update this snapshot when their source values change.
-- Do preserve theme scope, including the editor's explicitly light theme.
+- Do preserve the active shared light/dark variant, including inside the editor.
 - Do prioritize usability, readable composition, and visible data provenance.
 - Do preserve Spanish labels and textual status explanations.
 

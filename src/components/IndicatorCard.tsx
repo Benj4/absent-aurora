@@ -1,4 +1,3 @@
-import React from 'react';
 import type { FC } from 'react';
 import { normalizeFrequency } from '../lib/frequency';
 import { withBase } from '../lib/paths';

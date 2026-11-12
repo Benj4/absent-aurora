@@ -277,9 +277,9 @@
       "Editor source inspected against the approved replacement direction; parent reviewed 1440px, 390px, and 320px layouts.",
       "Save, publication, and database integration were not verified by this documentation pass.",
       "Tonal ramps are synthesized panel swatches, not implemented application tokens.",
-      "Portable editor previews resolve the scoped light-theme palette to literal values; approximate framework hover and focus states are labeled. Application navigation retains host light/dark theme variables.",
-      "The approved analysis editor is the app-wide design reference. Existing views have not been migrated by this documentation update; scoped editor tokens and the editor theme boundary are unchanged.",
-      "Application light is the default; dark is selected manually in Navbar and saved as absent-aurora-theme. System color preference is ignored. The editor remains explicitly light."
+      "Portable editor previews resolve the shared light palette to literal values; approximate framework hover and focus states are labeled. Runtime navigation and editor inherit the active custom light/dark variant.",
+      "The approved analysis editor supplies the shared application palette and control geometry. Custom light/dark variants replace the stock themes; editor layout overrides remain scoped.",
+      "Custom light is the default; custom dark is selected manually in Navbar and saved as absent-aurora-theme. System color preference is ignored. The editor inherits the selected variant."
     ]
   },
   "components": [
@@ -347,12 +347,12 @@
   ],
   "narrative": {
     "northStar": "Informe en construcción",
-    "overview": "Absent Aurora takes the character of a statistical publication in progress. The approved analysis editor is the visual reference: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while evidence and provenance remain visible.\n\nUse this visual language across all views, including the dashboard, authentication, publications, series, events, and user workspace. New and revised screens should inherit its restrained typography, surface hierarchy, control shapes, spacing rhythm, and action hierarchy. Adapt composition to the task; the editor's guided configuration flow belongs to analysis creation and editing.\n\nThis is an app-wide design direction, not a completed migration of every screen. Outside the editor, light is the default and dark is an optional manual choice in the shared navigation. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Apply shared patterns through semantic DaisyUI roles in the active theme; palette or theme changes require a deliberate implementation in `src/styles/global.css`.",
+    "overview": "Absent Aurora takes the character of a statistical publication in progress. The approved analysis editor is the visual reference: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while evidence and provenance remain visible.\n\nUse this visual language across all views, including the dashboard, authentication, publications, series, events, and user workspace. New and revised screens should inherit its restrained typography, surface hierarchy, control shapes, spacing rhythm, and action hierarchy. Adapt composition to the task; the editor's guided configuration flow belongs to analysis creation and editing.\n\nThe editor palette is the main Absent Aurora theme throughout the application. Custom `light` and `dark` variants share semantic roles, control radii and sizing; no stock DaisyUI themes are loaded. Light is the default and dark is an optional manual choice in the shared navigation, including inside the editor. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Define both variants in `src/styles/global.css`; individual page composition remains domain-specific.",
     "keyCharacteristics": [
       "Clear, contained controls with a distinct primary content surface.",
       "Contained depth: structural separation with occasional elevation.",
       "Functional color names that remain useful when palette values change.",
-      "Reusable components across views with explicit theme boundaries."
+      "Reusable components across views with shared light and dark theme variants."
     ],
     "rules": [
       {
@@ -367,12 +367,12 @@
       },
       {
         "name": "Event catalog composition",
-        "body": "The event catalog uses the analysis reader's bounded 1280px muted canvas. A visible heading and separate filter/action toolbar precede a grid of independent bordered event cards, with two columns from 1024px and one below. Cards have a subdued date strip with prominent day numerals and month/year; periods connect their start and end with an arrow, while single-date events are labeled “Hito puntual”. The title and expandable narrative lead the card body, followed by textual status and topic metadata. Geography and the external source link share a separated footer with small line icons. The compact, accessibly named actions menu leaves room for long titles. Cards size to their content and use active-theme surfaces and radii without hover elevation or nested cards. The inline creation form groups information, dates, and geography with fieldsets and thin rules; this form is also reused in the analysis editor. Catalog controls have 44px minimum heights and fields use 16px text below the desktop breakpoint. The catalog retains the active light or dark theme and its semantic colors; it does not apply the editor theme.",
+        "body": "The event catalog uses the analysis reader's bounded 1280px muted canvas. A visible heading and separate filter/action toolbar precede a grid of independent bordered event cards, with two columns from 1024px and one below. Cards have a subdued date strip with prominent day numerals and month/year; periods connect their start and end with an arrow, while single-date events are labeled “Hito puntual”. The title and expandable narrative lead the card body, followed by textual status and topic metadata. Geography and the external source link share a separated footer with small line icons. The compact, accessibly named actions menu leaves room for long titles. Cards size to their content and use active-theme surfaces and radii without hover elevation or nested cards. The inline creation form groups information, dates, and geography with fieldsets and thin rules; this form is also reused in the analysis editor. Catalog controls have 44px minimum heights and fields use 16px text below the desktop breakpoint. The catalog retains the active custom light or dark variant of the shared application theme.",
         "section": "layout"
       },
       {
         "name": "The Theme Boundary Rule",
-        "body": "Carry the analysis view's visual hierarchy across all screens through semantic colors in the active theme. Keep literal editor palette values and editor-only tokens scoped until an explicit theme migration.",
+        "body": "Carry the analysis view's visual hierarchy across all screens through semantic colors in the active Absent Aurora variant. Define palette values only in the custom light/dark themes. Keep editor-specific layout overrides scoped to `.analysis-editor`.",
         "section": "colors"
       },
       {
@@ -382,7 +382,7 @@
       },
       {
         "name": "Analysis reader composition",
-        "body": "The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active light or dark theme and does not force the editor theme.",
+        "body": "The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active custom light or dark variant of the shared application theme.",
         "section": "layout"
       }
     ],
@@ -391,7 +391,7 @@
       "Do use the approved analysis view as the visual reference for every new or revised screen.",
       "Do adapt its surface, typography, control, and spacing patterns to each view's task.",
       "Do name colors by their function and update this snapshot when their source values change.",
-      "Do preserve theme scope, including the editor's explicitly light theme.",
+      "Do preserve the active shared light/dark variant, including inside the editor.",
       "Do prioritize usability, readable composition, and visible data provenance.",
       "Do preserve Spanish labels and textual status explanations."
     ],

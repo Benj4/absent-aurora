@@ -59,7 +59,7 @@ Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capt
 - Use DaisyUI component classes for controls and Tailwind utilities for layout, spacing, and responsive behavior.
 - Reuse existing domain components and preserve route composition; extract shared components only for meaningful reuse or behavior.
 - Keep Tailwind integration in `astro.config.mjs` and CSS configuration in `src/styles/global.css`.
-- Define colors and radii in the active DaisyUI theme and consume its semantic variables; keep necessary editor-only tokens scoped to `analysis-editor`. Avoid repeated literal values and duplicate CSS rules.
+- Define colors and radii in the active DaisyUI theme and consume its semantic variables; use the shared custom light/dark variants and keep editor-only layout overrides scoped to `.analysis-editor`. Avoid repeated literal values and duplicate CSS rules.
 - Preserve DaisyUI focus indicators, dropdown arrows, disabled states, and native control behavior when adding CSS overrides.
 - Keep `DESIGN.md` and `.impeccable/design.json` aligned with visual changes. These files document the design; they are not runtime style configuration.
 

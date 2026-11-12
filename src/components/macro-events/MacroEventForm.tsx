@@ -112,7 +112,7 @@ export default function MacroEventForm({ isOpen, event, onClose, onSaved }: Prop
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!user) {
       setSubmitError('Inicia sesión para crear un evento.');

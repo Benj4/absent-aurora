@@ -50,7 +50,7 @@ export async function getAuthenticatedClient(
     },
   });
 
-  const { data, error } = await client.auth.signInWithPassword({
+  const { error } = await client.auth.signInWithPassword({
     email,
     password,
   });

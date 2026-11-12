@@ -48,7 +48,7 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
     setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (filters.status && filters.status !== 'all') params.set('status', filters.status);

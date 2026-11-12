@@ -193,7 +193,7 @@ const PostDetail: FC = () => {
     }
   };
 
-  const handleValidationSubmit = async (e: React.FormEvent) => {
+  const handleValidationSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!currentUser || !post || !validationStatus) return;
     setSubmitting(true);

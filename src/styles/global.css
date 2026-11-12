@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light --default, dark;
+  themes: false;
+  exclude: radial-progress, properties;
 }
 
 /* https://fontsource.org/fonts/jetbrains-mono/install */
@@ -52,10 +53,16 @@ code {
   }
 }
 
-/* Reference palette scoped to the analysis editor. */
+@layer base {
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+}
+
+/* Absent Aurora: the editor palette is the shared light variant. */
 @plugin "daisyui/theme" {
-  name: "analysis-editor";
-  default: false;
+  name: "light";
+  default: true;
   prefersdark: false;
   color-scheme: light;
   --color-base-100: #ffffff;
@@ -86,8 +93,46 @@ code {
   --border: 1px;
   --depth: 0;
   --noise: 0;
-  --editor-field-border: #b8c5d4;
-  --editor-soft: #e7f1fa;
+  --app-field-border: #b8c5d4;
+  --app-soft: #e7f1fa;
+}
+
+/* The same semantic roles and control geometry in low-light conditions. */
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+  --color-base-100: #101c2b;
+  --color-base-200: #0c1522;
+  --color-base-300: #34465c;
+  --color-base-content: #e2eaf4;
+  --color-primary: #9fc5ef;
+  --color-primary-content: #101c2b;
+  --color-secondary: #abc5df;
+  --color-secondary-content: #101c2b;
+  --color-accent: #9fc5ef;
+  --color-accent-content: #101c2b;
+  --color-neutral: #acbbcd;
+  --color-neutral-content: #101c2b;
+  --color-info: #acb7ff;
+  --color-info-content: #101c2b;
+  --color-success: #9fc5ef;
+  --color-success-content: #101c2b;
+  --color-warning: #493421;
+  --color-warning-content: #ffdbad;
+  --color-error: #ffb4a9;
+  --color-error-content: #101c2b;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --app-field-border: #647990;
+  --app-soft: #21374f;
 }
 
 .analysis-editor {
@@ -97,7 +142,7 @@ code {
 .analysis-editor .input:not(.input-ghost),
 .analysis-editor .select,
 .analysis-editor .textarea:not(.textarea-ghost) {
-  border-color: var(--editor-field-border);
+  border-color: var(--app-field-border);
   border-radius: var(--radius-field);
   background-color: var(--color-base-100);
   min-height: 44px;
@@ -111,7 +156,7 @@ code {
   box-shadow: none;
 }
 .analysis-editor .btn-outline {
-  border-color: var(--editor-field-border);
+  border-color: var(--app-field-border);
 }
 .analysis-editor .label {
   color: var(--color-neutral);
@@ -135,7 +180,7 @@ code {
 }
 .analysis-editor .badge-soft,
 .analysis-editor .btn-soft {
-  background-color: var(--editor-soft);
+  background-color: var(--app-soft);
   color: var(--color-primary);
 }
 .analysis-editor .btn-soft {
