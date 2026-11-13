@@ -33,11 +33,11 @@ export default function EventCorrections({ id, count, onFollowEvent }: {
   return <details className="group" onToggle={event => {
     if (event.currentTarget.open && !items.length && !error) void load();
   }}>
-    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">
+    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-normal sm:min-h-8 [&::-webkit-details-marker]:hidden">
       <span>{count === 1 ? 'Tiene 1 corrección' : `Tiene ${count} correcciones`}</span>
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4 shrink-0 group-open:rotate-180"><path d="m6 9 6 6 6-6" /></svg>
     </summary>
-    <ul className="space-y-3 pb-2">
+    <ul className="space-y-2 pb-2">
       {items.map(correction => <li key={correction.id} className="wrap-anywhere">
         <a className="link link-primary" href={`#event-${correction.id}`} onClick={() => onFollowEvent(correction.id)}>{correction.name || 'Sin nombre'}</a>
         <span className="mt-1 block text-xs text-base-content/70">Creada el {new Intl.DateTimeFormat('es-ES', { timeZone: 'UTC' }).format(new Date(correction.created_at))}{correction.status === 'invalid' ? ' · Invalidada' : ''}</span>

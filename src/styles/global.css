@@ -242,3 +242,69 @@ code {
   align-self: flex-start;
   margin: 16px 0 0 12px;
 }
+
+/* Shared catalog filters: compact on desktop, touch-friendly on mobile. */
+.app-filters {
+  --filter-control-height: calc(var(--size-field) * 8);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.app-filters > :not(.filter-field) {
+  min-width: 0;
+}
+
+.app-filters .filter-fields {
+  display: grid;
+  align-items: end;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.app-filters .filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  color: var(--color-neutral);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.app-filters > .filter-field {
+  flex: 1 1 10rem;
+}
+
+.app-filters .input,
+.app-filters .select,
+.app-filters .btn {
+  min-height: var(--filter-control-height);
+  height: var(--filter-control-height);
+  font-size: 0.875rem;
+}
+
+.app-filters .input,
+.app-filters .select {
+  width: 100%;
+  color: var(--color-base-content);
+  font-weight: 400;
+}
+
+.app-filters > p,
+.app-filters > [role="alert"] {
+  flex-basis: 100%;
+}
+
+@media (max-width: 639px) {
+  .app-filters {
+    --filter-control-height: 2.75rem;
+  }
+
+  .app-filters .input,
+  .app-filters .select {
+    font-size: 1rem;
+  }
+}

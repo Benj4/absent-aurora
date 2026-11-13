@@ -221,8 +221,9 @@ const PostDetail: FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-16">
-        <span className="loading loading-spinner loading-lg" />
+      <div role="status" className="flex items-center justify-center gap-3 py-12 text-sm text-base-content/70">
+        <span className="loading loading-spinner loading-sm" aria-hidden="true" />
+        Cargando publicación…
       </div>
     );
   }
@@ -247,244 +248,134 @@ const PostDetail: FC = () => {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  const frequencyLabel = { annual: 'Anual', quarterly: 'Trimestral', monthly: 'Mensual', daily: 'Diaria' }[normalizeFrequency(post.frequency)];
+
   return (
-    <div className="card bg-base-100 border border-base-200 shadow-sm w-full">
-      <div className="card-body gap-4 p-4 md:p-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h2 className="card-title">{post.indicator_id} <p className="text-sm font-light text-base-content/60">Publicación #{post.id.slice(-8)}</p></h2>
-
+    <article className="min-w-0 rounded-box border border-base-300 bg-base-100" aria-labelledby="post-title">
+      <header className="space-y-4 border-b border-base-300 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <h1 id="post-title" className="text-xl font-semibold leading-snug wrap-anywhere">{post.indicator_id}</h1>
+            <p className="text-xs text-base-content/70">Publicación #{post.id.slice(-8)}</p>
           </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className={`badge ${STATUS_BADGE[postStatus] ?? 'badge-neutral'}`}>
-              {STATUS_LABEL[postStatus] ?? postStatus}
-            </span>
-
-            {isEditor ? (
-              <div className="flex items-center gap-2">
-                <select
-                  className="select select-sm"
-                  aria-label="Nuevo estado de la publicación"
-                  value={pendingStatus}
-                  onChange={(e) => setPendingStatus(e.target.value as PostStatus)}
-                  disabled={isUpdating || (!isAdmin && postStatus === 'disabled')}
-                >
-                  <option value="pending">Pendiente</option>
-                  <option value="approved">Aprobado</option>
-                  <option value="rejected">Rechazado</option>
-                  <option value="disabled">Deshabilitado</option>
-                </select>
-                {pendingStatus !== postStatus && requiresReason && (
-                  <input className="input input-sm" aria-label="Motivo del cambio" placeholder="Motivo obligatorio" value={statusReason} onChange={e => setStatusReason(e.target.value)} disabled={isUpdating} required />
-                )}
-                <button
-                  type="button"
-                  className="btn btn-sm btn-primary"
-                  onClick={handleStatusUpdate}
-                  disabled={isUpdating || pendingStatus === postStatus || (!isAdmin && postStatus === 'disabled')}
-                >
-                  {isUpdating ? 'Guardando…' : 'Confirmar cambio'}
-                </button>
-              </div>
-            ) : null}
-          </div>
+          <span className={`badge badge-sm badge-soft h-auto min-h-5 max-w-full py-1 whitespace-normal ${STATUS_BADGE[postStatus] ?? 'badge-neutral'}`}>
+            {STATUS_LABEL[postStatus] ?? postStatus}
+          </span>
         </div>
-
-        {/* Metadata */}
-        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-          <div><dt className="text-base-content/60 inline">Fuente: </dt><dd className="inline">{post.data_source || '—'}</dd></div>
-          {post.url && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-base-content/60 inline">URL fuente: </dt>
-              <dd className="inline break-all">
-                <a className="link link-primary" href={post.url} target="_blank" rel="noopener noreferrer">{post.url}</a>
-              </dd>
-            </div>
-          )}
-          <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div>
-
-        {statusMessage && (
-          <div className="col-span-2 sm:col-span-3">
-            <div role="status" className="alert alert-info text-sm">
-              <span>{statusMessage}</span>
-            </div>
+        <dl className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
+          <div className="min-w-0 flex-1 basis-48">
+            <dt className="text-xs text-base-content/70">Fuente</dt>
+            <dd className="mt-1 wrap-anywhere">{post.data_source || 'Sin fuente indicada'}</dd>
+            {post.url && <dd className="mt-1"><a className="link link-primary inline-flex min-h-8 items-center gap-1 text-xs" href={post.url} target="_blank" rel="noopener noreferrer">
+              Consultar fuente
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-3.5"><path d="M14 4h6v6m0-6L10 14m0-10H4v16h16v-6" /></svg>
+            </a></dd>}
           </div>
-        )}
-          <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{new Date(post.created_at).toLocaleString('es-ES')}</dd></div>
-          {post.notes && (
-            <div className="col-span-2 sm:col-span-3">
-              <dt className="text-base-content/60 inline">Notas: </dt>
-              <dd className="inline">{post.notes}</dd>
-            </div>
-          )}
+          <div><dt className="text-xs text-base-content/70">Frecuencia</dt><dd className="mt-1">{frequencyLabel}</dd></div>
+          <div><dt className="text-xs text-base-content/70">Creado</dt><dd className="mt-1 tabular-nums"><time dateTime={post.created_at}>{new Date(post.created_at).toLocaleString('es-ES')}</time></dd></div>
         </dl>
+        {post.notes && <div className="space-y-1 text-sm"><h2 className="text-xs font-normal text-base-content/70">Notas de la publicación</h2><p className="whitespace-pre-wrap wrap-anywhere">{post.notes}</p></div>}
+      </header>
 
-        {/* Series data */}
-        <div className="divider text-sm text-base-content/60 my-1">
-          Datos de la serie ({post.serie_data.length} puntos)
+      <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-5 p-4 sm:p-5">
+          <section aria-labelledby="series-title" className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="series-title" className="text-sm font-semibold">Datos de la serie</h2>
+              <span className="text-xs text-base-content/70">{post.serie_data.length} puntos · Más recientes primero</span>
+            </div>
+            {sortedData.length > 0 ? (
+              <div className="max-h-112 overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" tabIndex={0} role="region" aria-label="Datos de la serie; tabla desplazable">
+                <table className="table table-sm table-pin-rows w-full tabular-nums">
+                  <caption className="sr-only">Valores publicados, ordenados del período más reciente al más antiguo.</caption>
+                  <thead><tr><th scope="col" className="w-10 text-right">#</th><th scope="col">Período</th><th scope="col" className="text-right">Valor reportado</th></tr></thead>
+                  <tbody>{sortedData.map((d, index) => (
+                    <tr key={d.id || String(index)}>
+                      <td className="text-right text-base-content/70">{index + 1}</td>
+                      <td className="whitespace-nowrap">{formatSeriesDate(d.date, post.frequency)}</td>
+                      <td className="text-right">{new Intl.NumberFormat('es-ES', { maximumFractionDigits: 6 }).format(d.value)}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            ) : <p className="py-3 text-sm text-base-content/70">Sin datos de serie adjuntos.</p>}
+          </section>
+
+          {/* Reviews remain visible under the existing independent-review rules. */}
+          {(post.status !== 'pending' || isEditor || existingValidation) && validations.length > 0 && (
+            <section aria-labelledby="validations-title" className="space-y-2 border-t border-base-300 pt-4">
+              <div className="flex items-baseline justify-between gap-2"><h2 id="validations-title" className="text-sm font-semibold">Validaciones recibidas</h2><span className="text-xs text-base-content/70">{validations.length} revisiones</span></div>
+              <ul className="divide-y divide-base-300">
+                {validations.map(val => <li key={val.id} className="space-y-2 py-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`badge badge-sm badge-soft h-auto min-h-5 max-w-full py-1 whitespace-normal ${STATUS_BADGE[val.validation_status] ?? 'badge-neutral'}`}>{STATUS_LABEL[val.validation_status] ?? val.validation_status}</span>
+                    <time dateTime={val.validated_at} className="text-xs tabular-nums text-base-content/70">{new Date(val.validated_at).toLocaleString('es-ES')}</time>
+                  </div>
+                  <p className="whitespace-pre-wrap wrap-anywhere text-base-content/70">{val.validation_notes || 'Sin notas.'}</p>
+                </li>)}
+              </ul>
+            </section>
+          )}
         </div>
 
-        {sortedData.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="table table-sm w-full">
-              <thead>
-                <tr>
-                  <th className="w-12 text-center">#</th>
-                  <th>Periodo</th>
-                  <th className="">Valor reportado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedData.map((d, index) => (
-                  <tr key={d.id || String(index)}>
-                    <td className="text-center text-base-content/50">{index + 1}</td>
-                    <td>{formatSeriesDate(d.date, post.frequency)}</td>
-                    <td className=" font-semibold">
-                      {new Intl.NumberFormat('es-ES', { maximumFractionDigits: 6 }).format(d.value)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="py-4 text-center text-base-content/50 text-sm">
-            Sin datos de serie adjuntos.
-          </div>
-        )}
-
-        {/* Reviews visible to validators or after an independent review. */}
-        {(post.status !== 'pending' || isEditor || existingValidation) && validations.length > 0 && (
-          <>
-            <div className="divider text-sm text-base-content/60 my-1">
-              Validaciones ({validations.length})
-            </div>
-            <ul className="flex flex-col gap-2">
-              {validations.map((val) => (
-                <li key={val.id} className="flex flex-col gap-1 p-3 rounded-lg border border-base-200 bg-base-50 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className={`badge badge-sm ${STATUS_BADGE[val.validation_status] ?? 'badge-neutral'}`}>
-                      {STATUS_LABEL[val.validation_status] ?? val.validation_status}
-                    </span>
-                    <span className="text-base-content/50 text-xs">
-                      {new Date(val.validated_at).toLocaleString('es-ES')}
-                    </span>
-                  </div>
-                  {val.validation_notes && (
-                    <p className="text-base-content/70">{val.validation_notes}</p>
-                  )}
-                  {!val.validation_notes && (
-                    <p className="text-base-content/40 italic">Sin notas.</p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {/* Revisión entre pares */}
-        {(
-          <>
-            <div className="divider my-1">Revisiones</div>
-
-            {!currentUser ? (
-              <div role="alert" className="alert alert-warning">
-                <span>
-                  Por favor{' '}
-                  <a href={withBase('/login')} className="link">inicia sesión</a>
-                  {' '}para validar esta publicación.
-                </span>
-              </div>
-            ) : null}
-
+        <aside className="min-w-0 space-y-5 border-t border-base-300 p-4 sm:p-5 lg:border-t-0 lg:border-l" aria-label="Revisión de la publicación">
+          <section aria-labelledby="review-title" className="space-y-3">
+            <h2 id="review-title" className="text-sm font-semibold">Tu validación</h2>
+            {!currentUser && <p className="text-sm leading-normal text-base-content/70"><a href={withBase('/login')} className="link link-primary">Inicia sesión</a> para validar esta publicación.</p>}
             {existingValidation ? (
-              <>
-                <div role="alert" className="alert">
-                  <div className="flex flex-col gap-1">
-                    <span>
-                      Ya validaste esta publicación como:{' '}
-                      <span className={`badge badge-sm ${STATUS_BADGE[existingValidation.validation_status] ?? 'badge-neutral'}`}>
-                        {STATUS_LABEL[existingValidation.validation_status] ?? existingValidation.validation_status}
-                      </span>
-                    </span>
-                    {existingValidation.validation_notes && (
-                      <span className="text-sm opacity-70">Notas: {existingValidation.validation_notes}</span>
-                    )}
-                  </div>
-                </div>
-
-              </>
+              <div className="space-y-2 text-sm">
+                <p className="text-base-content/70">Ya validaste esta publicación.</p>
+                <span className={`badge badge-sm badge-soft h-auto min-h-5 max-w-full py-1 whitespace-normal ${STATUS_BADGE[existingValidation.validation_status] ?? 'badge-neutral'}`}>{STATUS_LABEL[existingValidation.validation_status] ?? existingValidation.validation_status}</span>
+                {existingValidation.validation_notes && <p className="whitespace-pre-wrap wrap-anywhere">{existingValidation.validation_notes}</p>}
+              </div>
             ) : currentUser && currentUser.id === post.submitted_by ? (
-              <p className="alert">No puedes validar tu propia publicación.</p>
+              <p className="text-sm text-base-content/70">No puedes validar tu propia publicación.</p>
             ) : currentUser ? (
-              <form onSubmit={handleValidationSubmit} className="w-full max-w-2xl space-y-4">
-                <div className="flex flex-col gap-1 w-full">
-                  <label className="label pb-2">
-                    <span className="whitespace-normal font-medium">Decisión de validación <span className="text-error">*</span></span>
+              <form onSubmit={handleValidationSubmit} className="space-y-3">
+                <fieldset disabled={submitting} className="min-w-0 space-y-1">
+                  <legend className="mb-1 text-xs text-base-content/70">Decisión de validación (obligatoria)</legend>
+                  <label className="flex min-h-11 cursor-pointer items-start gap-2 rounded-field px-2 py-2 text-sm leading-normal text-success has-checked:bg-success/10">
+                    <input type="radio" name="validation_status" value="approved" className="radio radio-sm radio-success mt-0.5 shrink-0" checked={validationStatus === 'approved'} onChange={e => setValidationStatus(e.target.value)} required />
+                    <span>Los datos son correctos y confiables</span>
                   </label>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="flex items-center gap-3 rounded-box border border-success/40 bg-success/10 p-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="validation_status"
-                        value="approved"
-                        className="radio radio-success"
-                        checked={validationStatus === 'approved'}
-                        onChange={(e) => setValidationStatus(e.target.value)}
-                      />
-                      <span className="font-medium text-success">Los datos son correctos y confiables</span>
-                    </label>
-                    <label className="flex items-center gap-3 rounded-box border border-error/40 bg-error/10 p-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="validation_status"
-                        value="rejected"
-                        className="radio radio-error"
-                        checked={validationStatus === 'rejected'}
-                        onChange={(e) => setValidationStatus(e.target.value)}
-                      />
-                      <span className="font-medium text-error">Los datos no son correctos o confiables</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1 w-full">
-                  <label className="label pb-2">
-                    <span className="whitespace-normal font-medium">Notas (opcional)</span>
+                  <label className="flex min-h-11 cursor-pointer items-start gap-2 rounded-field px-2 py-2 text-sm leading-normal text-error has-checked:bg-error/10">
+                    <input type="radio" name="validation_status" value="rejected" className="radio radio-sm radio-error mt-0.5 shrink-0" checked={validationStatus === 'rejected'} onChange={e => setValidationStatus(e.target.value)} required />
+                    <span>Los datos no son correctos o confiables</span>
                   </label>
-                  <textarea
-                    className="textarea w-full"
-                    rows={3}
-                    placeholder="Agrega comentarios u observaciones sobre estos datos..."
-                    value={validationNotes}
-                    onChange={(e) => setValidationNotes(e.target.value)}
-                  />
+                </fieldset>
+                <div className="space-y-1">
+                  <label htmlFor="validation-notes" className="block text-xs text-base-content/70">Notas (opcional)</label>
+                  <textarea id="validation-notes" className="textarea textarea-sm w-full text-base sm:text-sm" rows={3} placeholder="Comentarios u observaciones sobre estos datos…" value={validationNotes} onChange={e => setValidationNotes(e.target.value)} disabled={submitting} />
                 </div>
-
-                {submitResult && (
-                  <div role="alert" className={`alert ${submitResult.type === 'success' ? 'alert-success' : 'alert-error'}`}>
-                    <span>{submitResult.message}</span>
-                  </div>
-                )}
-
-                <div className="pt-1">
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={!validationStatus || submitting}
-                  >
-                    {submitting && <span className="loading loading-spinner loading-sm" />}
-                    Enviar Revisión
-                  </button>
-                </div>
+                {submitResult && <div role="alert" className={`alert text-sm ${submitResult.type === 'success' ? 'alert-success' : 'alert-error'}`}><span>{submitResult.message}</span></div>}
+                <button type="submit" className="btn btn-primary btn-sm min-h-11 w-full sm:min-h-8" disabled={!validationStatus || submitting}>
+                  {submitting && <span className="loading loading-spinner loading-xs" aria-hidden="true" />}
+                  {submitting ? 'Enviando…' : 'Enviar revisión'}
+                </button>
               </form>
             ) : null}
+          </section>
 
-          </>
-        )}
+          {isEditor && <section className="space-y-3 border-t border-base-300 pt-4" aria-labelledby="status-title">
+            <h2 id="status-title" className="text-sm font-semibold">Gestionar estado</h2>
+            <div className="app-filters">
+              <label className="filter-field w-full">Estado de la publicación
+                <select className="select select-sm w-full" value={pendingStatus} onChange={e => setPendingStatus(e.target.value as PostStatus)} disabled={isUpdating || (!isAdmin && postStatus === 'disabled')}>
+                  <option value="pending">Pendiente</option><option value="approved">Aprobado</option><option value="rejected">Rechazado</option><option value="disabled">Deshabilitado</option>
+                </select>
+              </label>
+              {pendingStatus !== postStatus && requiresReason && <label className="filter-field w-full">Motivo del cambio (obligatorio)
+                <input className="input input-sm w-full" value={statusReason} onChange={e => setStatusReason(e.target.value)} disabled={isUpdating} required />
+              </label>}
+              <button type="button" className="btn btn-sm btn-outline w-full" onClick={handleStatusUpdate} disabled={isUpdating || pendingStatus === postStatus || (!isAdmin && postStatus === 'disabled')}>
+                {isUpdating ? 'Guardando…' : 'Confirmar cambio'}
+              </button>
+            </div>
+            {statusMessage && <p role="status" className="text-sm wrap-anywhere">{statusMessage}</p>}
+          </section>}
+        </aside>
       </div>
-    </div>
+    </article>
   );
 };
 

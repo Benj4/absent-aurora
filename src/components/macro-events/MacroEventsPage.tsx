@@ -214,7 +214,7 @@ export default function MacroEventsPage() {
   const pinned = linked?.event.id === linkedEventId && !events.some(event => event.id === linked.event.id) ? linked : null;
   return (
     <div>
-      <EventCatalogFilters onApply={applyFilters} locations={locations} locationError={locationError} onRetryLocations={() => void loadLocations()} actions={user && <button type="button" className="btn btn-outline w-full sm:w-auto" aria-expanded={panelOpen} aria-controls="event-form-panel" onClick={() => { setCorrection(null); setPanelOpen(true); }}>Nuevo evento</button>} />
+      <EventCatalogFilters onApply={applyFilters} locations={locations} locationError={locationError} onRetryLocations={() => void loadLocations()} actions={user && <button type="button" className="btn btn-outline btn-sm w-full sm:w-auto" aria-expanded={panelOpen} aria-controls="event-form-panel" onClick={() => { setCorrection(null); setPanelOpen(true); }}>Nuevo evento</button>} />
       {user && panelOpen && <div id="event-form-panel" className="mb-6"><MacroEventForm isOpen event={correction} onClose={() => { setPanelOpen(false); setCorrection(null); }} onSaved={() => { setPanelOpen(false); setCorrection(null); void refresh(); }} /></div>}
       {actionError && <div role="alert" className="alert alert-error mb-5 text-sm">{actionError}</div>}
       {linkedEventId && !linked && !linkError && <p role="status" className="py-4 text-sm">Cargando evento vinculado…</p>}
@@ -227,7 +227,7 @@ export default function MacroEventsPage() {
         <div role="alert" className="alert alert-error"><span>No se pudieron cargar los eventos.</span><button type="button" className="btn btn-outline" onClick={() => void load()}>Reintentar</button></div>
       ) : events.length === 0 ? <p role="status" className="px-5 py-10 text-sm text-base-content/70">No hay eventos que coincidan con los filtros.</p> : <>
         <p role="status" className="mb-4 text-sm text-base-content/70">{events.length} eventos cargados · Más recientes por fecha del evento</p>
-        <div className="grid items-start gap-5 lg:grid-cols-2">{events.map(event => renderEvent(event, context))}</div>
+        <div className="grid items-start gap-3 lg:grid-cols-2">{events.map(event => renderEvent(event, context))}</div>
         <div className="mt-6 flex flex-col items-center gap-3">
           {moreError && <p role="alert" className="text-sm text-error">No se pudieron cargar más eventos. Los resultados anteriores se conservan.</p>}
           {(hasMore || moreError) && <button type="button" className="btn btn-outline" disabled={loadingMore} onClick={() => void load(true)}>{loadingMore ? 'Cargando…' : moreError ? 'Reintentar' : 'Cargar más'}</button>}

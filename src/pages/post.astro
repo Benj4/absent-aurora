@@ -1,14 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PostDetail from '../components/PostDetail';
+import { withBase } from '../lib/paths';
 ---
 
 <Layout title="Detalle de Publicación">
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="mb-6">
-      <a href="/" class="text-sm opacity-70 hover:opacity-100">&larr; Volver al Dashboard</a>
-    </div>
+  <div class="min-h-[calc(100svh-8rem)] bg-base-200/60">
+    <div class="mx-auto max-w-6xl px-4 py-6 md:py-8">
+      <div class="mb-4">
+        <a href={withBase('/')} class="link link-hover inline-flex min-h-8 items-center text-sm text-base-content/70">&larr; Volver al inicio</a>
+      </div>
 
-    <PostDetail client:only />
+      <PostDetail client:only />
+    </div>
   </div>
 </Layout>
