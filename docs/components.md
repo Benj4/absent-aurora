@@ -45,7 +45,7 @@ Paths in the table are relative to `src/` unless they begin with `/`.
 - `src/pages/login.astro`: authentication route.
 - `src/components/LoginForm.tsx`: login-first authentication with signup fallback, recovery email requests, and password updates. Supabase intentionally does not distinguish missing accounts from incorrect passwords; only `invalid_credentials` triggers the signup fallback. Recovery and confirmation redirects respect the deployment base path. Add the deployed `/login` URL (including its `?recovery=1` variant) to Supabase Auth's allowed redirect URLs. `Welcome.astro` preserves the recovery hash marker before the shared client consumes it.
 - `src/components/Navbar.tsx`: desktop and mobile navigation, including the public events catalog.
-- `src/lib/paths.ts`: GitHub Pages base-path helpers. Internal links must use these helpers where required.
+- `src/lib/paths.ts`: deployment base-path helpers. Cloudflare uses `/`; the explicit GitHub Pages rollback target uses the repository prefix. Internal links must use these helpers where required.
 
 ### Supabase and generated types
 

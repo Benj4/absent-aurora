@@ -1,5 +1,7 @@
 # build output
 dist/
+.cloudflare/
+.env.*.local
 
 # generated types
 .astro/
