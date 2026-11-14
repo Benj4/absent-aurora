@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MacroEventsPage from '../components/macro-events/MacroEventsPage';
+---
+
+<Layout
+  title="Hitos y Eventos — Absent Aurora"
+  breadcrumbItems={[
+    { label: 'Inicio', href: '/' },
+    { label: 'Hitos y Eventos' },
+  ]}
+>
+  <div class="events-catalog min-h-[calc(100svh-8rem)] bg-base-200/60">
+    <section class="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8 lg:py-8" aria-labelledby="events-title">
+      <div>
+        <header class="mb-6 space-y-2">
+          <h1 id="events-title" class="text-2xl font-bold leading-tight text-pretty lg:text-[28px]">Hitos y Eventos</h1>
+          <p class="text-sm text-base-content/70">
+            Consulta hitos y periodos que dan contexto a las series temporales.
+          </p>
+        </header>
+
+        <MacroEventsPage client:load />
+        <noscript>
+          <p class="px-5 py-6 text-sm lg:px-8">Activa JavaScript para consultar el catálogo de eventos.</p>
+        </noscript>
+      </div>
+    </section>
+  </div>
+</Layout>

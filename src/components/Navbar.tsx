@@ -1,150 +1,188 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { User } from '@supabase/auth-js';
-import type { MenuProps } from 'antd';
-import { Layout, Menu } from 'antd';
-import { LogoutOutlined, ProfileOutlined, UserOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-
-const { Header } = Layout;
+import { useAuthSession } from '../lib/use-auth-session';
+import { stripBase, withBase } from '../lib/paths';
 
 const Navbar = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [activeKey, setActiveKey] = useState('inicio');
+  const { user } = useAuthSession();
+  const [activePath, setActivePath] = useState('/');
+  const [mounted, setMounted] = useState(false);
+  const [darkTheme, setDarkTheme] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    setMounted(true);
+    setActivePath(stripBase(window.location.pathname));
+    setDarkTheme(document.documentElement.dataset.theme === 'dark');
 
-    async function fetchUser() {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (mounted) setUser(data?.user ?? null);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-      }
-    }
-
-    fetchUser();
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) setUser(session?.user ?? null);
-    });
-    const subscription = (data as any)?.subscription;
-
-    const pathname = window.location.pathname;
-    if (pathname === '/') setActiveKey('inicio');
-    else if (pathname === '/postlist') setActiveKey('publicaciones');
-    else if (pathname === '/antd-demo' || pathname === '/antd-test') setActiveKey('demo');
-
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe?.();
+    const syncTheme = (event: StorageEvent) => {
+      if (event.key !== 'absent-aurora-theme' && event.key !== null) return;
+      const theme = event.newValue === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = theme;
+      setDarkTheme(theme === 'dark');
     };
+    window.addEventListener('storage', syncTheme);
+    return () => window.removeEventListener('storage', syncTheme);
   }, []);
+
+  const toggleTheme = () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    setDarkTheme(theme === 'dark');
+    try {
+      localStorage.setItem('absent-aurora-theme', theme);
+    } catch {
+      // The selection still applies to this page when storage is unavailable.
+    }
+  };
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      window.location.href = '/login';
+      window.location.href = withBase('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
-  const navItems = useMemo<MenuProps['items']>(
-    () => {
-      const baseItems: NonNullable<MenuProps['items']> = [
-        { key: 'inicio', label: <a href="/">Inicio</a> },
-        { key: 'publicaciones', label: <a href="/postlist">Publicaciones</a> },
-        { key: 'demo', label: <a href="/antd-demo">Demo Ant Design</a> },
-        {
-          key: 'spacer',
-          label: '',
-          disabled: true,
-          style: { marginInlineStart: 'auto', cursor: 'default' },
-        },
-      ];
-
-      if (!user) {
-        return [...baseItems, { key: 'iniciar-sesion', label: <a href="/login">Iniciar sesion</a> }];
-      }
-
-      return [
-        ...baseItems,
-        {
-          key: 'perfil',
-          label: user.email ?? 'Usuario',
-          children: [
-            {
-              key: 'mis-publicaciones',
-              icon: <ProfileOutlined />,
-              label: <a href={`/user?userId=${user.id}`}>Mis publicaciones</a>,
-            },
-            {
-              key: 'mis-reviews',
-              icon: <UserOutlined />,
-              label: <a href={`/user/reviews?userId=${user.id}`}>Mis reviews</a>,
-            },
-            { type: 'divider' },
-            {
-              key: 'cerrar-sesion',
-              icon: <LogoutOutlined />,
-              label: 'Cerrar sesion',
-              danger: true,
-            },
-          ],
-        },
-      ];
-    },
-    [user],
-  );
-
-  const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-    if (key === 'cerrar-sesion') {
-      void handleLogout();
-    }
-  };
+  const isActive = (path: string) => activePath === path;
 
   return (
-    <Header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        paddingInline: 24,
-      }}
-    >
-      <div className="demo-logo" />
+    <div className="navbar flex-wrap gap-y-2 bg-base-100 border-b border-base-200 px-4">
+      {/* Brand and mobile navigation */}
+      <div className="navbar-start w-auto flex-1">
+        <details className="dropdown md:hidden">
+          <summary className="btn btn-ghost btn-sm" aria-label="Abrir navegación">☰</summary>
+          <ul className="dropdown-content menu z-50 w-52 rounded-box border border-base-200 bg-base-100 p-2 shadow-lg">
+            <li><a href={withBase('/')}>Inicio</a></li>
+            <li><a href={withBase('/postlist')}>Publicaciones</a></li>
+            <li><a href={withBase('/eventos')}>Eventos</a></li>
+            <li><a href={withBase('/analisis/nuevo')}>Crear análisis</a></li>
+          </ul>
+        </details>
+        <a href={withBase('/')} className="text-lg font-bold tracking-tight">
+          Absent Aurora
+        </a>
+      </div>
 
-      <Menu
-        theme="light"
-        mode="horizontal"
-        selectedKeys={[activeKey]}
-        items={navItems}
-        onClick={onMenuClick}
-        style={{ flex: 1, minWidth: 0 }}
-      />
+      {/* Center nav links */}
+      <div className="navbar-center hidden md:flex">
+        <ul className="menu menu-horizontal px-1 gap-1">
+          <li>
+            <a
+              href={withBase('/')}
+              className={isActive('/') ? 'active' : ''}
+            >
+              Inicio
+            </a>
+          </li>
+          <li>
+            <a
+              href={withBase('/postlist')}
+              className={isActive('/postlist') ? 'active' : ''}
+            >
+              Publicaciones
+            </a>
+          </li>
+          <li><a href={withBase('/eventos')} className={isActive('/eventos') ? 'active' : ''}>Eventos</a></li>
+          <li>
+            <a
+              href={withBase('/analisis/nuevo')}
+              className={isActive('/analisis/nuevo') ? 'active' : ''}
+            >
+              Crear análisis
+            </a>
+          </li>
+        </ul>
+      </div>
 
-      <style>{`
-        .demo-logo {
-          width: 120px;
-          min-width: 120px;
-          height: 32px;
-          border-radius: 6px;
-          /* background: rgba(255, 255, 255, 0.2); */
-        }
-
-        @media (max-width: 900px) {
-          .demo-logo {
-            width: 72px;
-            min-width: 72px;
-          }
-        }
-      `}</style>
-    </Header>
+      {/* Right section */}
+      <div className="navbar-end w-auto gap-2">
+        <button
+          type="button"
+          className="btn btn-ghost btn-square min-h-11 min-w-11"
+          aria-label="Tema oscuro"
+          aria-pressed={darkTheme}
+          title={darkTheme ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+          disabled={!mounted}
+          onClick={toggleTheme}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.9 13.1A9 9 0 0 1 10.9 3.1a9 9 0 1 0 10 10Z" />
+          </svg>
+        </button>
+        {!mounted ? (
+          // Server/initial render: always show login button to avoid hydration mismatch
+          <a href={withBase('/login')} className="btn btn-primary btn-sm">
+            Iniciar sesión
+          </a>
+        ) : user ? (
+          // Client-side: show dropdown if user is logged in
+          <div className="dropdown dropdown-end">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-sm gap-2">
+              {/* User icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+              </svg>
+              <span className="max-w-40 truncate text-sm">{user.email}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu bg-base-100 rounded-box z-50 w-52 p-2 shadow-lg border border-base-200"
+            >
+              <li>
+                <a href={withBase(`/user?userId=${user.id}`)}>
+                  {/* List/profile icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M7.491 5.992A7.5 7.5 0 0 1 21.5 12a7.5 7.5 0 0 1-14.498 2.724 7.5 7.5 0 0 1 0-5.448ZM3.75 12a8.25 8.25 0 1 1 16.5 0 8.25 8.25 0 0 1-16.5 0Zm9-3.75a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" clipRule="evenodd" />
+                  </svg>
+                  Mis publicaciones
+                </a>
+              </li>
+              <li>
+                <a href={withBase(`/user/analisis?userId=${user.id}`)}>
+                  {/* Analysis icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                    <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5V19.5A1.5 1.5 0 0 1 19.5 21h-15A1.5 1.5 0 0 1 3 19.5V4.5ZM5.25 5.25v13.5h13.5V5.25H5.25Zm2.25 12V7.5h1.5v9.75h-1.5Zm3.75 0V10.5h1.5v7.5h-1.5Zm3.75 0v-6h1.5v6h-1.5Z"/>
+                  </svg>
+                  Mis análisis
+                </a>
+              </li>
+              <li>
+                <a href={withBase(`/user/reviews?userId=${user.id}`)}>
+                  {/* Reviews icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                    <path d="M11.625 16.5a1.875 1.875 0 1 0 0-3.75 1.875 1.875 0 0 0 0 3.75Z" />
+                    <path fillRule="evenodd" d="M5.625 1.5H9a3.75 3.75 0 0 1 3.75 3.75v1.875c0 1.036.84 1.875 1.875 1.875H16.5a3.75 3.75 0 0 1 3.75 3.75v7.875c0 1.035-.84 1.875-1.875 1.875H5.625a1.875 1.875 0 0 1-1.875-1.875V3.375c0-1.036.84-1.875 1.875-1.875Zm6 16.5c.66 0 1.277-.19 1.797-.518l1.048 1.048a.75.75 0 0 0 1.06-1.06l-1.047-1.048A3.375 3.375 0 1 0 11.625 18Z" clipRule="evenodd" />
+                    <path d="M14.25 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 16.5 7.5h-1.875a.375.375 0 0 1-.375-.375V5.25Z" />
+                  </svg>
+                  Mis reviews
+                </a>
+              </li>
+              <li className="border-t border-base-200 mt-1 pt-1">
+                <button
+                  onClick={() => void handleLogout()}
+                  className="text-error w-full text-left flex items-center gap-2"
+                >
+                  {/* Logout icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                  </svg>
+                  Cerrar sesión
+                </button>
+              </li>
+            </ul>
+          </div>
+        ) : (
+          // Client-side: show login button if no user
+          <a href={withBase('/login')} className="btn btn-primary btn-sm">
+            Iniciar sesión
+          </a>
+        )}
+      </div>
+    </div>
   );
 };
 

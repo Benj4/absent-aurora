@@ -1,20 +1,26 @@
 ---
 // filepath: src/pages/user/[...slug].astro
-import Layout from '../../layouts/Layout.astro';
-import UserPosts from '../../components/user/UserPosts';
-
+import Layout from "../../layouts/Layout.astro";
+import UserPosts from "../../components/user/UserPosts";
+import { withBase } from "../../lib/paths";
 ---
 
-<Layout>
-  <main class="prose max-w-6xl mx-auto" style="padding:1.25rem">
-    <div class="mb-6">
-      <a href="/" class="text-blue-600 hover:text-blue-800 text-sm">&larr; Volver al tablero</a>
-    </div>
-
+<Layout
+  breadcrumbItems={[
+    { label: "Inicio", href: withBase("/") },
+    { label: "Usuario" },
+    { label: "Post" },
+  ]}
+>
+  <section class="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:py-8">
+    <h1 class="text-2xl font-semibold">Publicaciones del usuario</h1>
     <UserPosts client:load />
 
     <noscript>
-      <div class="mt-4 text-gray-600">Esta página requiere JavaScript para navegar entre las secciones de usuario (Publicaciones, Editar, Validaciones).</div>
+      <div class="mt-4 text-base-content/70">
+        Esta página requiere JavaScript para navegar entre las secciones de
+        usuario (Publicaciones, Editar, Validaciones).
+      </div>
     </noscript>
-  </main>
+  </section>
 </Layout>

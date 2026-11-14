@@ -1,11 +1,12 @@
 /**
  * Row Level Security (RLS) Policy Tests for serie_posts table
  * 
- * Tests the following policies (when uncommented in schema.sql):
- * - Anyone can view approved posts
- * - Users can view their own posts
+ * Tests the following policies from the Supabase migration history:
+ * - Anyone can view posts
  * - Users can insert their own posts
- * - Users can update their own posts (only to 'disabled')
+ * - Anonymous users cannot insert posts
+ * - Regular users cannot update post status
+ * - Users cannot update posts owned by another user
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import {
@@ -22,26 +23,35 @@ describe('RLS Policies - serie_posts', () => {
   let user2Id: string;
   let user1Email: string;
   let user2Email: string;
+  let user1Password: string;
+  let user2Password: string;
 
   beforeAll(async () => {
-    // Create test users
-    user1Email = process.env.TEST_USER_1_EMAIL || 'testuser1@example.com';
-    user2Email = process.env.TEST_USER_2_EMAIL || 'testuser2@example.com';
-    const password = process.env.TEST_USER_1_PASSWORD || 'testpassword123';
+    // Use unique accounts so the suite never reuses or deletes an existing user.
+    const runId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const emailWithRunId = (email: string) => {
+      const [localPart, domain] = email.split('@');
+      return `${localPart}+${runId}@${domain}`;
+    };
 
-    user1Id = await createTestUser(user1Email, password);
-    user2Id = await createTestUser(user2Email, password);
+    user1Email = emailWithRunId(process.env.TEST_USER_1_EMAIL || 'testuser1@example.com');
+    user2Email = emailWithRunId(process.env.TEST_USER_2_EMAIL || 'testuser2@example.com');
+    user1Password = process.env.TEST_USER_1_PASSWORD || 'testpassword123';
+    user2Password = process.env.TEST_USER_2_PASSWORD || 'testpassword123';
+
+    user1Id = await createTestUser(user1Email, user1Password);
+    user2Id = await createTestUser(user2Email, user2Password);
   });
 
   afterAll(async () => {
-    // Clean up test users
-    await deleteTestUser(user1Id);
-    await deleteTestUser(user2Id);
+    // Clean up only users that were created successfully.
+    if (user1Id) await deleteTestUser(user1Id);
+    if (user2Id) await deleteTestUser(user2Id);
   });
 
   beforeEach(async () => {
-    // Clean up test data before each test
-    await cleanupTestData();
+    // Delete only posts owned by accounts created for this test run.
+    await cleanupTestData([user1Id, user2Id]);
   });
 
   describe('SELECT policies', () => {
@@ -177,7 +187,7 @@ describe('RLS Policies - serie_posts', () => {
     it('should allow authenticated users to insert their own posts', async () => {
       const user1Client = await getAuthenticatedClient(
         user1Email,
-        process.env.TEST_USER_1_PASSWORD || 'testpassword123'
+        user1Password
       );
 
       const { data, error } = await user1Client
@@ -217,7 +227,7 @@ describe('RLS Policies - serie_posts', () => {
   });
 
   describe('UPDATE policies', () => {
-    it('should allow users to disable their own posts', async () => {
+    it('should NOT allow regular users to disable their own posts', async () => {
       // Setup: Create a post for user1
       const adminClient = getAdminClient();
       const { data: insertedPost, error: insertError } = await adminClient
@@ -237,20 +247,17 @@ describe('RLS Policies - serie_posts', () => {
       // Test: User1 should be able to disable their own post
       const user1Client = await getAuthenticatedClient(
         user1Email,
-        process.env.TEST_USER_1_PASSWORD || 'testpassword123'
+        user1Password
       );
 
-      const { data: updatedPost, error: updateError } = await user1Client
+      const { data: updatedPosts, error: updateError } = await user1Client
         .from('serie_posts')
         .update({ status: 'disabled' })
         .eq('id', insertedPost!.id)
-        .select()
-        .single();
-
-      console.log({updateError, updatedPost});
+        .select();
 
       expect(updateError).toBeNull();
-      expect(updatedPost?.status).toBe('disabled');
+      expect(updatedPosts).toEqual([]);
     });
 
     it('should NOT allow users to update other users posts', async () => {
@@ -273,7 +280,7 @@ describe('RLS Policies - serie_posts', () => {
       // Test: User2 should NOT be able to update user1's post
       const user2Client = await getAuthenticatedClient(
         user2Email,
-        process.env.TEST_USER_2_PASSWORD || 'testpassword123'
+        user2Password
       );
 
       const { data: updatedPost, error: updateError } = await user2Client
@@ -281,8 +288,6 @@ describe('RLS Policies - serie_posts', () => {
         .update({ status: 'disabled' })
         .eq('id', insertedPost!.id)
         .select();
-
-      console.log({updateError, updatedPost});
 
       // Should have an error or return empty array
       expect(updateError !== null || updatedPost?.length === 0).toBe(true);

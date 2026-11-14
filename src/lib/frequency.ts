@@ -16,9 +16,9 @@ export function normalizeFrequency(nativeFrequency: string): CanonicalFrequency 
 /** Spanish hint shown above the data entry table. */
 export function getDateHint(freq: CanonicalFrequency): string {
   switch (freq) {
-    case 'annual':    return 'Usa el 1 de enero del año (ej. 2025-01-01)';
+    case 'annual':    return ''; // Usa el 1 de enero del año (ej. 2025-01-01)
     case 'quarterly': return 'Primer día del trimestre (T1: 01-01, T2: 04-01, T3: 07-01, T4: 10-01)';
-    case 'monthly':   return 'Primer día del mes (ej. 2025-03-01)';
+    case 'monthly':   return ''; // Primer día del mes (ej. 2025-03-01)
     case 'daily':     return 'Cualquier fecha válida (YYYY-MM-DD)';
   }
 }

@@ -1,0 +1,15 @@
+---
+// filepath: src/pages/analisis/editar.astro
+import Layout from '../../layouts/Layout.astro';
+import AnalysisBuilder from '../../components/AnalysisBuilder';
+
+---
+
+
+<Layout
+  title="Editar análisis — Absent Aurora"
+
+>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" />
+  <AnalysisBuilder client:load mode="edit" />
+</Layout>

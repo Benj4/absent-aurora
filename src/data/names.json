@@ -1,0 +1,42 @@
+{
+  "E01": {
+    "index": 0,
+    "label": "PIB real"
+  },
+  "E02": {
+    "index": 1,
+    "label": "PIB per cápita"
+  },
+  "E03": {
+    "index": 2,
+    "label": "IMACEC (total)"
+  },
+  "E04": {
+    "index": 3,
+    "label": "IMACEC (minero / no minero)"
+  },
+  "E05": {
+    "index": 4,
+    "label": "IPC general"
+  },
+  "E06": {
+    "index": 5,
+    "label": "IPC por división (alimentos, vivienda, transporte, etc.)"
+  },
+  "E07": {
+    "index": 6,
+    "label": "Inflación 12 meses"
+  },
+  "E08": {
+    "index": 7,
+    "label": "Inflación subyacente"
+  },
+  "E09": {
+    "index": 8,
+    "label": "Tasa de Política Monetaria (TPM)"
+  },
+  "E10": {
+    "index": 9,
+    "label": "Tasas de mercado (créditos consumo e hipotecario)"
+  }
+}

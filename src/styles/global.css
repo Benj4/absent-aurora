@@ -1,26 +1,8 @@
 @import "tailwindcss";
-
-/* Keep global CSS minimal so Ant Design owns the UI baseline across routes. */
-@import 'antd/dist/reset.css';
-
-
-/* Ant Design CSS Variables Support */
-/* :root {
-  color-scheme: light;
-  --ant-layout-header-bg: #ffffff;
+@plugin "daisyui" {
+  themes: false;
+  exclude: radial-progress, properties;
 }
-
-body {
-  --ant-layout-header-bg: #ffffff;
-} */
-
-.ant-layout-header {
-  background: #ffffff !important;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* @import 'tailwindcss';
-@import 'katex/dist/katex.css'; */
 
 /* https://fontsource.org/fonts/jetbrains-mono/install */
 /* jetbrains-mono-latin-wght-normal */
@@ -34,4 +16,295 @@ body {
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
     U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+code {
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+}
+
+/* The event catalog follows the analysis reader and keeps the active theme. */
+.events-catalog {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+.events-catalog .btn {
+  min-height: 44px;
+  height: auto;
+  border-radius: var(--radius-field);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.events-catalog .input,
+.events-catalog .select,
+.events-catalog .textarea {
+  min-width: 0;
+  min-height: 44px;
+  border-radius: var(--radius-field);
+  font-size: 16px;
+}
+
+@media (min-width: 1024px) {
+  .events-catalog .input,
+  .events-catalog .select,
+  .events-catalog .textarea {
+    font-size: 14px;
+  }
+}
+
+@layer base {
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+}
+
+/* Absent Aurora: the editor palette is the shared light variant. */
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f3f6fa;
+  --color-base-300: #cbd4df;
+  --color-base-content: #1a2c40;
+  --color-primary: #173964;
+  --color-primary-content: #ffffff;
+  --color-secondary: #365f86;
+  --color-secondary-content: #ffffff;
+  --color-accent: #173964;
+  --color-accent-content: #ffffff;
+  --color-neutral: #526275;
+  --color-neutral-content: #ffffff;
+  --color-info: #3b4fc4;
+  --color-info-content: #ffffff;
+  --color-success: #173964;
+  --color-success-content: #ffffff;
+  --color-warning: #f3e3d3;
+  --color-warning-content: #7a4510;
+  --color-error: #b42318;
+  --color-error-content: #ffffff;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --app-field-border: #b8c5d4;
+  --app-soft: #e7f1fa;
+}
+
+/* The same semantic roles and control geometry in low-light conditions. */
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+  --color-base-100: #101c2b;
+  --color-base-200: #0c1522;
+  --color-base-300: #34465c;
+  --color-base-content: #e2eaf4;
+  --color-primary: #9fc5ef;
+  --color-primary-content: #101c2b;
+  --color-secondary: #abc5df;
+  --color-secondary-content: #101c2b;
+  --color-accent: #9fc5ef;
+  --color-accent-content: #101c2b;
+  --color-neutral: #acbbcd;
+  --color-neutral-content: #101c2b;
+  --color-info: #acb7ff;
+  --color-info-content: #101c2b;
+  --color-success: #9fc5ef;
+  --color-success-content: #101c2b;
+  --color-warning: #493421;
+  --color-warning-content: #ffdbad;
+  --color-error: #ffb4a9;
+  --color-error-content: #101c2b;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --app-field-border: #647990;
+  --app-soft: #21374f;
+}
+
+.analysis-editor {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+.analysis-editor .input:not(.input-ghost),
+.analysis-editor .select,
+.analysis-editor .textarea:not(.textarea-ghost) {
+  border-color: var(--app-field-border);
+  border-radius: var(--radius-field);
+  background-color: var(--color-base-100);
+  min-height: 44px;
+  font-size: 14px;
+}
+.analysis-editor .btn {
+  min-height: 44px;
+  height: auto;
+  border-radius: var(--radius-field);
+  font-size: 14px;
+  box-shadow: none;
+}
+.analysis-editor .btn-outline {
+  border-color: var(--app-field-border);
+}
+.analysis-editor .label {
+  color: var(--color-neutral);
+  font-size: 12px;
+  font-weight: 600;
+}
+.analysis-editor .collapse {
+  background: transparent;
+  overflow: visible;
+}
+.analysis-editor .collapse-title {
+  min-height: 64px;
+  padding-left: 0;
+}
+.analysis-editor .collapse-content {
+  padding-bottom: 22px;
+  padding-inline: 0;
+}
+.analysis-editor .collapse:not([open]) .collapse-content {
+  padding-bottom: 0;
+}
+.analysis-editor .badge-soft,
+.analysis-editor .btn-soft {
+  background-color: var(--app-soft);
+  color: var(--color-primary);
+}
+.analysis-editor .btn-soft {
+  border: 2px solid var(--color-primary);
+}
+.analysis-editor .input-ghost,
+.analysis-editor .textarea-ghost {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 0;
+}
+
+.analysis-editor .btn-outline.btn-accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Keep editor hints readable and fields usable without mobile focus zoom. */
+.analysis-editor input::placeholder,
+.analysis-editor textarea::placeholder {
+  color: var(--color-neutral);
+  opacity: 1;
+}
+@media (max-width: 1023px) {
+  .analysis-editor .input:not(.input-ghost),
+  .analysis-editor .select,
+  .analysis-editor .textarea {
+    font-size: 16px;
+  }
+}
+
+.analysis-editor .editor-toolbar {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.analysis-editor .editor-toolbar .btn-outline {
+  color: var(--color-primary-content);
+  border-color: currentColor;
+  background: transparent;
+}
+.analysis-editor .editor-toolbar .btn-outline:hover {
+  background: color-mix(in srgb, var(--color-primary-content) 12%, transparent);
+}
+.analysis-editor .editor-step {
+  cursor: pointer;
+}
+.analysis-editor .editor-step:hover {
+  background: color-mix(in srgb, var(--color-primary-content) 12%, transparent);
+}
+.analysis-editor ::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.analysis-editor .analysis-source-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  align-self: flex-start;
+  margin: 16px 0 0 12px;
+}
+
+/* Shared catalog filters: compact on desktop, touch-friendly on mobile. */
+.app-filters {
+  --filter-control-height: calc(var(--size-field) * 8);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.app-filters > :not(.filter-field) {
+  min-width: 0;
+}
+
+.app-filters .filter-fields {
+  display: grid;
+  align-items: end;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.app-filters .filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  color: var(--color-neutral);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.app-filters > .filter-field {
+  flex: 1 1 10rem;
+}
+
+.app-filters .input,
+.app-filters .select,
+.app-filters .btn {
+  min-height: var(--filter-control-height);
+  height: var(--filter-control-height);
+  font-size: 0.875rem;
+}
+
+.app-filters .input,
+.app-filters .select {
+  width: 100%;
+  color: var(--color-base-content);
+  font-weight: 400;
+}
+
+.app-filters > p,
+.app-filters > [role="alert"] {
+  flex-basis: 100%;
+}
+
+@media (max-width: 639px) {
+  .app-filters {
+    --filter-control-height: 2.75rem;
+  }
+
+  .app-filters .input,
+  .app-filters .select {
+    font-size: 1rem;
+  }
 }

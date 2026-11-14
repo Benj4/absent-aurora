@@ -1,23 +1,26 @@
 import type { FC } from 'react';
-import { Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from 'antd';
+import { withBase } from '../lib/paths';
+import indicatorsNames from '../data/names.json';
+import type { SeriePost, SerieDataPoint } from '../lib/supabase';
 
-const { Title, Text } = Typography;
+/** Projection of SerieDataPoint used for the nested join result (post_id excluded). */
+type SerieData = Pick<SerieDataPoint, 'id' | 'date' | 'value'>;
 
-// NOTE: Use local types compatible with server responses. Prefer importing from `src/lib/supabase` when possible.
-interface SerieData {
-  id?: number | string;
-  date: string;
-  value: number;
-}
-
+/**
+ * Display-oriented subset of SeriePost with an optional nested serie_data join.
+ * Fields mirror SeriePost field types to stay anchored to the canonical schema;
+ * data_source and updated_at are optional because this component is also used
+ * in list contexts where those fields may not be selected.
+ */
 interface Post {
-  id: number | string;
-  indicator_id: string;
-  data_source?: string;
-  frequency: string;
-  status: string;
-  created_at: string;
-  updated_at?: string;
+  id: SeriePost['id'];
+  indicator_id: SeriePost['indicator_id'];
+  data_source?: SeriePost['data_source'];
+  url?: SeriePost['url'];
+  frequency: SeriePost['frequency'];
+  status: SeriePost['status'];
+  created_at: SeriePost['created_at'];
+  updated_at?: SeriePost['updated_at'];
   serie_data?: SerieData[];
 }
 
@@ -27,33 +30,23 @@ interface Props {
   showLinks?: boolean;
 }
 
-const statusColor = (status: string) => {
+const statusBadge = (status: string) => {
   switch (status) {
-    case 'approved':
-      return 'success';
-    case 'pending':
-      return 'warning';
-    case 'rejected':
-      return 'error';
-    case 'disabled':
-      return 'default';
-    default:
-      return 'default';
+    case 'approved': return 'badge-success';
+    case 'pending': return 'badge-warning';
+    case 'rejected': return 'badge-error';
+    case 'disabled': return 'badge-ghost';
+    default: return 'badge-neutral';
   }
 };
 
 const statusLabel = (status: string) => {
   switch (status) {
-    case 'approved':
-      return 'Aprobado';
-    case 'pending':
-      return 'Pendiente';
-    case 'rejected':
-      return 'Rechazado';
-    case 'disabled':
-      return 'Deshabilitado';
-    default:
-      return status;
+    case 'approved': return 'Aprobado';
+    case 'pending': return 'Pendiente';
+    case 'rejected': return 'Rechazado';
+    case 'disabled': return 'Deshabilitado';
+    default: return status;
   }
 };
 
@@ -91,148 +84,127 @@ const PostCard: FC<Props> = ({ post, maxDataPoints = 10, showLinks = true }) => 
   const tableData = slice.map((data, index) => {
     const previous = slice[index + 1];
     const variation = previous ? data.value - previous.value : null;
-
     return {
       rank: index + 1,
-    key: String(data.id ?? `${data.date}-${data.value}`),
-    date: formatSeriesDate(data.date, post.frequency),
+      key: String(data.id ?? `${data.date}-${data.value}`),
+      date: formatSeriesDate(data.date, post.frequency),
       rawDate: data.date,
-    value: formatValue(data.value),
+      value: formatValue(data.value),
       rawValue: data.value,
       variation,
     };
   });
 
+  //@ts-ignore
+  const indicadorInfo = indicatorsNames[post.indicator_id];
+
   return (
-    <Card
-      title={
-        <div>
-          <Title level={4} style={{ margin: 0 }}>{post.indicator_id}</Title>
-          <Text type="secondary">Publicacion #{post.id}</Text>
+    <div className="card bg-base-100 border border-base-200 shadow-sm w-full">
+      <div className="card-body gap-3 p-4">
+        {/* Card header */}
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="card-title text-base">
+              {post.indicator_id} {' - '}
+              {indicadorInfo?.label}
+              <p className="text-sm font-light text-base-content/60">#{String(post.id).slice(-8)}</p>
+            </h2>
+            
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {/* <span className="badge badge-neutral badge-sm">{post.frequency}</span> */}
+            <span className={`badge badge-sm ${statusBadge(post.status)}`}>{statusLabel(post.status)}</span>
+          </div>
         </div>
-      }
-      extra={
-        <Space size={8} wrap>
-          <Tag>{post.frequency}</Tag>
-          <Tag color={statusColor(post.status)}>{statusLabel(post.status)}</Tag>
-        </Space>
-      }
-      style={{ width: '100%' }}
-    >
-      <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }}>
-        <Descriptions.Item label="Fuente">{post.data_source || 'N/A'}</Descriptions.Item>
-        <Descriptions.Item label="Frecuencia">{post.frequency}</Descriptions.Item>
-        <Descriptions.Item label="Creado">{formatDate(post.created_at)}</Descriptions.Item>
-        {post.updated_at && (
-          <Descriptions.Item label="Actualizado" span={3}>{formatDate(post.updated_at)}</Descriptions.Item>
-        )}
-      </Descriptions>
 
-      {shouldShowSerie && serie.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <Space size={16} wrap style={{ marginBottom: 8 }}>
-            <Text strong>Puntos: {serie.length}</Text>
-            {latest && (
-              <Text type="secondary">
-                Ultimo: {formatSeriesDate(latest.date, post.frequency)} ({formatValue(latest.value)})
-              </Text>
-            )}
-            {oldest && (
-              <Text type="secondary">
-                Primero: {formatSeriesDate(oldest.date, post.frequency)}
-              </Text>
-            )}
-          </Space>
-
-          <Table
-            className="postcard-ant-table"
-            size="small"
-            pagination={tableData.length > 8 ? { pageSize: 8, size: 'small', hideOnSinglePage: true } : false}
-            scroll={{ x: 560 }}
-            dataSource={tableData}
-            // rowClassName={(record, rowIndex) => {
-            //   if (record.rank === 1) return 'bg-green-500/10';
-            //   return (rowIndex ?? 0) % 2 === 0 ? 'bg-black/5' : '';
-            // }}
-            locale={{ emptyText: 'Sin datos para mostrar' }}
-            columns={[
-              {
-                title: '#',
-                dataIndex: 'rank',
-                key: 'rank',
-                width: 64,
-                align: 'center',
-                render: (rank: number) => <Text type="secondary">{rank}</Text>,
-              },
-              {
-                title: 'Periodo',
-                dataIndex: 'date',
-                key: 'date',
-                sorter: (a, b) => new Date(a.rawDate).getTime() - new Date(b.rawDate).getTime(),
-                defaultSortOrder: 'descend',
-                render: (period: string, record) => (
-                  <Space size={8}>
-                    <Text>{period}</Text>
-                    {/* {record.rank === 1 && <Tag color="success">reciente</Tag>} */}
-                  </Space>
-                ),
-              },
-              {
-                title: 'Valor reportado',
-                dataIndex: 'value',
-                key: 'value',
-                align: 'right',
-                sorter: (a, b) => a.rawValue - b.rawValue,
-                render: (value: string) => <Text strong>{value}</Text>,
-              },
-              {
-                title: 'Variacion',
-                dataIndex: 'variation',
-                key: 'variation',
-                align: 'right',
-                width: 140,
-                render: (variation: number | null) => {
-                  if (variation === null) return <Text type="secondary">-</Text>;
-                  const isPositive = variation > 0;
-                  const isNegative = variation < 0;
-
-                  if (!isPositive && !isNegative) {
-                    return <Text type="secondary">0</Text>;
-                  }
-
-                  return (
-                    <Text type={isPositive ? 'success' : 'danger'}>
-                      {isPositive ? '+' : ''}
-                      {formatValue(variation)}
-                    </Text>
-                  );
-                },
-              },
-            ]}
-          />
-
-          {serie.length > maxDataPoints && (
-            <Text type="secondary" italic>
-              Mostrando {maxDataPoints} de {serie.length} puntos (mas recientes)
-            </Text>
+        {/* Metadata */}
+        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+          <div><dt className="text-base-content/60 inline">Fuente: </dt><dd className="inline">{post.data_source || 'N/A'}</dd></div>
+          {post.url && (
+            <div className="col-span-2 sm:col-span-3">
+              <dt className="text-base-content/60 inline">URL fuente: </dt>
+              <dd className="inline break-all">
+                <a className="link link-primary" href={post.url} target="_blank" rel="noopener noreferrer">{post.url}</a>
+              </dd>
+            </div>
           )}
-        </div>
-      )}
+          {/* <div><dt className="text-base-content/60 inline">Frecuencia: </dt><dd className="inline">{post.frequency}</dd></div> */}
+          <div><dt className="text-base-content/60 inline">Creado: </dt><dd className="inline">{formatDate(post.created_at)}</dd></div>
+        </dl>
 
-      {shouldShowSerie && serie.length === 0 && (
-        <div style={{ marginTop: 16 }}>
-          <Empty description="No hay datos de serie adjuntos a esta publicacion." image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        </div>
-      )}
+        {/* Series data table */}
+        {shouldShowSerie && serie.length > 0 && (
+          <div className="mt-2">
+            <div className="flex flex-wrap gap-4 text-sm mb-2">
+              <span className="font-semibold">Puntos: {serie.length}</span>
+              {oldest && (
+                <span className="text-base-content/60">
+                  Desde {formatSeriesDate(oldest.date, post.frequency)}
+                </span>
+              )}
+              {latest && (
+                <span className="text-base-content/60">
+                  hasta {formatSeriesDate(latest.date, post.frequency)} ({formatValue(latest.value)})
+                </span>
+              )}
+            </div>
 
-      {showLinks && (
-        <div style={{ marginTop: 12 }}>
-          <Button type="link" href={`/post?id=${post.id}`} style={{ paddingInline: 0 }}>
-            Revisar y validar
-          </Button>
-        </div>
-      )}
-    </Card>
+            <div className="overflow-x-auto">
+              <table className="table table-xs w-full">
+                <thead>
+                  <tr>
+                    <th className="w-12 text-center">#</th>
+                    <th>Periodo</th>
+                    <th>Valor reportado</th>
+                    <th>Variación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableData.map((row) => {
+                    const varIsPositive = row.variation !== null && row.variation > 0;
+                    const varIsNegative = row.variation !== null && row.variation < 0;
+                    return (
+                      <tr key={row.key}>
+                        <td className="text-center text-base-content/50">{row.rank}</td>
+                        <td>{row.date}</td>
+                        <td className="font-semibold">{row.value}</td>
+                        <td className={`${varIsPositive ? 'text-success' : varIsNegative ? 'text-error' : 'text-base-content/50'}`}>
+                          {row.variation === null
+                            ? '-'
+                            : row.variation === 0
+                              ? '0'
+                              : `${varIsPositive ? '+' : ''}${formatValue(row.variation)}`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {serie.length > maxDataPoints && (
+              <p className="text-sm text-base-content/60 italic mt-1">
+                Mostrando {maxDataPoints} de {serie.length} puntos (más recientes)
+              </p>
+            )}
+          </div>
+        )}
+
+        {shouldShowSerie && serie.length === 0 && (
+          <div className="py-4 text-center text-base-content/50 text-sm">
+            No hay datos de serie adjuntos a esta publicación.
+          </div>
+        )}
+
+        {showLinks && (
+          <div className="card-actions mt-1">
+            <a href={withBase(`/post?id=${post.id}`)} className="btn btn-link btn-sm px-0">
+              Revisar y validar →
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

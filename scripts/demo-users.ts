@@ -1,0 +1,147 @@
+import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import type { Database } from '../src/types/database.types';
+
+if (!existsSync('.env.demo.local')) throw new Error('Create .env.demo.local from .env.demo.example first.');
+const environment = config({ path: '.env.demo.local', quiet: true }).parsed;
+const url = environment?.SUPABASE_URL;
+const anonKey = environment?.SUPABASE_ANON_KEY;
+const serviceKey = environment?.SUPABASE_SERVICE_ROLE_KEY;
+if (!url || !anonKey || !serviceKey) throw new Error('Complete .env.demo.local with the local URL, anon key and service-role key.');
+const localAnonKey = anonKey;
+const target = new URL(url);
+if (target.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(target.hostname) || target.username || target.password || target.pathname !== '/' || target.search || target.hash) {
+  throw new Error('Only a local HTTP Supabase URL is supported.');
+}
+const actors = [
+  ['author-a', 'user'], ['reviewer-b', 'user'], ['reviewer-c', 'user'],
+  ['editor', 'editor'], ['admin', 'admin'], ['no-role', null],
+] as const;
+type Alias = typeof actors[number][0];
+type Manifest = { version: 1; target: string; marker: string; ids: Partial<Record<Alias, string>> };
+// Null means an adopted account whose password remains externally managed.
+type Credentials = Record<Alias, string | null>;
+const args = process.argv.slice(2);
+if (args.some(arg => arg !== '--adopt-existing')) throw new Error('Argumento desconocido. Usa --adopt-existing para adoptar cuentas locales existentes.');
+const adoptExisting = args.includes('--adopt-existing');
+const dir = '.demo-users';
+const manifestPath = `${dir}/manifest.json`;
+const credentialsPath = `${dir}/credentials.json`;
+const fingerprint = createHash('sha256').update(`${target.origin}\n${serviceKey}`).digest('hex');
+const admin = createClient<Database>(target.origin, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+const email = (alias: Alias) => `aa-demo-${alias}@example.test`;
+const save = (path: string, value: unknown) => {
+  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
+  chmodSync(path, 0o600);
+};
+const must = (error: { message: string } | null, stage: string) => {
+  if (error) throw new Error(`${stage}: ${error.message}`);
+};
+
+async function main() {
+  // Check Auth and the role table before creating any identities.
+  const initial = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
+  must(initial.error, 'Auth preflight');
+  const roles = await admin.from('user_roles').select('user_id,role').limit(1);
+  must(roles.error, 'Role table preflight');
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  chmodSync(dir, 0o700);
+  if (existsSync(manifestPath) !== existsSync(credentialsPath)) {
+    throw new Error('Manifest and credentials must both exist or both be absent; preserve them and investigate.');
+  }
+  let manifest: Manifest;
+  let credentials: Credentials;
+  if (existsSync(manifestPath)) {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    credentials = JSON.parse(readFileSync(credentialsPath, 'utf8'));
+    if (manifest.version !== 1 || manifest.target !== fingerprint || !manifest.marker || !manifest.ids || actors.some(([alias]) => typeof credentials[alias] !== 'string' && credentials[alias] !== null)) {
+      throw new Error('Invalid manifest, credentials, or different Supabase target.');
+    }
+  } else {
+    manifest = { version: 1, target: fingerprint, marker: randomUUID(), ids: {} };
+    credentials = Object.fromEntries(actors.map(([alias]) => [alias, randomBytes(24).toString('base64url')])) as Credentials;
+    save(credentialsPath, credentials);
+    save(manifestPath, manifest);
+  }
+  const allUsers = [];
+  for (let page = 1; ; page++) {
+    const result = await admin.auth.admin.listUsers({ page, perPage: 100 });
+    must(result.error, `List users page ${page}`);
+    allUsers.push(...result.data.users);
+    if (result.data.users.length < 100) break;
+  }
+  // Validate all identities before changing any account. Missing users can be
+  // recreated; a surviving ID with another email must never be reassigned.
+  const needsAdoption = new Set<Alias>();
+  for (const [alias] of actors) {
+    const found = allUsers.filter(user => user.email?.toLowerCase() === email(alias));
+    const previous = allUsers.find(user => user.id === manifest.ids[alias]);
+    if (found.length > 1 || (previous && previous.email?.toLowerCase() !== email(alias))) {
+      throw new Error(`Identidad incompatible para ${email(alias)}; no se modificaron cuentas.`);
+    }
+    if (found[0] && (found[0].user_metadata?.demo_marker !== manifest.marker ||
+        (manifest.ids[alias] && manifest.ids[alias] !== found[0].id))) {
+      if (!adoptExisting) {
+        throw new Error(`La cuenta ${email(alias)} no pertenece al manifiesto. Ejecuta pnpm run demo:users --adopt-existing para adoptarla conservando su contraseña. No se modificaron cuentas.`);
+      }
+      needsAdoption.add(alias);
+    }
+  }
+  for (const [alias, role] of actors) {
+    const address = email(alias);
+    let user = allUsers.find(item => item.email?.toLowerCase() === address);
+    if (!user) {
+      credentials[alias] ??= randomBytes(24).toString('base64url');
+      save(credentialsPath, credentials);
+      const result = await admin.auth.admin.createUser({ email: address, password: credentials[alias]!, email_confirm: true, user_metadata: { demo_marker: manifest.marker } });
+      must(result.error, `Create ${address}`);
+      user = result.data.user!;
+    }
+    if (needsAdoption.has(alias)) {
+      // Discard obsolete stored credentials before marking the account managed.
+      credentials[alias] = null;
+      save(credentialsPath, credentials);
+      const result = await admin.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...user.user_metadata, demo_marker: manifest.marker },
+      });
+      must(result.error, `Adoptar ${address}`);
+    }
+    manifest.ids[alias] = user.id;
+    save(manifestPath, manifest);
+    const existing = await admin.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
+    must(existing.error, `Read role ${address}`);
+    if (role) {
+      const result = await admin.from('user_roles').upsert({ user_id: user.id, role });
+      must(result.error, `Assign role ${address}`);
+    } else if (!role && existing.data) {
+      const result = await admin.from('user_roles').delete().eq('user_id', user.id);
+      must(result.error, `Remove role ${address}`);
+    }
+    const verified = await admin.auth.admin.getUserById(user.id);
+    must(verified.error, `Verificar ${address}`);
+    const metadata = verified.data.user?.app_metadata;
+    if (!metadata || (role === null ? 'role' in metadata : metadata.role !== role)) {
+      throw new Error(`El rol de Auth no coincide para ${address}.`);
+    }
+    const password = credentials[alias];
+    if (password !== null) {
+      const client = createClient<Database>(target.origin, localAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      try {
+        const session = await client.auth.signInWithPassword({ email: address, password });
+        must(session.error, `Iniciar sesión ${address}`);
+        if (session.data.user?.id !== user.id ||
+            (role === null ? 'role' in session.data.user.app_metadata : session.data.user.app_metadata.role !== role)) {
+          throw new Error(`Identidad o rol de sesión inesperado: ${address}`);
+        }
+      } finally {
+        const signedOut = await client.auth.signOut({ scope: 'local' });
+        must(signedOut.error, `Cerrar sesión de verificación ${address}`);
+      }
+    }
+    console.log(`${address}\t${role ?? 'sin rol'}\t${password === null ? 'contraseña conservada; rol verificado en Auth' : 'sesión verificada'}`);
+  }
+  console.log(`Credentials: ${credentialsPath} (owner only); manifest: ${manifestPath}`);
+}
+main().catch(error => { console.error(error instanceof Error ? error.message : 'Provisioning failed'); process.exitCode = 1; });

@@ -1,60 +1,47 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar.tsx";
-
-// import AntdProvider from '../components/AntdProvider';
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
-
-const { Header, Content, Footer } = Layout;
+import Breadcrumbs from "../components/Breadcrumbs.tsx";
+import AuthSessionBootstrap from "../components/AuthSessionBootstrap.tsx";
+import { withBase } from '../lib/paths';
 
 interface Props {
 	title?: string;
-	breadcrumbItems?: { label: string; href: string }[];
+	breadcrumbItems?: { label: string; href?: string }[];
 }
 
-const { 
+const {
 	title = 'Mites Absent Aurora',
-	breadcrumbItems = []
+	breadcrumbItems = [],
 } = Astro.props;
+
 ---
 
 <!doctype html>
-<html
-	lang="es"
->
+<html lang="es" data-theme="light">
 	<head>
 		<meta charset="UTF-8" />
+		<script is:inline>
+			try {
+				document.documentElement.dataset.theme =
+					localStorage.getItem('absent-aurora-theme') === 'dark' ? 'dark' : 'light';
+			} catch {
+				// Keep the default light theme when storage is unavailable.
+			}
+		</script>
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
 		<meta name="generator" content={Astro.generator} />
-		<!-- Ant Design Reset CSS -->
-		<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@6.3.0/dist/reset.css" /> -->
-		<!-- Ant Design Full CSS (Backup if CSS-in-JS fails) -->
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@6.3.0/dist/antd.min.css" />
 		<title>{title}</title>
 	</head>
 	<body>
-		<Layout>
+		<div class="min-h-screen flex flex-col bg-base-100 text-base-content">
+			<AuthSessionBootstrap client:load />
 			<Navbar client:load />
-			
-			<!-- { JSON.stringify(breadcrumbItems) }
-			<Breadcrumb
-				style={{ margin: '24px 0' }}
-				items={[{ title: 'Home' }, { title: 'List' }, { title: 'App' }]}
-			/> -->
-
-			<slot />
-		</Layout>
-		<!-- <Navbar client:load /> -->
-		<!-- <Navbar /> -->
+			<Breadcrumbs items={breadcrumbItems} client:load />
+			<main class="flex-1">
+				<slot />
+			</main>
+		</div>
 	</body>
 </html>
-
-<!-- <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style> -->

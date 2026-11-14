@@ -1,0 +1,13 @@
+---
+import { withBase } from '../../lib/paths';
+const destination = withBase('/eventos');
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0;url=${destination}`} />
+    <title>Redirigiendo a eventos</title>
+  </head>
+  <body><p>Redirigiendo a <a href={destination}>eventos</a>.</p></body>
+</html>

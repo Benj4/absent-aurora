@@ -1,8 +1,6 @@
-import React from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import PostCard from '../PostCard';
-import AntdProvider from '../AntdProvider';
 
 
 const UserPosts = () => {
@@ -29,7 +27,7 @@ const UserPosts = () => {
 
       const { data, error } = await supabase
         .from('serie_posts')
-        .select('id, indicator_id, data_source, frequency, status, created_at, updated_at, serie_data(id, date, value)')
+        .select('id, indicator_id, data_source, url, frequency, status, created_at, updated_at, serie_data(id, date, value)')
         .eq('submitted_by', userId)
         .order('created_at', { ascending: false });
 
@@ -48,20 +46,18 @@ const UserPosts = () => {
   }, [userId]);
 
   if (loading) return <p>Cargando publicaciones…</p>;
-  if (error) return <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error: {error}</div>;
-  if (!posts || posts.length === 0) return <p className="text-gray-600">No se encontraron publicaciones para este usuario.</p>;
+  if (error) return <div role="alert" className="alert alert-error">Error: {error}</div>;
+  if (!posts || posts.length === 0) return <p className="text-base-content/70">No se encontraron publicaciones para este usuario.</p>;
 
   return (
-    <AntdProvider>
-      <div className="space-y-6">
-        <p className="text-gray-600">Total: <strong>{posts.length}</strong></p>
-        <div className="grid gap-4">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
+    <div className="space-y-6">
+      <p className="text-base-content/70">Total: <strong>{posts.length}</strong></p>
+      <div className="grid gap-4">
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
       </div>
-    </AntdProvider>
+    </div>
   );
 }
 

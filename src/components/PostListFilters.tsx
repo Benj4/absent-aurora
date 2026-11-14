@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, Select, Space } from 'antd';
+import { withBase } from '../lib/paths';
 
 type Filters = {
   status: string;
@@ -31,7 +31,6 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
   });
 
   useEffect(() => {
-    // Keep the list synchronized with URL state on first load and browser navigation.
     const urlFilters = parseSearch(window.location.search);
     setFilters(urlFilters);
     if (onSearch) onSearch(urlFilters);
@@ -45,12 +44,11 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
     return () => window.removeEventListener('popstate', onPop);
   }, [onSearch]);
 
-
   function handleFieldChange(name: keyof Filters, value: string) {
     setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (filters.status && filters.status !== 'all') params.set('status', filters.status);
@@ -63,69 +61,75 @@ export default function PostListFilters({ onSearch }: { onSearch?: (f: Filters) 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6">
-      <Space size={[12, 12]} wrap align="end">
-        <Form.Item label="Estado" style={{ marginBottom: 0, minWidth: 180 }}>
-          <Select
-            aria-label="Estado"
-            value={filters.status}
-            onChange={(value) => handleFieldChange('status', value)}
-            options={[
-              { value: 'all', label: 'Todos' },
-              { value: 'approved', label: 'Aprobado' },
-              { value: 'pending', label: 'Pendiente' },
-              { value: 'rejected', label: 'Rechazado' },
-              { value: 'disabled', label: 'Deshabilitado' },
-            ]}
-          />
-        </Form.Item>
+    <form onSubmit={handleSubmit} className="app-filters flex flex-wrap items-end gap-3 mb-6">
+      <label className="filter-field">
+        <span>Estado</span>
+        <select
+          className="select select-sm w-full"
+          aria-label="Estado"
+          value={filters.status}
+          onChange={(e) => handleFieldChange('status', e.target.value)}
+        >
+          <option value="all">Todos</option>
+          <option value="approved">Aprobado</option>
+          <option value="pending">Pendiente</option>
+          <option value="rejected">Rechazado</option>
+          <option value="disabled">Deshabilitado</option>
+        </select>
+      </label>
 
-        <Form.Item label="Buscar" style={{ marginBottom: 0, minWidth: 240 }}>
-          <Input
-            value={filters.q}
-            onChange={(e) => handleFieldChange('q', e.target.value)}
-            placeholder="Indicador o fuente"
-            allowClear
-          />
-        </Form.Item>
+      <label className="filter-field">
+        <span>Buscar</span>
+        <input
+          type="text"
+          className="input input-sm w-full"
+          value={filters.q}
+          onChange={(e) => handleFieldChange('q', e.target.value)}
+          placeholder="Indicador o fuente"
+        />
+      </label>
 
-        <Form.Item label="Ordenar" style={{ marginBottom: 0, minWidth: 180 }}>
-          <Select
-            aria-label="Ordenar"
-            value={filters.sort}
-            onChange={(value) => handleFieldChange('sort', value)}
-            options={[
-              { value: 'newest', label: 'Mas recientes' },
-              { value: 'oldest', label: 'Mas antiguos' },
-            ]}
-          />
-        </Form.Item>
+      <label className="filter-field">
+        <span>Ordenar</span>
+        <select
+          className="select select-sm w-full"
+          aria-label="Ordenar"
+          value={filters.sort}
+          onChange={(e) => handleFieldChange('sort', e.target.value)}
+        >
+          <option value="newest">Más recientes</option>
+          <option value="oldest">Más antiguos</option>
+        </select>
+      </label>
 
-        <Form.Item label="Desde" style={{ marginBottom: 0 }}>
-          <Input
-            type="date"
-            value={filters.from}
-            onChange={(e) => handleFieldChange('from', e.target.value)}
-            allowClear
-          />
-        </Form.Item>
+      <label className="filter-field">
+        <span>Desde</span>
+        <input
+          type="date"
+          className="input input-sm"
+          value={filters.from}
+          onChange={(e) => handleFieldChange('from', e.target.value)}
+        />
+      </label>
 
-        <Form.Item label="Hasta" style={{ marginBottom: 0 }}>
-          <Input
-            type="date"
-            value={filters.to}
-            onChange={(e) => handleFieldChange('to', e.target.value)}
-            allowClear
-          />
-        </Form.Item>
+      <label className="filter-field">
+        <span>Hasta</span>
+        <input
+          type="date"
+          className="input input-sm"
+          value={filters.to}
+          onChange={(e) => handleFieldChange('to', e.target.value)}
+        />
+      </label>
 
-        <Form.Item style={{ marginBottom: 0 }}>
-          <Space>
-            <Button type="primary" htmlType="submit">Filtrar</Button>
-            <Button href="/postlist">Borrar filtros</Button>
-          </Space>
-        </Form.Item>
-      </Space>
+      <div className="flex gap-2">
+        <button type="submit" className="btn btn-primary btn-sm">
+          Filtrar
+        </button>
+        <a href={withBase('/postlist')} className="btn btn-ghost btn-sm">
+          Borrar filtros
+        </a>
+      </div>
     </form>
   );
 }

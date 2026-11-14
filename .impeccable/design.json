@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T15:40:18.566806+00:00",
+  "title": "Design System: Absent Aurora",
+  "extensions": {
+    "colorMeta": {
+      "editor-primary": {
+        "role": "primary",
+        "displayName": "editor-primary",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #173964)",
+          "color-mix(in oklch, black 55%, #173964)",
+          "color-mix(in oklch, black 35%, #173964)",
+          "color-mix(in oklch, black 15%, #173964)",
+          "color-mix(in oklch, white 15%, #173964)",
+          "color-mix(in oklch, white 35%, #173964)",
+          "color-mix(in oklch, white 55%, #173964)",
+          "color-mix(in oklch, white 75%, #173964)"
+        ]
+      },
+      "editor-primary-content": {
+        "role": "neutral",
+        "displayName": "editor-primary-content",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #ffffff)",
+          "color-mix(in oklch, black 55%, #ffffff)",
+          "color-mix(in oklch, black 35%, #ffffff)",
+          "color-mix(in oklch, black 15%, #ffffff)",
+          "color-mix(in oklch, white 15%, #ffffff)",
+          "color-mix(in oklch, white 35%, #ffffff)",
+          "color-mix(in oklch, white 55%, #ffffff)",
+          "color-mix(in oklch, white 75%, #ffffff)"
+        ]
+      },
+      "editor-secondary": {
+        "role": "secondary",
+        "displayName": "editor-secondary",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #365f86)",
+          "color-mix(in oklch, black 55%, #365f86)",
+          "color-mix(in oklch, black 35%, #365f86)",
+          "color-mix(in oklch, black 15%, #365f86)",
+          "color-mix(in oklch, white 15%, #365f86)",
+          "color-mix(in oklch, white 35%, #365f86)",
+          "color-mix(in oklch, white 55%, #365f86)",
+          "color-mix(in oklch, white 75%, #365f86)"
+        ]
+      },
+      "editor-secondary-content": {
+        "role": "neutral",
+        "displayName": "editor-secondary-content",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #ffffff)",
+          "color-mix(in oklch, black 55%, #ffffff)",
+          "color-mix(in oklch, black 35%, #ffffff)",
+          "color-mix(in oklch, black 15%, #ffffff)",
+          "color-mix(in oklch, white 15%, #ffffff)",
+          "color-mix(in oklch, white 35%, #ffffff)",
+          "color-mix(in oklch, white 55%, #ffffff)",
+          "color-mix(in oklch, white 75%, #ffffff)"
+        ]
+      },
+      "editor-base-100": {
+        "role": "neutral",
+        "displayName": "editor-base-100",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #ffffff)",
+          "color-mix(in oklch, black 55%, #ffffff)",
+          "color-mix(in oklch, black 35%, #ffffff)",
+          "color-mix(in oklch, black 15%, #ffffff)",
+          "color-mix(in oklch, white 15%, #ffffff)",
+          "color-mix(in oklch, white 35%, #ffffff)",
+          "color-mix(in oklch, white 55%, #ffffff)",
+          "color-mix(in oklch, white 75%, #ffffff)"
+        ]
+      },
+      "editor-base-200": {
+        "role": "neutral",
+        "displayName": "editor-base-200",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #f3f6fa)",
+          "color-mix(in oklch, black 55%, #f3f6fa)",
+          "color-mix(in oklch, black 35%, #f3f6fa)",
+          "color-mix(in oklch, black 15%, #f3f6fa)",
+          "color-mix(in oklch, white 15%, #f3f6fa)",
+          "color-mix(in oklch, white 35%, #f3f6fa)",
+          "color-mix(in oklch, white 55%, #f3f6fa)",
+          "color-mix(in oklch, white 75%, #f3f6fa)"
+        ]
+      },
+      "editor-base-300": {
+        "role": "neutral",
+        "displayName": "editor-base-300",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #cbd4df)",
+          "color-mix(in oklch, black 55%, #cbd4df)",
+          "color-mix(in oklch, black 35%, #cbd4df)",
+          "color-mix(in oklch, black 15%, #cbd4df)",
+          "color-mix(in oklch, white 15%, #cbd4df)",
+          "color-mix(in oklch, white 35%, #cbd4df)",
+          "color-mix(in oklch, white 55%, #cbd4df)",
+          "color-mix(in oklch, white 75%, #cbd4df)"
+        ]
+      },
+      "editor-base-content": {
+        "role": "neutral",
+        "displayName": "editor-base-content",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #1a2c40)",
+          "color-mix(in oklch, black 55%, #1a2c40)",
+          "color-mix(in oklch, black 35%, #1a2c40)",
+          "color-mix(in oklch, black 15%, #1a2c40)",
+          "color-mix(in oklch, white 15%, #1a2c40)",
+          "color-mix(in oklch, white 35%, #1a2c40)",
+          "color-mix(in oklch, white 55%, #1a2c40)",
+          "color-mix(in oklch, white 75%, #1a2c40)"
+        ]
+      },
+      "editor-neutral": {
+        "role": "neutral",
+        "displayName": "editor-neutral",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #526275)",
+          "color-mix(in oklch, black 55%, #526275)",
+          "color-mix(in oklch, black 35%, #526275)",
+          "color-mix(in oklch, black 15%, #526275)",
+          "color-mix(in oklch, white 15%, #526275)",
+          "color-mix(in oklch, white 35%, #526275)",
+          "color-mix(in oklch, white 55%, #526275)",
+          "color-mix(in oklch, white 75%, #526275)"
+        ]
+      },
+      "editor-info": {
+        "role": "info",
+        "displayName": "editor-info",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #3b4fc4)",
+          "color-mix(in oklch, black 55%, #3b4fc4)",
+          "color-mix(in oklch, black 35%, #3b4fc4)",
+          "color-mix(in oklch, black 15%, #3b4fc4)",
+          "color-mix(in oklch, white 15%, #3b4fc4)",
+          "color-mix(in oklch, white 35%, #3b4fc4)",
+          "color-mix(in oklch, white 55%, #3b4fc4)",
+          "color-mix(in oklch, white 75%, #3b4fc4)"
+        ]
+      },
+      "editor-success": {
+        "role": "success",
+        "displayName": "editor-success",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #173964)",
+          "color-mix(in oklch, black 55%, #173964)",
+          "color-mix(in oklch, black 35%, #173964)",
+          "color-mix(in oklch, black 15%, #173964)",
+          "color-mix(in oklch, white 15%, #173964)",
+          "color-mix(in oklch, white 35%, #173964)",
+          "color-mix(in oklch, white 55%, #173964)",
+          "color-mix(in oklch, white 75%, #173964)"
+        ]
+      },
+      "editor-warning": {
+        "role": "warning",
+        "displayName": "editor-warning",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #f3e3d3)",
+          "color-mix(in oklch, black 55%, #f3e3d3)",
+          "color-mix(in oklch, black 35%, #f3e3d3)",
+          "color-mix(in oklch, black 15%, #f3e3d3)",
+          "color-mix(in oklch, white 15%, #f3e3d3)",
+          "color-mix(in oklch, white 35%, #f3e3d3)",
+          "color-mix(in oklch, white 55%, #f3e3d3)",
+          "color-mix(in oklch, white 75%, #f3e3d3)"
+        ]
+      },
+      "editor-warning-content": {
+        "role": "warning",
+        "displayName": "editor-warning-content",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #7a4510)",
+          "color-mix(in oklch, black 55%, #7a4510)",
+          "color-mix(in oklch, black 35%, #7a4510)",
+          "color-mix(in oklch, black 15%, #7a4510)",
+          "color-mix(in oklch, white 15%, #7a4510)",
+          "color-mix(in oklch, white 35%, #7a4510)",
+          "color-mix(in oklch, white 55%, #7a4510)",
+          "color-mix(in oklch, white 75%, #7a4510)"
+        ]
+      },
+      "editor-error": {
+        "role": "error",
+        "displayName": "editor-error",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #b42318)",
+          "color-mix(in oklch, black 55%, #b42318)",
+          "color-mix(in oklch, black 35%, #b42318)",
+          "color-mix(in oklch, black 15%, #b42318)",
+          "color-mix(in oklch, white 15%, #b42318)",
+          "color-mix(in oklch, white 35%, #b42318)",
+          "color-mix(in oklch, white 55%, #b42318)",
+          "color-mix(in oklch, white 75%, #b42318)"
+        ]
+      },
+      "editor-field-border": {
+        "role": "neutral",
+        "displayName": "editor-field-border",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #b8c5d4)",
+          "color-mix(in oklch, black 55%, #b8c5d4)",
+          "color-mix(in oklch, black 35%, #b8c5d4)",
+          "color-mix(in oklch, black 15%, #b8c5d4)",
+          "color-mix(in oklch, white 15%, #b8c5d4)",
+          "color-mix(in oklch, white 35%, #b8c5d4)",
+          "color-mix(in oklch, white 55%, #b8c5d4)",
+          "color-mix(in oklch, white 75%, #b8c5d4)"
+        ]
+      },
+      "editor-soft": {
+        "role": "primary",
+        "displayName": "editor-soft",
+        "tonalRamp": [
+          "color-mix(in oklch, black 75%, #e7f1fa)",
+          "color-mix(in oklch, black 55%, #e7f1fa)",
+          "color-mix(in oklch, black 35%, #e7f1fa)",
+          "color-mix(in oklch, black 15%, #e7f1fa)",
+          "color-mix(in oklch, white 15%, #e7f1fa)",
+          "color-mix(in oklch, white 35%, #e7f1fa)",
+          "color-mix(in oklch, white 55%, #e7f1fa)",
+          "color-mix(in oklch, white 75%, #e7f1fa)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "editor-body": {
+        "displayName": "Editor body",
+        "purpose": "Functional editor controls and body using the operating system UI stack."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Explicit code element font; not every monospace utility."
+      },
+      "editor-panel-title": {
+        "displayName": "Editor working heading",
+        "purpose": "Bold configuration panel and toolbar headings."
+      },
+      "editor-report-title": {
+        "displayName": "Report title",
+        "purpose": "Editable report title; grows to 28px at the large breakpoint."
+      }
+    },
+    "shadows": [
+      {
+        "name": "editor-button",
+        "value": "none",
+        "purpose": "Explicit editor button override."
+      }
+    ],
+    "motion": [
+      {
+        "name": "chart-update",
+        "value": "250ms",
+        "purpose": "Highcharts animation in chart-options.ts."
+      },
+      {
+        "name": "disclosure-rotation",
+        "value": "200ms",
+        "purpose": "Detailed-data disclosure indicator utility."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "editor-two-column",
+        "value": "1024px",
+        "purpose": "Desktop two-column editor; mobile view switch below this width."
+      }
+    ],
+    "captureNotes": [
+      "Editor source inspected against the approved replacement direction; parent reviewed 1440px, 390px, and 320px layouts.",
+      "Save, publication, and database integration were not verified by this documentation pass.",
+      "Tonal ramps are synthesized panel swatches, not implemented application tokens.",
+      "Portable editor previews resolve the shared light palette to literal values; approximate framework hover and focus states are labeled. Runtime navigation and editor inherit the active custom light/dark variant.",
+      "The approved analysis editor supplies the shared application palette and control geometry. Custom light/dark variants replace the stock themes; editor layout overrides remain scoped.",
+      "Custom light is the default; custom dark is selected manually in Navbar and saved as absent-aurora-theme. System color preference is ignored. The editor inherits the selected variant."
+    ]
+  },
+  "components": [
+    {
+      "name": "Editor primary button",
+      "kind": "button",
+      "refersTo": "editor-button-primary",
+      "description": "Source-derived editor control. Preview padding and interaction states approximate the DaisyUI defaults.",
+      "html": "<button type=\"button\" class=\"ds-control ds-primary\">Guardar análisis</button>",
+      "css": ".ds-primary{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;min-height:44px;height:auto;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;box-shadow:none;background:#173964;color:#fff;border:1px solid transparent}.ds-primary:hover{filter:brightness(.95)}.ds-primary:active{filter:brightness(.9)}.ds-control:focus-visible{outline:2px solid #173964;outline-offset:2px}.ds-control:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Editor outline button",
+      "kind": "button",
+      "refersTo": "editor-button-outline",
+      "description": "Editor outline border and dimensions; preview states approximate framework defaults.",
+      "html": "<button type=\"button\" class=\"ds-control ds-outline\">Crear nuevo período</button>",
+      "css": ".ds-outline{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;min-height:44px;height:auto;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;box-shadow:none;background:transparent;border:1px solid #b8c5d4;color:#1a2c40}.ds-outline:hover{background:#f3f6fa}.ds-outline:active{background:#cbd4df}.ds-control:focus-visible{outline:2px solid #173964;outline-offset:2px}.ds-control:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Editor selected mode",
+      "kind": "button",
+      "refersTo": "editor-button-soft",
+      "description": "Selected alignment control, with explicit soft background and two-pixel border. Preview hover/focus states are approximations.",
+      "html": "<button type=\"button\" aria-pressed=\"true\" class=\"ds-control ds-soft\">Calendario<span class=\"ds-hint\">Valores por fecha real, en su unidad original.</span></button>",
+      "css": ".ds-soft{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;min-height:44px;height:auto;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;box-shadow:none;text-align:left;background:#e7f1fa;color:#173964;border:2px solid #173964;padding:12px 16px}.ds-hint{display:block;font-size:12px;font-weight:400;margin-top:4px}.ds-soft:hover{filter:brightness(.98)}.ds-soft:active{filter:brightness(.95)}.ds-control:focus-visible{outline:2px solid #173964;outline-offset:2px}.ds-control:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Editor search field",
+      "kind": "input",
+      "refersTo": "editor-input",
+      "description": "Explicit editor field overrides with a visible label. Preview padding and focus treatment approximate framework defaults.",
+      "html": "<label class=\"ds-label\" for=\"ds-event-search\">Buscar evento</label><input id=\"ds-event-search\" type=\"search\" class=\"ds-control ds-input\" placeholder=\"Buscar evento…\">",
+      "css": ".ds-label{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;display:block;font-size:12px;font-weight:600;color:#526275;margin-bottom:6px}.ds-input{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;min-height:44px;border:1px solid #b8c5d4;border-radius:8px;background:#fff;color:#1a2c40;padding:0 12px;max-width:100%}.ds-input:hover{border-color:#526275}.ds-control:focus-visible{outline:2px solid #173964;outline-offset:2px}.ds-control:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Editor report surface",
+      "kind": "card",
+      "refersTo": "editor-card",
+      "description": "Shared white report surface with an internal chart separator; static preview of the empty chart section.",
+      "html": "<section class=\"ds-card\" aria-label=\"Gráfico comparativo\"><h2 class=\"ds-card-title\">Gráfico comparativo</h2><p class=\"ds-card-copy\">Selecciona al menos un indicador y define las fechas de inicio y fin de un período para ver el gráfico.</p></section>",
+      "css": ".ds-card{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-size:14px;background:#fff;color:#1a2c40;border:1px solid #cbd4df;border-radius:12px;padding:20px}.ds-card-title{font-size:14px;font-weight:600;color:#526275;margin:0 0 16px;border-top:1px solid #cbd4df;padding-top:20px}.ds-card-copy{font-size:14px;text-align:center;padding:24px 0;margin:0}"
+    },
+    {
+      "name": "Application navigation",
+      "kind": "nav",
+      "description": "Compact portable representation of Navbar links, not the responsive account implementation. Host theme variables remain active; fallback palette and states are preview approximations.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Navegación principal\"><a class=\"ds-brand\" href=\"#\">Absent Aurora</a><a class=\"ds-control ds-nav-link\" href=\"#\">Inicio</a><a class=\"ds-control ds-nav-link\" href=\"#\">Publicaciones</a><a class=\"ds-control ds-nav-link\" href=\"#\">Eventos</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 16px;font-family:system-ui,sans-serif;background:var(--color-base-100,#fff);color:var(--color-base-content,#1b2430);border-bottom:1px solid var(--color-base-200,#f4f5f7)}.ds-brand{font-size:18px;font-weight:700;letter-spacing:-.025em;color:inherit;text-decoration:none;margin-right:16px}.ds-nav-link{font-size:14px;padding:8px 12px;color:inherit;text-decoration:none;border-radius:8px}.ds-nav-link:hover{background:var(--color-base-200,#f4f5f7)}.ds-nav-link:active{background:var(--color-base-300,#e3e6eb)}.ds-control:focus-visible{outline:2px solid var(--color-primary,#0b5555);outline-offset:2px}.ds-control:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Editor guided navigation",
+      "kind": "nav",
+      "description": "Three-step editor navigation. Current step has an underline; preview is static and does not simulate draft state or focus movement.",
+      "html": "<nav class=\"ds-steps\" aria-label=\"Pasos del análisis\"><button type=\"button\" class=\"ds-step ds-current\" aria-current=\"step\"><span>1</span> Datos</button><button type=\"button\" class=\"ds-step\"><span>2</span> Períodos</button><button type=\"button\" class=\"ds-step\"><span>3</span> Contexto</button></nav>",
+      "css": ".ds-steps{display:flex;background:#fff;border-bottom:1px solid #cbd4df;font-family:system-ui,sans-serif}.ds-step{display:flex;align-items:center;justify-content:center;gap:8px;flex:1;min-height:64px;padding:0 8px;background:transparent;border:0;border-bottom:2px solid transparent;color:#526275;font:inherit;font-size:14px;cursor:pointer}.ds-step span{font-size:12px;font-variant-numeric:tabular-nums}.ds-step.ds-current{border-bottom-color:#173964;color:#173964;font-weight:700}.ds-step:hover{background:#f3f6fa}.ds-step:focus-visible{outline:2px solid #173964;outline-offset:-3px}"
+    },
+    {
+      "name": "Editor period chip",
+      "kind": "chip",
+      "description": "Static period chip using a sample data-series color; series colors are configuration, not brand tokens.",
+      "html": "<span class=\"ds-period\"><span class=\"ds-dot\" aria-hidden=\"true\"></span>Período 1 <span class=\"ds-dates\">2024-01-01 → 2024-12-31</span></span>",
+      "css": ".ds-period{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;max-width:100%;overflow-wrap:anywhere;border:1px solid #17396440;background:#1739641a;color:#1a2c40;border-radius:9999px;padding:4px 10px;font-family:system-ui,sans-serif;font-size:12px;font-weight:600}.ds-dot{width:6px;height:6px;border-radius:50%;background:#173964;flex-shrink:0}.ds-dates{font-weight:400}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Informe en construcción",
+    "overview": "Absent Aurora takes the character of a statistical publication in progress. The approved analysis editor is the visual reference: a navy working header, cool blue-gray canvas, and a white report surface. Clear controls support sustained analytical work while evidence and provenance remain visible.\n\nUse this visual language across all views, including the dashboard, authentication, publications, series, events, and user workspace. New and revised screens should inherit its restrained typography, surface hierarchy, control shapes, spacing rhythm, and action hierarchy. Adapt composition to the task; the editor's guided configuration flow belongs to analysis creation and editing.\n\nThe editor palette is the main Absent Aurora theme throughout the application. Custom `light` and `dark` variants share semantic roles, control radii and sizing; no stock DaisyUI themes are loaded. Light is the default and dark is an optional manual choice in the shared navigation, including inside the editor. Never select a theme automatically from the system preference. Remember explicit choices across navigation and reloads when browser storage is available. Define both variants in `src/styles/global.css`; individual page composition remains domain-specific.",
+    "keyCharacteristics": [
+      "Clear, contained controls with a distinct primary content surface.",
+      "Contained depth: structural separation with occasional elevation.",
+      "Functional color names that remain useful when palette values change.",
+      "Reusable components across views with shared light and dark theme variants."
+    ],
+    "rules": [
+      {
+        "name": "Post detail and validation",
+        "body": "Post detail and validation use one bordered report surface on the muted application canvas. A compact heading, textual status and secondary source/frequency/creation metadata lead the page; source URLs use a short external link rather than dominating the header. From 1024px, series data and previous reviews occupy a flexible column beside a 320px validation column. Below that, sections stack in reading order. The data table has a 448px maximum scroll height, pinned headers, a keyboard-focusable scroll region and right-aligned tabular values. Previous reviews use separated rows rather than nested cards. The validation section uses a native radio fieldset with semantic success/error text and radios, a subtle matching background on the selected option, a labeled notes textarea and a compact submit action; editor-only status management is a separate subsection. Existing authorization, own-post restrictions and independent-review visibility remain unchanged. Both application theme variants are inherited. Browser verification is pending because the automation host is unavailable.",
+        "section": "layout"
+      },
+      {
+        "name": "Event correction provenance",
+        "body": "Correction provenance occupies a subdued region at the bottom of an event card: the immediate predecessor is labeled “Corrección de”, and an initially closed disclosure shows the number of all direct corrections. Expanding it loads links, creation dates and invalidity on demand, with additional pages available. Links focus their target; targets outside the loaded results appear in a separately labeled linked-event section that preserves the active filters. URL fragments support direct access and a primary-colored ring highlights the target. The creation form identifies the event being corrected before submission. Correction relationships remain separate from validity badges. Browser verification of the new filter and pagination controls is pending.",
+        "section": "layout"
+      },
+      {
+        "name": "Event catalog filters and pagination",
+        "body": "Catalog filters follow the shared `.app-filters` pattern used by the publications list: small DaisyUI controls, regular-weight 12px secondary labels, 4px label gaps and 12px field gaps, without a surrounding card. Status, topic, geography and date fields share a responsive auto-fit grid rather than two fixed rows. Controls are 32px high with 14px text from 640px; below that they are 44px high with 16px field text. Date mode provides independent inclusive Desde/Hasta bounds or a specific date. Explicit Aplicar filtros and Limpiar filtros actions reset the 20-event page; Cargar más appends up to 20 matches. Loading, validation, empty and retry states stay within the affected region. Dates describe event occurrence, including overlapping periods, rather than record creation. Name search is deferred.",
+        "section": "layout"
+      },
+      {
+        "name": "Event catalog composition",
+        "body": "The event catalog uses the analysis reader's bounded 1280px muted canvas. A visible heading and separate filter/action toolbar precede a grid of independent bordered event cards, with two columns from 1024px and one below. Cards use a compact 16px inset and 12px internal gaps. A 16px semibold name is the primary heading; full start/end dates appear as secondary 12px text directly beneath it, without a separate date strip or oversized day numerals. Narrative previews show up to 180 characters with a Ver más control that reveals the full text. Status, topic, geography and source share a single separated 12px footer after the narrative; metadata wraps on narrow cards. Cards are separated by 12px. Expansion and source links retain 44px touch targets on mobile and use 32px targets from 640px. The compact, accessibly named actions menu leaves room for long titles. Cards size to their content and use active-theme surfaces and radii without hover elevation or nested cards. The inline creation form groups information, dates, and geography with fieldsets and thin rules; this form is also reused in the analysis editor. Catalog filters use the shared compact desktop pattern with touch-sized mobile controls; card action menus keep their 44px minimum. The catalog retains the active custom light or dark variant of the shared application theme.",
+        "section": "layout"
+      },
+      {
+        "name": "The Theme Boundary Rule",
+        "body": "Carry the analysis view's visual hierarchy across all screens through semantic colors in the active Absent Aurora variant. Define palette values only in the custom light/dark themes. Keep editor-specific layout overrides scoped to `.analysis-editor`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Shared Composition Rule",
+        "body": "Reuse the analysis view's bounded canvas, clear content surface, compact action group, and internal separators across routes. Preserve each view's task and information hierarchy rather than copying the editor's sidebar or steps.",
+        "section": "layout"
+      },
+      {
+        "name": "Analysis reader composition",
+        "body": "The analysis reader uses a single bordered report surface on a muted canvas, bounded to 1280px with responsive gutters. Its visible title, publication status, region, description, validity warnings, and linked versions precede a two-column indicator and period summary that stacks on mobile. Chart controls have 44px minimum targets; an accessible Help button toggles the initially hidden calendar and index-zero definitions; changes apply only to the current view. Source references use separated rows with explicit series links. Macro events and detailed values are expanded by default, with contained keyboard-focusable table scrolling, wrapped names, and right-aligned tabular values. The reader consumes the active custom light or dark variant of the shared application theme.",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "Do reuse the existing component baseline before introducing another visual treatment.",
+      "Do use the approved analysis view as the visual reference for every new or revised screen.",
+      "Do adapt its surface, typography, control, and spacing patterns to each view's task.",
+      "Do name colors by their function and update this snapshot when their source values change.",
+      "Do preserve the active shared light/dark variant, including inside the editor.",
+      "Do prioritize usability, readable composition, and visible data provenance.",
+      "Do preserve Spanish labels and textual status explanations."
+    ],
+    "donts": [
+      "Don't hard-code the editor palette into other views or bypass active-theme semantics.",
+      "Don't copy analysis-specific steps, hidden headings, or preview switching into unrelated views.",
+      "Don't introduce a separate rounded card around every report subsection.",
+      "Don't assume the bundled code font is the rendered font of every monospace utility.",
+      "Don't promote chart series colors or one-off utility values into brand tokens.",
+      "Don't claim browser verification from source inspection alone."
+    ]
+  }
+}

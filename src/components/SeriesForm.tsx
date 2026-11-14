@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
-import { Alert, Button, DatePicker, Input, Space, Table, Typography } from 'antd';
-const { TextArea } = Input;
-import { ArrowLeftOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
 import { supabase } from '../lib/supabase';
 import { normalizeFrequency, getDateHint, validateDate } from '../lib/frequency';
+import { getDomainFromUrl, isValidHttpUrl } from '../lib/url-title';
+import { withBase } from '../lib/paths';
+import {
+  clearSeriesFormDraft,
+  getSeriesFormDraftKey,
+  loadSeriesFormDraft,
+  saveSeriesFormDraft,
+} from '../lib/series-form-draft';
+import { useAuthSession } from '../lib/use-auth-session';
 
 interface Indicator {
   id: string;
@@ -28,8 +33,6 @@ interface Props {
 
 type StatusType = 'idle' | 'loading' | 'success' | 'error';
 
-const { Text } = Typography;
-
 const INITIAL_ROWS: DataRow[] = [
   { date: '', value: '' },
   { date: '', value: '' },
@@ -37,29 +40,80 @@ const INITIAL_ROWS: DataRow[] = [
   { date: '', value: '' },
 ];
 
+const MIN_YEAR = 1950;
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - MIN_YEAR + 1 }, (_, index) => String(CURRENT_YEAR - index));
+const MONTH_OPTIONS = [
+  { value: '01', label: 'Enero' },
+  { value: '02', label: 'Febrero' },
+  { value: '03', label: 'Marzo' },
+  { value: '04', label: 'Abril' },
+  { value: '05', label: 'Mayo' },
+  { value: '06', label: 'Junio' },
+  { value: '07', label: 'Julio' },
+  { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Septiembre' },
+  { value: '10', label: 'Octubre' },
+  { value: '11', label: 'Noviembre' },
+  { value: '12', label: 'Diciembre' },
+];
+
 const SeriesForm: FC<Props> = ({ indicator }) => {
   const [dataSource, setDataSource] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [rows, setRows] = useState<DataRow[]>(INITIAL_ROWS);
   const [status, setStatus] = useState<StatusType>('idle');
   const [statusMessage, setStatusMessage] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [savedPostId, setSavedPostId] = useState<string | null>(null);
+  const { user, ready: isAuthReady } = useAuthSession();
+  const isAuthenticated = Boolean(user);
 
   const canonicalFreq = normalizeFrequency(indicator.nativeFrequency ?? '');
   const dateHint = getDateHint(canonicalFreq);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const getNextDateForRow = (): string => {
+    const filledRows = rows.filter((row) => row.date);
+    if (filledRows.length === 0) {
+      return '';
+    }
 
-  const checkAuth = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    setIsAuthenticated(!error && !!user);
-    if (error || !user) console.log('No authenticated user');
+    const lastDate = filledRows[filledRows.length - 1].date;
+    if (!lastDate) {
+      return '';
+    }
+
+    const [year, month, day] = lastDate.split('-').map(Number);
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+      return '';
+    }
+
+    const next = new Date(Date.UTC(year, month - 1, day));
+
+    switch (canonicalFreq) {
+      case 'annual':
+        return `${year - 1}-01-01`;
+      case 'quarterly': {
+        const nextMonth = month - 3;
+        const nextYear = year - Math.floor((nextMonth - 1) / 12);
+        const normalizedMonth = ((nextMonth - 1) % 12) + 1;
+        return `${nextYear}-${String(normalizedMonth).padStart(2, '0')}-01`;
+      }
+      case 'monthly': {
+        next.setUTCMonth(next.getUTCMonth() - 1);
+        return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-01`;
+      }
+      case 'daily':
+        next.setUTCDate(next.getUTCDate() - 1);
+        return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+      default:
+        return '';
+    }
   };
 
   const addRow = () => {
-    setRows([...rows, { date: '', value: '' }]);
+    const nextDate = getNextDateForRow();
+    setRows([...rows, { date: nextDate, value: '' }]);
   };
 
   const removeRow = (index: number) => {
@@ -74,44 +128,146 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
     setRows(updated);
   };
 
-  const updateDateRow = (index: number, value: dayjs.Dayjs | null ) => {
+  /** Convert native HTML input value to ISO date string YYYY-MM-DD */
+  const updateDateRow = (index: number, rawInputValue: string) => {
     const updated = [...rows];
-
-
-    if (value) {
-      let formattedDate: string;
+    if (!rawInputValue) {
+      updated[index].date = '';
+    } else {
       switch (canonicalFreq) {
-        case 'annual':
-          formattedDate = value.month(0).date(1).format('YYYY-MM-DD');
+        case 'annual': {
+          const year = parseInt(rawInputValue, 10);
+          updated[index].date = isNaN(year) ? '' : `${year}-01-01`;
           break;
+        }
         case 'quarterly': {
-          const quarterStartMonth = Math.floor(value.month() / 3) * 3; // 0, 3, 6, or 9
-          formattedDate = value.month(quarterStartMonth).date(1).format('YYYY-MM-DD');
+          const [y, m] = rawInputValue.split('-').map(Number);
+          const quarterStartMonth = Math.floor((m - 1) / 3) * 3 + 1;
+          updated[index].date = `${y}-${String(quarterStartMonth).padStart(2, '0')}-01`;
           break;
         }
         case 'monthly':
-          formattedDate = value.date(1).format('YYYY-MM-DD');
+          updated[index].date = `${rawInputValue}-01`;
           break;
         case 'daily':
-          formattedDate = value.format('YYYY-MM-DD');
+          updated[index].date = rawInputValue;
           break;
+        default:
+          updated[index].date = rawInputValue;
       }
-      updated[index].date = formattedDate;
-    } else {
-      updated[index].date = '';
+    }
+    setRows(updated);
+  };
+
+  /** Convert stored ISO date string back to native HTML input value */
+  const getInputValue = (date: string): string => {
+    if (!date) return '';
+    switch (canonicalFreq) {
+      case 'annual': return date.slice(0, 4);
+      case 'monthly': return date.slice(0, 7);
+      case 'quarterly': return date.slice(0, 7);
+      case 'daily': return date;
+      default: return date;
+    }
+  };
+
+  const createMonthlyRows = (year: number, rows: DataRow[]): DataRow[] => {
+    return MONTH_OPTIONS.map((m, i) => (i === 0 || !rows[i]?.date ?
+      { ...rows[i], date: `${year}-${m.value}-01` }
+      :
+      rows[i]));
+  };
+
+  const updateYearMonthRow = (index: number, field: 'year' | 'month', value: string) => {
+    const current = getInputValue(rows[index].date);
+    const [currentYear = '', currentMonth = '01'] = current.split('-');
+
+    const year = field === 'year' ? value : currentYear;
+    const month = field === 'month' ? value : currentMonth;
+
+    if (!year || !month) {
+      updateRow(index, 'date', '');
+      return;
     }
 
-    setRows(updated);
-  }
+    updateDateRow(index, `${year}-${month}`);
+  };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const prevFirstDateRef = useRef<string>('');
+  const isDraftHydratedRef = useRef(false);
+  const draftStorageKey = getSeriesFormDraftKey(indicator.id, canonicalFreq);
+
+  useEffect(() => {
+    const firstDate = rows[0]?.date ?? '';
+
+    if (firstDate === prevFirstDateRef.current) return;
+    prevFirstDateRef.current = firstDate;
+    if (!firstDate) return;
+
+    if (canonicalFreq === 'annual') {
+      const year = parseInt(firstDate.slice(0, 4), 10);
+      if (isNaN(year)) return;
+      setRows(prev =>
+        prev.map((row, i) => (i === 0 || !row.date ? { ...row, date: `${year - i}-01-01` } : row))
+      );
+    } else if (canonicalFreq === 'monthly') {
+      const year = parseInt(firstDate.slice(0, 4), 10);
+      if (isNaN(year)) return;
+      setRows(createMonthlyRows(year, rows));
+    }
+  }, [rows[0]?.date, rows[1]?.date, canonicalFreq]);
+
+  useEffect(() => {
+    const draft = loadSeriesFormDraft(draftStorageKey);
+    if (draft) {
+      setDataSource(draft.dataSource);
+      setSourceUrl(draft.sourceUrl);
+      setNotes(draft.notes);
+      if (draft.rows.length > 0) {
+        setRows(draft.rows);
+      }
+    }
+
+    isDraftHydratedRef.current = true;
+  }, [draftStorageKey]);
+
+  useEffect(() => {
+    console.log('isDraftHydratedRef.current :>> ', isDraftHydratedRef.current);
+    if (!isDraftHydratedRef.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      saveSeriesFormDraft(draftStorageKey, {
+        dataSource,
+        sourceUrl,
+        notes,
+        rows,
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [draftStorageKey, dataSource, sourceUrl, notes, rows]);
+
+  useEffect(() => {
+    const trimmedUrl = sourceUrl.trim();
+    if (!trimmedUrl || dataSource.trim() !== '' || !isValidHttpUrl(trimmedUrl)) {
+      return;
+    }
+
+    const domain = getDomainFromUrl(trimmedUrl);
+    if (domain) {
+      setDataSource(domain);
+    }
+  }, [sourceUrl]);
+
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('loading');
     setStatusMessage('');
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
+      if (!user) {
         throw new Error('Debes iniciar sesión para enviar datos. Por favor, inicia sesión primero.');
       }
 
@@ -119,13 +275,24 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         throw new Error('Por favor, completa todos los campos requeridos.');
       }
 
-      const validRows = rows.filter(row => row.date.trim() !== '' && row.value.trim() !== '');
+      const trimmedUrl = sourceUrl.trim();
+      if (trimmedUrl) {
+        try {
+          new URL(trimmedUrl);
+        } catch {
+          throw new Error('La URL de la fuente no es valida. Usa un formato como https://sitio.com.');
+        }
+      }
+
+      const validRows = rows.filter(row => row.date?.trim() && row.value?.trim());
       if (validRows.length < 1) {
         throw new Error('Por favor, proporciona al menos 1 punto de datos.');
       }
-
-      console.log('validRows :>> ', validRows);
-
+      const dates = validRows.map((row) => row.date);
+      const hasDuplicates = dates.some((date, idx) => dates.indexOf(date) !== idx);
+      if (hasDuplicates) {
+        throw new Error('Hay fechas duplicadas. Por favor corrige las filas repetidas.');
+      }
       for (const row of validRows) {
         const dateError = validateDate(row.date, canonicalFreq);
         if (dateError) throw new Error(dateError);
@@ -141,34 +308,19 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
         throw new Error('Por favor, ingresa valores numéricos válidos.');
       }
 
-      // Step 1: Insert serie_posts record
-      const { data: postData, error: postError } = await supabase
-        .from('serie_posts')
-        .insert({
-          indicator_id: indicator.id,
-          data_source: dataSource,
-          frequency: indicator.nativeFrequency,
-          status: 'pending',
-          notes: notes.trim() || null,
-        })
-        .select()
-        .single();
+      const { data: postData, error: postError } = await supabase.rpc('create_series_with_points', {
+        p_indicator_id: indicator.id, p_source: dataSource, p_url: trimmedUrl || '',
+        p_frequency: indicator.nativeFrequency, p_notes: notes.trim(), p_points: validData,
+      });
 
       if (postError) throw postError;
 
-      // Step 2: Insert serie_data records
-      const dataPoints = validData.map(item => ({
-        post_id: postData.id,
-        date: item.date,
-        value: item.value,
-      }));
-
-      const { error: dataError } = await supabase.from('serie_data').insert(dataPoints);
-      if (dataError) throw dataError;
-
+      clearSeriesFormDraft(draftStorageKey);
       setStatus('success');
       setStatusMessage(`✓ ¡Datos enviados exitosamente! ${validData.length} puntos de datos agregados.`);
+      setSavedPostId(postData);
       setDataSource('');
+      setSourceUrl('');
       setNotes('');
       setRows(INITIAL_ROWS);
     } catch (error: any) {
@@ -178,152 +330,213 @@ const SeriesForm: FC<Props> = ({ indicator }) => {
     }
   };
 
+  const handleRefreshForm = () => {
+    clearSeriesFormDraft(draftStorageKey);
+    window.location.reload();
+  };
+
   const unitSymbol = indicator.unit?.symbol || indicator.unit?.type || '';
-
-  const pickerType = (
-    canonicalFreq === 'annual' ? 'year' :
-    canonicalFreq === 'quarterly' ? 'quarter' :
-    canonicalFreq === 'monthly' ? 'month' :
-    'date'
-  ) as 'year' | 'quarter' | 'month' | 'date';
-
-  const tableRows = rows.map((row, index) => ({
-    key: index.toString(),
-    index,
-    ...row,
-  }));
-
-  const columns = [
-    {
-      title: 'Fecha',
-      dataIndex: 'date',
-      key: 'date',
-      render: (_: string, row: { index: number; date: string }) => (
-        <DatePicker
-          picker={pickerType}
-          value={row.date ? dayjs(row.date) : null}
-          onChange={(val) => updateDateRow(row.index, val)}
-          style={{ width: '100%' }}
-        />
-      ),
-    },
-    {
-      title: 'Valor',
-      dataIndex: 'value',
-      key: 'value',
-      render: (_: string, row: { index: number; value: string }) => (
-        <Input
-          type="number"
-          step="any"
-          value={row.value}
-          onChange={(e) => updateRow(row.index, 'value', e.target.value)}
-          placeholder="0.00"
-          addonAfter={unitSymbol || undefined}
-        />
-      ),
-    },
-    {
-      title: 'Acción',
-      key: 'action',
-      width: 96,
-      align: 'center' as const,
-      render: (_: unknown, row: { index: number }) => (
-        <Button
-          type="text"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => removeRow(row.index)}
-          disabled={rows.length <= 1}
-          aria-label="Eliminar fila"
-        />
-      ),
-    },
-  ];
 
   return (
     <div className="mx-auto w-full max-w-4xl">
-      <div style={{ marginBottom: 16 }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          href={`/indicators/${indicator.id}/data`}
-        >
-          Volver a datos del indicador
-        </Button>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div>
-            <Text strong>Fuente de Datos</Text>
-            <Input
-              style={{ marginTop: 8 }}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="flex justify-end">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={handleRefreshForm}>
+            Limpiar formulario
+          </button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-1 md:col-span-1">
+            <div className="label py-0">
+              <span className="whitespace-normal font-semibold">Fuente de Datos <span className="text-error">*</span></span>
+            </div>
+            <input
               type="text"
-              id="data-source"
-              name="data-source"
+              className="input w-full"
               value={dataSource}
               onChange={(e) => setDataSource(e.target.value)}
               placeholder="ej., Banco Central, INE"
               required
             />
-          </div>
+          </label>
 
-          <div>
-            <Text strong>Notas <Text type="secondary">(opcional)</Text></Text>
-            <TextArea
-              style={{ marginTop: 8 }}
+          <label className="flex flex-col gap-1 md:col-span-1">
+            <div className="label py-0">
+              <span className="whitespace-normal font-semibold">URL de la Fuente <span className="text-base-content/50">(opcional)</span></span>
+            </div>
+            <input
+              type="url"
+              className="input w-full"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              placeholder="https://ejemplo.cl/dataset"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <div className="label py-0">
+              <span className="whitespace-normal font-semibold">Notas <span className="text-base-content/50">(opcional)</span></span>
+            </div>
+            <textarea
+              className="textarea w-full"
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Comentarios adicionales sobre este ingreso de datos..."
             />
+          </label>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-semibold text-sm">Valores de la Serie <span className="text-error">*</span> <span className="font-normal text-base-content/50">(mínimo 1 fila)</span></p>
+          <p className="text-sm text-base-content/60">{dateHint}</p>
+
+          <div className="overflow-x-auto">
+            <table className="table table-sm w-full">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>
+                    Valor
+                    {unitSymbol && <span className="font-normal text-base-content/50 ml-1">({unitSymbol})</span>}
+                  </th>
+                  <th className="w-16 text-center">—</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, index) => (!row ? 'nana' :
+                  <tr key={index}>
+                    <td>
+                      {/* [{row.date}] */}
+                      {canonicalFreq === 'annual' && (
+                        <select
+                          className="select select-sm w-full"
+                          value={getInputValue(row.date)}
+                          onChange={(e) => updateDateRow(index, e.target.value)}
+                        >
+                          <option value="">Selecciona un año</option>
+                          {YEAR_OPTIONS.map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      {(canonicalFreq === 'monthly' || canonicalFreq === 'quarterly') && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <select
+                            className="select select-sm w-full"
+                            value={getInputValue(row.date).split('-')[0] ?? ''}
+                            onChange={(e) => updateYearMonthRow(index, 'year', e.target.value)}
+                          >
+                            <option value="">Anio</option>
+                            {YEAR_OPTIONS.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+
+                          <select
+                            className="select select-sm w-full"
+                            value={getInputValue(row.date).split('-')[1] ?? ''}
+                            onChange={(e) => updateYearMonthRow(index, 'month', e.target.value)}
+                          >
+                            <option value="">Mes</option>
+                            {MONTH_OPTIONS.map((month) => (
+                              <option key={month.value} value={month.value}>{month.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {canonicalFreq === 'daily' && (
+                        <input
+                          type="date"
+                          className="input input-sm w-full"
+                          value={getInputValue(row.date)}
+                          onChange={(e) => updateDateRow(index, e.target.value)}
+                        />
+                      )}
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="any"
+                        className="input input-sm w-full"
+                        value={row.value}
+                        onChange={(e) => updateRow(index, 'value', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </td>
+                    <td className="text-center">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs text-error"
+                        onClick={() => removeRow(index)}
+                        disabled={rows.length <= 1}
+                        aria-label="Eliminar fila"
+                      >
+                        {/* Trash icon */}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                          <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
+          <button type="button" className="btn btn-dashed btn-sm mt-1 gap-2" onClick={addRow}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+            </svg>
+            Agregar Fila
+          </button>
+        </div>
+
+        {!isAuthReady && (
+          <div role="alert" className="alert alert-info">
+            <span>...</span>
+          </div>
+        )}
+
+        {isAuthReady && !isAuthenticated && (
+          <div role="alert" className="alert alert-warning">
+            <span>Debes iniciar sesión para enviar datos.</span>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3">
           <div>
-            <Text strong>Valores de la Serie (mínimo 1 fila)</Text>
-            <div style={{ marginTop: 4, marginBottom: 10 }}>
-              <Text type="secondary">{dateHint}</Text>
-            </div>
-            <Table
-              dataSource={tableRows}
-              columns={columns}
-              pagination={false}
-              bordered
-              size="small"
-              scroll={{ x: 720 }}
-            />
-            <Button type="dashed" icon={<PlusOutlined />} onClick={addRow} style={{ marginTop: 10 }}>
-              Agregar Fila
-            </Button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={!isAuthenticated || status === 'loading'}
+            >
+              {status === 'loading' && <span className="loading loading-spinner loading-sm" />}
+              Enviar Datos de Series
+            </button>
           </div>
 
-          {!isAuthenticated && (
-            <Alert
-              type="warning"
-              message="Debes iniciar sesión para enviar datos."
-              showIcon
-            />
+          {statusMessage && (
+            <div role="alert" className={`alert ${status === 'success' ? 'alert-success' : status === 'error' ? 'alert-error' : 'alert-info'}`}>
+              <span>{statusMessage}</span>
+            </div>
           )}
 
-          <div>
-            <Button
-              htmlType="submit"
-              type="primary"
-              loading={status === 'loading'}
-              disabled={!isAuthenticated}
-            >
-              Enviar Datos de Series
-            </Button>
+          {status === 'success' && savedPostId && (
+            <div className="mt-2">
+              <a
+                href={withBase(`/post?id=${savedPostId}`)}
+                className="link link-primary"
+              >
+                Ver publicación
+              </a>
+            </div>
+          )}
 
-            {statusMessage && (
-              <div style={{ marginTop: 10 }}>
-                <Alert
-                  type={status === 'success' ? 'success' : status === 'error' ? 'error' : 'info'}
-                  message={statusMessage}
-                  showIcon
-                />
-              </div>
-            )}
-          </div>
-        </Space>
+        </div>
       </form>
     </div>
   );

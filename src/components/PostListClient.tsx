@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import PostListFilters from './PostListFilters';
 import PostCard from './PostCard';
 import { supabase } from '../lib/supabase';
-import AntdProvider from './AntdProvider';
 
 type Filters = {
   status: string;
@@ -12,7 +11,7 @@ type Filters = {
   to: string;
 };
 
-export default function PostListClient({ initialPosts = [] as any[], initialFilters }: { initialPosts?: any[]; initialFilters?: Filters }) {
+export default function PostListClient({ initialPosts = [] as any[] }: { initialPosts?: any[]; initialFilters?: Filters }) {
   const [posts, setPosts] = useState<any[]>(initialPosts || []);
 
   const [loading, setLoading] = useState(false);
@@ -24,7 +23,7 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
     try {
       let q = supabase
         .from('serie_posts')
-        .select(`id, indicator_id, data_source, frequency, status, created_at, updated_at, serie_data(id, date, value)`)
+        .select(`id, indicator_id, data_source, url, frequency, status, created_at, updated_at, serie_data(id, date, value)`)
         .limit(50);
 
       if (f.status && f.status !== 'all') q = q.eq('status', f.status);
@@ -71,21 +70,20 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
   }, [runSearch]);
 
   return (
-    <AntdProvider>
-      <div>
+    <div>
         <PostListFilters onSearch={handleSearch} />
 
 
       {loading && (
-        <div className="text-sm text-gray-600">Cargando publicaciones...</div>
+        <div className="text-sm text-base-content/70">Cargando publicaciones...</div>
       )}
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">Error: {error}</div>
+        <div role="alert" className="alert alert-error mb-4">Error: {error}</div>
       )}
 
-      {!loading && posts.length === 0 && (
-        <p className="text-gray-500">No se encontraron publicaciones.</p>
+      {!loading && !error && posts.length === 0 && (
+        <p className="text-base-content/70">No se encontraron publicaciones.</p>
       )}
 
       {!loading && posts.length > 0 && (
@@ -95,7 +93,6 @@ export default function PostListClient({ initialPosts = [] as any[], initialFilt
           ))}
         </div>
       )}
-      </div>
-    </AntdProvider>
+    </div>
   );
 }

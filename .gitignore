@@ -1,8 +1,13 @@
 # build output
 dist/
+.cloudflare/
+.env.*.local
 
 # generated types
 .astro/
+
+.agents/
+
 
 # dependencies
 node_modules/
@@ -18,6 +23,8 @@ pnpm-debug.log*
 .env.production
 .env.test
 .env.local
+.env.demo.local
+.demo-users/
 
 # macOS-specific files
 .DS_Store
@@ -30,3 +37,11 @@ coverage/
 
 # vitest
 .vitest/
+
+#impeccable
+.impeccable/config.local.json
+.impeccable/questions/
+.impeccable/review/
+
+# Manual browser artifacts
+.e2e-artifacts/
