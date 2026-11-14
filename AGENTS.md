@@ -33,7 +33,7 @@ Do not copy versions into documentation when they can be read from `package.json
 - Supabase provides browser authentication and PostgreSQL access.
 - `src/lib/supabase.ts` is the only application client instance. Tests use isolated clients under `tests/utils/`.
 - Database interfaces are generated into `src/types/database.types.ts` and re-exported by `src/lib/supabase.ts`.
-- The Cloudflare target is Workers Builds from `main`, with root paths. Cutover is pending; GitHub Pages still publishes `staging` until Cloudflare is verified. Use `DEPLOY_TARGET=github-pages` explicitly for the legacy build, never infer its base from `GITHUB_ACTIONS`. See `docs/deployment.md` for migration state and rollback.
+- The Cloudflare target is Workers Builds from `master`, with root paths. Cutover is pending; GitHub Pages still publishes `staging` until Cloudflare is verified. Use `DEPLOY_TARGET=github-pages` explicitly for the legacy build, never infer its base from `GITHUB_ACTIONS`. See `docs/deployment.md` for migration state and rollback.
 
 Use Supabase CLI migrations in `supabase/migrations/` for database changes. Capture remote schema with `supabase db pull` and review generated SQL before committing. Remote migration application requires authorization. Run `pnpm run generate:types` after schema changes to introspect the linked database with the official CLI.
 

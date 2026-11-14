@@ -16,7 +16,7 @@ Absent Aurora is a time-series data platform for submitting, reviewing, and visu
 - Astro, React, TypeScript, Tailwind CSS, and DaisyUI versions are specified in `package.json`.
 - Supabase Auth and PostgreSQL.
 - Vitest for Supabase integration tests.
-- Cloudflare Workers Static Assets configuration for production from `main`; cutover is pending. GitHub Pages remains active from `staging` until Cloudflare validation. See [deployment and rollback](docs/deployment.md).
+- Cloudflare Workers Static Assets configuration for production from `master`; cutover is pending. GitHub Pages remains active from `staging` until Cloudflare validation. See [deployment and rollback](docs/deployment.md).
 
 ## Local setup
 
@@ -63,7 +63,7 @@ Candidate URL: https://absent-aurora.bdiazcaballero.workers.dev (not deployed or
 The account and its `bdiazcaballero.workers.dev` subdomain were confirmed through `cf`.
 Production remains https://benj4.github.io/absent-aurora/ until cutover is verified.
 
-`pnpm run build:cloudflare` runs checks, builds Astro, and packages `dist` as assets-only Cloudflare Build Output. `pnpm run deploy:dry-run` also validates that output with `cf` without uploading it. `pnpm run deploy` is reserved for the Workers Builds `main` trigger and rejects other branches and stale commits. Configure the connected build as documented in [deployment and rollback](docs/deployment.md); repository files alone do not enable automatic deployment.
+`pnpm run build:cloudflare` runs checks, builds Astro, and packages `dist` as assets-only Cloudflare Build Output. `pnpm run deploy:dry-run` also validates that output with `cf` without uploading it. `pnpm run deploy` is reserved for the Workers Builds `master` trigger and rejects other branches and stale commits. Configure the connected build as documented in [deployment and rollback](docs/deployment.md); repository files alone do not enable automatic deployment.
 
 Create a migration with `pnpm run supabase:migration:new <name>`.
 
