@@ -34,7 +34,7 @@ After deployment authorization, create the Worker and connect it to the existing
 | Setting | Required value |
 | --- | --- |
 | Repository / root | `Benj4/absent-aurora` / repository root |
-| Production branch | `main` |
+| Production branch | `master` |
 | Preview builds | Disabled initially |
 | Build command | `pnpm install --frozen-lockfile && pnpm run build:cloudflare` |
 | Deploy command | `pnpm run deploy` |
@@ -46,7 +46,7 @@ After deployment authorization, create the Worker and connect it to the existing
 | `SITE_URL` | `https://absent-aurora.bdiazcaballero.workers.dev` |
 | Deployment credentials | Cloudflare-managed build token; never committed |
 
-`pnpm run deploy` requires the platform's `WORKERS_CI_BRANCH=main` and `WORKERS_CI_COMMIT_SHA`, matching the checkout and packaged revision. It checks the current remote `main` SHA immediately before deployment and rejects stale output; Git read access must work inside Builds. Do not override platform metadata. Configure serial production builds and confirm queue ordering/cancellation behavior in the account before enabling the trigger: the SHA check alone cannot eliminate a race after the remote check. Preserve the last successful deployment when build/check/deploy fails. A single Workers Builds trigger owns production; do not add a GitHub Actions deployment in parallel.
+`pnpm run deploy` requires the platform's `WORKERS_CI_BRANCH=master` and `WORKERS_CI_COMMIT_SHA`, matching the checkout and packaged revision. It checks the current remote `master` SHA immediately before deployment and rejects stale output; Git read access must work inside Builds. Do not override platform metadata. Configure serial production builds and confirm queue ordering/cancellation behavior in the account before enabling the trigger: the SHA check alone cannot eliminate a race after the remote check. Preserve the last successful deployment when build/check/deploy fails. A single Workers Builds trigger owns production; do not add a GitHub Actions deployment in parallel.
 
 ## Auth and cutover
 
@@ -56,10 +56,10 @@ Validate confirmation, password recovery, sign-in/out, data reads, charts, and a
 
 Before retiring Pages, record:
 
-- Deployed `main` commit, automatic Workers Builds run, Worker version and deployment IDs, and public HTTPS URL.
+- Deployed `master` commit, automatic Workers Builds run, Worker version and deployment IDs, and public HTTPS URL.
 - Browser results for assets, navigation, direct nested routes/reloads, post and analysis query parameters, charts, and unknown-route HTTP 404 responses.
 - Authentication confirmation/recovery results and the saved prior Auth settings.
-- Trigger evidence that only `main` promotes, serialized build behavior, and failure evidence that a rejected build preserves the prior deployment.
+- Trigger evidence that only `master` promotes, serialized build behavior, and failure evidence that a rejected build preserves the prior deployment.
 
 Only after that evidence exists, remove Pages deploy/upload jobs, `pages:write`, `id-token:write`, and Pages-specific concurrency/environment settings from `.github/workflows/astro.build.yml`. Preserve useful validation. Update README and AGENTS to mark Cloudflare active and record the verified URL. Old GitHub Pages links cannot receive Cloudflare HTTP redirects: retain a Pages transition artifact or explicitly agree on their retirement before disabling Pages hosting.
 
